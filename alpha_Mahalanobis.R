@@ -1,5 +1,6 @@
 library(fda.usc)
 
+setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati")
 
 #### Kernel estimator ####
 
