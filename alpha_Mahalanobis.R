@@ -112,13 +112,19 @@ f_alpha_approx <-function(f,alpha,lambda,eigenft){
     coeff[j]<-lambda[j]/(lambda[j]+alpha)
     prod[j]<-scalar_prod(f,eigenft[,j])
     
-    approx[,j]<- (coeff[j]*prod[j])*eigenft[,j]
+    approx[,j]<- as.numeric(coeff[j]*prod[j])*eigenft[,j]
     
     res[,j]<-res[,j] + approx[,j]
     
   }
   return(res[,t_points])
 }
+
+# prova
+f1_alpha <- f_alpha_approx(f.data$ausxSL$data[1,],1e-4,lambda,eigenft)
+x11()
+plot(t(importMatrix(res, type = c('SL', 'sx'), position = 'au'))[1,], type = "l", ylim = c(-250, 250))
+lines(f.data$ausxSL$argvals, f1_alpha, type = 'l', lwd=3, col = 'blue')
 
 # norm and inner product wrt sample covariance function K
 norm2_K <- function (f,lambda,eigenft){
@@ -146,26 +152,27 @@ inner_product_K<- function(f,g,lambda,eigenft) {
 }
 
 
-
 # prova dell'approssimazione con una funzione f presa dal dataset.
 # problem: the eigenfunctions have very small values and this leads the approximation of f to be very small and far from the true one. 
+
+f_prova <- X_bar
+f_prova_alpha <- f_alpha_approx(f_prova,alpha=1e-8,lambda,eigenft)
+
 x11()
 plot(t(importMatrix(res, type = c('SL', 'sx'), position = 'au'))[1,], type = "l", ylim = c(-250, 250))
 lines(f.data$ausxSL$argvals, X_bar, type = 'l', lwd=3, col = 'firebrick2')
 lines(f.data$ausxSL$argvals, f_prova_alpha, type = 'l', lwd=3, col = 'blue')
 
-f_prova<-X_bar
-f_prova_alpha<-f_alpha_approx(f_prova,alpha=1e-8,lambda,eigenft)
 
 
 # Example of sum for the first two eigenfunctions
 coeff_1<-lambda[1]/(lambda[1]+ 1e-8)
 prod_1<-scalar_prod(f_prova,eigenft[,1])
-approx_1<- (coeff_1*prod_1)*eigenft[,1]
+approx_1<- as.numeric(coeff_1*prod_1)*eigenft[,1]
 
 coeff_2<-lambda[2]/(lambda[2]+ 1e-8)
 prod_2<-scalar_prod(f_prova,eigenft[,2])
-approx_2<- (coeff_2*prod_2)*eigenft[,2]
+approx_2<- as.numeric(coeff_2*prod_2)*eigenft[,2]
 
 res<-approx_2 + approx_1
 
