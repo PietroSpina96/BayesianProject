@@ -180,3 +180,4 @@ res<-approx_2 + approx_1
 ##### Save Workspace ####
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
 save.image("functional_WP.RData")
+
