@@ -7,7 +7,7 @@ library(roahd)
 
 # Commentate i set delle directory non vostre
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
-#setwd("C:/Users/admin/Documents/R/Project_BS/potenziali_evocati")
+#setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject")
 
 
 #### DATA SIMULATION - MODEL 1 ####
@@ -81,6 +81,45 @@ for (i in (n-c+1):n){
 
 
 #### alpha-Mahalanobis distance calculation ####
+
+#alpha_approximation
+f_alpha_approx <-function(f,alpha,lambda,eigenft){
+  coeff<-prod<-res<-rep(0,t_points)
+  approx<-matrix(0,t_points,t_points)
+  
+  for (j in 1:t_points) {
+    
+    coeff[j]<-lambda[j]/(lambda[j]+alpha)
+    prod[j]<-scalar_prod(f,eigenft[,j])
+    approx[,j]<- as.numeric(coeff[j]*prod[j])*eigenft[,j]
+    res<-res+approx[,j]
+    
+  }
+  return(res)
+}
+
+#alpha-mahalanobis distance
+alpha_Mahalanobis <- function(alpha,f1,f2,lambda, eigenft) {
+  dis<-coeff<-prod<-rep(0,t_points)
+  
+  for (j in 1:t_points){
+    
+    coeff[j]<-lambda[j]/(lambda[j]+alpha)^2
+    prod[j]<-(scalar_prod(f1-f2,eigenft[,j]))^2
+    dis[j]<-coeff[j]*prod[j]
+    
+  }
+  res<-sum(dis)
+  return(res)
+}
+
+#scalar product
+scalar_prod<- function (f1,f2) {
+  # f sono vettori colonna
+  res<- t(f1)%*%f2
+  return(res)
+}
+
 
 # Smoothed data
 
