@@ -171,7 +171,7 @@ Mahalanobis_Distance <- matrix(0, nrow = 26, ncol = 26)
 for (i in 1:26){
   print(i)
   for (j in 1:26){
-    Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,f.data_alpha[i,],f.data_alpha[j,],lambda,eigenft)
+    Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,f.data$ausxSL$data[i,],f.data$ausxSL$data[j,],lambda,eigenft)
   }
 }
 

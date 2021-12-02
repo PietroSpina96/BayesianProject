@@ -12,8 +12,8 @@ setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject"
 
 #### DATA SIMULATION - MODEL 1 ####
 
-n <- 26
-c <- 10
+n <- 100
+c <- 15
 t_points <- 200
 
 
@@ -72,10 +72,10 @@ for (i in 1:n){
 # Simulated data plot
 x11()
 plot(time,data1[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2)
-for(i in 2:16){
+for(i in 2:(n-c)){
   lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
-for (i in 17:n){
+for (i in (n-c+1):n){
   lines(time,data1[i,],type = 'l', col = 'blue', lwd = 2)
 }
 
@@ -89,22 +89,22 @@ values <- eig$values
 vectors <- eig$vectors
 
 alpha <- 1e+4
-f.data_alpha_sim <- matrix(0, nrow = 26, ncol = t_points)
-for (i in 1:26){
+f.data_alpha_sim <- matrix(0, nrow = n, ncol = t_points)
+for (i in 1:n){
   f.data_alpha_sim[i,] <- f_alpha_approx(data1[i,],alpha,values,vectors)
 }
 
 # alpha-Mahalanobis distance matrix 
 
-Mahalanobis_Distance <- matrix(0, nrow = 26, ncol = 26)
-for (i in 1:26){
-  for (j in 1:26){
-    Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,f.data_alpha_sim[i,],f.data_alpha_sim[j,],values,vectors)
+Mahalanobis_Distance <- matrix(0, nrow = n, ncol = n)
+for (i in 1:n){
+  for (j in 1:n){
+    Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,data1[i,],data1[j,],values,vectors)
   }
 }
 
 x11()
-image.plot(1:26,1:26,Mahalanobis_Distance)
+image.plot(1:n,1:n,Mahalanobis_Distance)
 
 
 
