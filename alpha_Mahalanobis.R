@@ -5,9 +5,9 @@ library(fda)
 library(fields)
 
 # Commentate i set delle directory non vostre
-#setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati")
-#setwd('C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/potenziali_evocati')
-setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
+setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati")
+setwd('C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/potenziali_evocati')
+#setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
 
 load('functional_WP.RData')
 
@@ -146,27 +146,37 @@ inner_product_K<- function(f,g,lambda,eigenft) {
 }
 
 # prova dell'approssimazione con una funzione f presa dal dataset.
-alpha<-1e+4
-f_prova <- X_bar
-f_prova_alpha <- f_alpha_approx(f_prova,alpha,lambda,eigenft)
+f_prova <- f.data$ausxSL$data[1,]
 
 x11()
-plot(t(importMatrix(res, type = c('SL', 'sx'), position = 'au'))[1,], type = "l", ylim = c(-250, 250))
-lines(f.data$ausxSL$argvals, X_bar, type = 'l', lwd=3, col = 'firebrick2')
-lines(f.data$ausxSL$argvals, f_prova_alpha, type = 'l', lwd=3, col = 'blue')
+plot(t(importMatrix(res, type = c('SL', 'sx'), position = 'au'))[1,], type = "l", ylim = c(-250, 250), lwd=2)
+lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,1e+4,lambda,eigenft), type = 'l', lwd=3, col = 'firebrick2')
+lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,1e+6,lambda,eigenft), type = 'l', lwd=3, col = 'blue')
+lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,1e+7,lambda,eigenft), type = 'l', lwd=3, col = 'forestgreen')
 
 
+#### alpha-Mahalanobis distance calculation ####
 
-# Example of sum for the first two eigenfunctions
-coeff1<-lambda[1]/(lambda[1]+0.001)
-coeff2<-lambda[2]/(lambda[2]+0.001)
-prod1<-scalar_prod(X_bar,eigenft[,1])
-prod2<-scalar_prod(X_bar,eigenft[,2])
-approx1<- (coeff1*prod1)*eigenft[,1]
-approx2<- (coeff1*prod1)*eigenft[,2]
-res<-rep(0,t_points)
-res1<-res+approx1
-res2<-res1+approx2
+# Smoothed data
+
+alpha <- 1e+4
+f.data_alpha <- matrix(0, nrow = 26, ncol = 1600)
+for (i in 1:26){
+  f.data_alpha[i,] <- f_alpha_approx(f.data$ausxSL$data[i,],alpha,lambda,eigenft)
+}
+
+# alpha-Mahalanobis distance matrix 
+
+Mahalanobis_Distance <- matrix(0, nrow = 26, ncol = 26)
+for (i in 1:26){
+  print(i)
+  for (j in 1:26){
+    Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,f.data_alpha[i,],f.data_alpha[j,],lambda,eigenft)
+  }
+}
+
+x11()
+image.plot(1:26,1:26,Mahalanobis_Distance)
 
 ##### Save Workspace ####
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
