@@ -12,8 +12,8 @@ setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject"
 
 #### DATA SIMULATION - MODEL 1 ####
 
-n <- 100
-c <- 15
+n <- 26
+c <- 10
 t_points <- 200
 
 
@@ -37,6 +37,7 @@ for (i in 1:t_points){
 
 # Create simulated data
 
+set.seed(1234)
 m <- rep(0,t_points)
 random_process <- generate_gauss_fdata(n, m, Cov = K_1)
 
@@ -127,7 +128,7 @@ eig <- eigen(K_1)
 values <- eig$values
 vectors <- eig$vectors
 
-alpha <- 1e+4
+alpha <- 0.1
 f.data_alpha_sim <- matrix(0, nrow = n, ncol = t_points)
 for (i in 1:n){
   f.data_alpha_sim[i,] <- f_alpha_approx(data1[i,],alpha,values,vectors)
@@ -135,9 +136,9 @@ for (i in 1:n){
 
 x11()
 plot(time, data1[1,], type = 'l', lwd = 2)
-lines(time, f_alpha_approx(data1[1,],1e+4,values,vectors), type = 'l', lwd = 2, col = 'firebrick2')
-lines(time, f_alpha_approx(data1[1,],1e+6,values,vectors), type = 'l', lwd = 2, col = 'blue')
-lines(time, f_alpha_approx(data1[1,],1e+8,values,vectors), type = 'l', lwd = 2, 'forestgreen')
+lines(time, f_alpha_approx(data1[1,],1,values,vectors), type = 'l', lwd = 2, col = 'firebrick2')
+lines(time, f_alpha_approx(data1[1,],0.1,values,vectors), type = 'l', lwd = 2, col = 'blue')
+lines(time, f_alpha_approx(data1[1,],0.01,values,vectors), type = 'l', lwd = 2, col = 'forestgreen')
 
 # alpha-Mahalanobis distance matrix 
 
@@ -151,3 +152,6 @@ for (i in 1:n){
 x11()
 image.plot(1:n,1:n,Mahalanobis_Distance)
 
+##### Save Workspace ####
+setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
+save.image("Simulated_WP.RData")

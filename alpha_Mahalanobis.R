@@ -148,11 +148,10 @@ inner_product_K<- function(f,g,lambda,eigenft) {
 # prova dell'approssimazione con una funzione f presa dal dataset.
 f_prova <- f.data$ausxSL$data[1,]
 
-x11()
-plot(t(importMatrix(res, type = c('SL', 'sx'), position = 'au'))[1,], type = "l", ylim = c(-250, 250), lwd=2)
-lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,1e+4,lambda,eigenft), type = 'l', lwd=3, col = 'firebrick2')
-lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,1e+6,lambda,eigenft), type = 'l', lwd=3, col = 'blue')
-lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,1e+7,lambda,eigenft), type = 'l', lwd=3, col = 'forestgreen')
+plot(t(importMatrix(res, type = c('SL', 'sx'), position = 'au'))[1,], type = "l", ylim = c(-250, 250), lwd=1)
+lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,0.1,lambda,eigenft), type = 'l', lwd=1, col = 'firebrick2')
+lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,0.01,lambda,eigenft), type = 'l', lwd=1, col = 'blue')
+lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,0.0001,lambda,eigenft), type = 'l', lwd=1, col = 'forestgreen')
 
 
 #### alpha-Mahalanobis distance calculation ####
