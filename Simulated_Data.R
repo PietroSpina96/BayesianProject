@@ -94,6 +94,12 @@ for (i in 1:n){
   f.data_alpha_sim[i,] <- f_alpha_approx(data1[i,],alpha,values,vectors)
 }
 
+x11()
+plot(time, data1[1,], type = 'l', lwd = 2)
+lines(time, f_alpha_approx(data1[1,],1e+4,values,vectors), type = 'l', lwd = 2, col = 'firebrick2')
+lines(time, f_alpha_approx(data1[1,],1e+6,values,vectors), type = 'l', lwd = 2, col = 'blue')
+lines(time, f_alpha_approx(data1[1,],1e+8,values,vectors), type = 'l', lwd = 2, 'forestgreen')
+
 # alpha-Mahalanobis distance matrix 
 
 Mahalanobis_Distance <- matrix(0, nrow = n, ncol = n)
@@ -105,12 +111,4 @@ for (i in 1:n){
 
 x11()
 image.plot(1:n,1:n,Mahalanobis_Distance)
-
-
-
-
-
-
-
-
 
