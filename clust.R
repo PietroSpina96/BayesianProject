@@ -1,3 +1,6 @@
+
+# DA RIGA 184 NUOVA FUNZIONE PER CLUSTERING
+
 #### IMPORTAZIONE DATI ####
 data <- read.table('dati.csv', head=TRUE, sep=',', row.names = "id")
 data <- data[,-c(5,9,21,22,23,24,25,26)]
@@ -50,7 +53,6 @@ for(i in 1:26)
 }
 
 #### GENERO MATRICI PER OGNI CONDIZIONE TESTATA AURICOLARE ####
-
 importMatrix <- function(x, type, position)
 {
   temp <- matrix(0, nrow=length(res[[1]][[1]]))
@@ -90,10 +92,8 @@ importMatrix <- function(x, type, position)
 
 ################################################
 
-
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
 load("functional_WP.RData")
-
 
 library(fdakma)
 
@@ -121,8 +121,6 @@ C2=which(clust$labels==2)
 
 n=dim(y0)[1]
 
-
-
 #centroids
 Xk=clust$y0.centers.final
 
@@ -132,7 +130,6 @@ matplot(t(y0), type='l', xlab='x', ylab='orig.func')
 matplot(t(Xk), type='l', xlab='x', ylab='centroids')
 
 ###############################################
-
 
 #clusters without the ith unit
 clust_min_i<-function(i,x,y0){
@@ -145,8 +142,6 @@ clust_min_i<-function(i,x,y0){
   )
   return (clust_min_i)
 }
-
-
 
 D=matrix(0,n,K)
 
@@ -186,21 +181,19 @@ lambda=10^(-4)
 P=exp(-lambda*D)
 
 
+########################################################################################
+########################################################################################
+#### CLUSTERING ON SIMULATED DATA: Cmap ####
 
+#setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
+setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
 
-
-
-
-#### CLUSTERING ON SIMULATED DATA ####
-
-setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
 load('Simulated_WP.RData')
 data<-data1
 rm(data1)
 
+
 #### Loss function ####
-
-
 gibbs_loss <- function(n_clust, centroids, label ,data){
   res = rep(0,n_clust)
   
@@ -219,10 +212,16 @@ gibbs_loss <- function(n_clust, centroids, label ,data){
 
 
 #### Clustering function ####
+# The parameter eig corresponds to the output of the eigen function (list of eigenvalues and eigenvectors)
+# The function works with n_clust=2 and not generic k ( for the moment)
+# alpha is the smoothing parameter
+# toll is the tolerance for the while loop
 
 fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
   
   n <- dim(data)[1]
+  
+  # index of each centroid randomly defined through sampling
   y0.1 <- sample(1:n,1)
   y0.2 <- sample(1:n,1)
   
@@ -230,8 +229,10 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
     y0.2 <- sample(1:n,1)
   }
   
+  # vector of labels
   c_lab <- rep(0,n)
   
+  # eigenvalues and eigenfunctions for the alpha-mahalanobis function
   values <- eig$values
   vectors <- eig$vectors
   
@@ -242,6 +243,7 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
     }
   }
   
+  # i-th unit belongs to cluster1 if the distance(centroid1, i-th unit) is less than the distance(centroid2,i-th unit)
   for (i in 1:n){
     if (Mahalanobis_Distance[y0.1,i] < Mahalanobis_Distance[y0.2,i]){
       c_lab[i] <- 1
@@ -251,7 +253,8 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
   }
   
   loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = list(data[y0.1,], data[y0.2,]), label = c_lab, data = data)
-  
+
+  # update each centroid as the mean of the clusters data
   centroid1 <- colMeans(data[which(c_lab=='1'),])
   centroid2 <- colMeans(data[which(c_lab=='2'),])
   
@@ -261,7 +264,6 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
     c_lab <- rep(0,n)
     
     for (i in 1:n){
-      
       if (alpha_Mahalanobis(alpha,centroid1,data[i,],values,vectors) < alpha_Mahalanobis(alpha,centroid2,data[i,],values,vectors)){
         c_lab[i] <- 1
       }
@@ -279,15 +281,16 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
   
 }
 
+# Application on the simulated data
 k <- 2
 clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, eig = eig, toll = 1e-6, data = data)
 c_opt <- clust$label
 c1 <- clust$centroid1
 c2 <- clust$centroid2
+show(c_opt)  #label switching 
 
 
 # Theoretical optimal plot vs clustering plot
-
 data1 <- data[which(c_opt=='1'),]
 data2 <- data[which(c_opt=='2'),]
 
@@ -311,12 +314,12 @@ for (i in 1:dim(data2)[1]){
 }
 lines(time,c1,type = 'l', lwd = 4)
 lines(time,c2,type = 'l', lwd = 4)
+
 rm(data1)
 rm(data2)
 
 
 # Theoretical optimal plot vs clustering plot SMOOTHED
-
 data1 <- f.data_alpha_sim[which(c_opt=='1'),]
 data2 <- f.data_alpha_sim[which(c_opt=='2'),]
 
