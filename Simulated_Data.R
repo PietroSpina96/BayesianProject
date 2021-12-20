@@ -166,11 +166,6 @@ for (i in (n-c+1):n){
 
 
 
-##### LOSS FUNCTION ####
-
-k = 2 # Suppose 2 clusters
-
-
 ##### Save Workspace ####
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
 save.image("Simulated_WP.RData")

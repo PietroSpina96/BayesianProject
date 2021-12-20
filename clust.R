@@ -198,11 +198,29 @@ load('Simulated_WP.RData')
 data<-data1
 rm(data1)
 
+#### Loss function ####
+
+
+gibbs_loss <- function(n_clust, centroids, label ,data){
+  res = rep(0,n_clust)
+  
+  for (k in 1:n_clust){
+    for (i in 1:n){
+      if (label[i] == k){
+        sum_partial = alpha_Mahalanobis(alpha,data[i,],centroids[[k]],eig$values,eig$vectors)
+        res[k] = res[k] + sum_partial
+      }
+    }
+  }
+  
+  tot = sum(res)
+  return(tot)
+}
 
 
 #### Clustering function ####
 
-fda_clustering_mahalanobis <- function(n_clust, alpha, eig, data){
+fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
   
   n <- dim(data)[1]
   y0.1 <- sample(1:n,1)
@@ -232,32 +250,66 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, data){
       c_lab[i] <- 2
   }
   
-  loss_value <- gibbs_loss(n_clust = n_clust, centroids = list(data[y0.1,], data[y0.2,]), label = c_lab, data = data)
+  loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = list(data[y0.1,], data[y0.2,]), label = c_lab, data = data)
   
   centroid1 <- colMeans(data[which(c_lab=='1'),])
   centroid2 <- colMeans(data[which(c_lab=='2'),])
-}
-
-
-
-#### Loss function ####
-
-
-gibbs_loss <- function(n_clust, centroids, label ,data){
-  res = rep(0,n_clust)
   
-  for (k in 1:n_clust){
+  loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = list(centroid1, centroid2), label = c_lab, data = data)
+  
+  while(abs(loss_value1 - loss_value2) >= toll){
+    c_lab <- rep(0,n)
+    
     for (i in 1:n){
-      if (label[i] == k){
-        sum_partial = alpha_Mahalanobis(alpha,data[i,],centroids[[k]],eig$values,eig$vectors)
-        res[k] = res[k] + sum_partial
+      
+      if (alpha_Mahalanobis(alpha,centroid1,data[i,],values,vectors) < alpha_Mahalanobis(alpha,centroid2,data[i,],values,vectors)){
+        c_lab[i] <- 1
       }
+      else c_lab[i] <- 2
     }
+    loss_value1 <- loss_value2
+    
+    centroid1 <- colMeans(data[which(c_lab=='1'),])
+    centroid2 <- colMeans(data[which(c_lab=='2'),])
+    
+    loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = list(centroid1, centroid2), label = c_lab, data = data)
   }
   
-  tot = sum(res)
-  return(tot)
+  return(list("label" = c_lab, "centroid1" = centroid1, "centroid2" = centroid2))
+  
 }
+
+clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, eig = eig, toll = 1e-2, data = data)
+c_opt <- clust$label
+c1 <- clust$centroid1
+c2 <- clust$centroid2
+
+# Theoretical optimal plot vs clustering plot
+
+data1 <- data[which(c_opt=='1'),]
+data2 <- data[which(c_opt=='2'),]
+
+x11()
+par(mfrow = c(1,2))
+plot(time,data[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2)
+for(i in 2:(n-c)){
+  lines(time,data[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in (n-c+1):n){
+  lines(time,data[i,],type = 'l', col = 'blue', lwd = 2)
+}
+
+plot(time,data1[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2)
+for (i in 2:dim(data1)[1]){
+  lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in 1:dim(data2)[1]){
+  lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
+}
+lines(time,c1,type = 'l', lwd = 4)
+lines(time,c2,type = 'l', lwd = 4)
+
+
 
 
 
