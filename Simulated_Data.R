@@ -13,8 +13,8 @@ load("Simulated_WP.RData")
 
 #### DATA SIMULATION - MODEL 1 ####
 
-n <- 26
-c <- 10
+n <- 100
+c <- 20
 t_points <- 200
 
 

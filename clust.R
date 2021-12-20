@@ -279,10 +279,12 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
   
 }
 
-clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, eig = eig, toll = 1e-2, data = data)
+k <- 2
+clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, eig = eig, toll = 1e-6, data = data)
 c_opt <- clust$label
 c1 <- clust$centroid1
 c2 <- clust$centroid2
+
 
 # Theoretical optimal plot vs clustering plot
 
@@ -291,7 +293,8 @@ data2 <- data[which(c_opt=='2'),]
 
 x11()
 par(mfrow = c(1,2))
-plot(time,data[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2)
+
+plot(time,data[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2, main = "Main and contaminated processes")
 for(i in 2:(n-c)){
   lines(time,data[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
@@ -299,7 +302,7 @@ for (i in (n-c+1):n){
   lines(time,data[i,],type = 'l', col = 'blue', lwd = 2)
 }
 
-plot(time,data1[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2)
+plot(time,data1[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2, main = "Clustered data")
 for (i in 2:dim(data1)[1]){
   lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
@@ -308,9 +311,38 @@ for (i in 1:dim(data2)[1]){
 }
 lines(time,c1,type = 'l', lwd = 4)
 lines(time,c2,type = 'l', lwd = 4)
+rm(data1)
+rm(data2)
 
 
+# Theoretical optimal plot vs clustering plot SMOOTHED
 
+data1 <- f.data_alpha_sim[which(c_opt=='1'),]
+data2 <- f.data_alpha_sim[which(c_opt=='2'),]
+
+x11()
+par(mfrow = c(1,2))
+
+plot(time,f.data_alpha_sim[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2, main = "Smooth processes")
+for(i in 2:(n-c)){
+  lines(time,f.data_alpha_sim[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in (n-c+1):n){
+  lines(time,f.data_alpha_sim[i,],type = 'l', col = 'blue', lwd = 2)
+}
+
+plot(time,data1[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2, main = "Clustered smoothed data")
+for (i in 2:dim(data1)[1]){
+  lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in 1:dim(data2)[1]){
+  lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
+}
+lines(time,f_alpha_approx(c1,alpha,eig$values,eig$vectors),type = 'l', lwd = 4)
+lines(time,f_alpha_approx(c2,alpha,eig$values,eig$vectors),type = 'l', lwd = 4)
+
+rm(data1)
+rm(data2)
 
 
 
