@@ -201,20 +201,41 @@ rm(data1)
 
 
 #### Clustering function ####
-y0.1 <- sample(1:n,1)
-y0.2 <- sample(1:n,1)
-while (y0.2 == y0.1) {
+
+fda_clustering_mahalanobis <- function(n_clust, alpha, eig, data){
+  
+  n <- dim(data)[1]
+  y0.1 <- sample(1:n,1)
   y0.2 <- sample(1:n,1)
-}
-
-c_lab <- rep(0,n)
-
-for (i in 1:n){
-  if (Mahalanobis_Distance[y0.1,i] < Mahalanobis_Distance[y0.2,i]){
-    c_lab[i] <- 1
+  
+  while (y0.2 == y0.1) {
+    y0.2 <- sample(1:n,1)
   }
-  if (Mahalanobis_Distance[y0.1,i] > Mahalanobis_Distance[y0.2,i])
-    c_lab[i] <- 2
+  
+  c_lab <- rep(0,n)
+  
+  values <- eig$values
+  vectors <- eig$vectors
+  
+  Mahalanobis_Distance <- matrix(0, nrow = n, ncol = n)
+  for (i in 1:n){
+    for (j in 1:n){
+      Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,data[i,],data[j,],values,vectors)
+    }
+  }
+  
+  for (i in 1:n){
+    if (Mahalanobis_Distance[y0.1,i] < Mahalanobis_Distance[y0.2,i]){
+      c_lab[i] <- 1
+    }
+    if (Mahalanobis_Distance[y0.1,i] >= Mahalanobis_Distance[y0.2,i])
+      c_lab[i] <- 2
+  }
+  
+  loss_value <- gibbs_loss(n_clust = n_clust, centroids = list(data[y0.1,], data[y0.2,]), label = c_lab, data = data)
+  
+  centroid1 <- colMeans(data[which(c_lab=='1'),])
+  centroid2 <- colMeans(data[which(c_lab=='2'),])
 }
 
 
@@ -222,10 +243,21 @@ for (i in 1:n){
 #### Loss function ####
 
 
-gibbs_loss <- function(n_clust, centroid, label ,data){
+gibbs_loss <- function(n_clust, centroids, label ,data){
+  res = rep(0,n_clust)
   
+  for (k in 1:n_clust){
+    for (i in 1:n){
+      if (label[i] == k){
+        sum_partial = alpha_Mahalanobis(alpha,data[i,],centroids[[k]],eig$values,eig$vectors)
+        res[k] = res[k] + sum_partial
+      }
+    }
+  }
+  
+  tot = sum(res)
+  return(tot)
 }
-
 
 
 
