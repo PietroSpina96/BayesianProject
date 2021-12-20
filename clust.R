@@ -91,6 +91,8 @@ importMatrix <- function(x, type, position)
 ################################################
 
 
+setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
+load("functional_WP.RData")
 
 
 library(fdakma)
@@ -182,3 +184,51 @@ for (i in 1:n){
 D
 lambda=10^(-4)
 P=exp(-lambda*D)
+
+
+
+
+
+
+
+#### CLUSTERING ON SIMULATED DATA ####
+
+setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
+load('Simulated_WP.RData')
+data<-data1
+rm(data1)
+
+
+
+#### Clustering function ####
+y0.1 <- sample(1:n,1)
+y0.2 <- sample(1:n,1)
+while (y0.2 == y0.1) {
+  y0.2 <- sample(1:n,1)
+}
+
+c_lab <- rep(0,n)
+
+for (i in 1:n){
+  if (Mahalanobis_Distance[y0.1,i] < Mahalanobis_Distance[y0.2,i]){
+    c_lab[i] <- 1
+  }
+  if (Mahalanobis_Distance[y0.1,i] > Mahalanobis_Distance[y0.2,i])
+    c_lab[i] <- 2
+}
+
+
+
+#### Loss function ####
+
+
+gibbs_loss <- function(n_clust, centroid, label ,data){
+  
+}
+
+
+
+
+
+
+

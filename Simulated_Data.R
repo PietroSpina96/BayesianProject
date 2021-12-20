@@ -9,6 +9,7 @@ library(roahd)
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
 #setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject")
 
+load("Simulated_WP.RData")
 
 #### DATA SIMULATION - MODEL 1 ####
 
@@ -151,6 +152,24 @@ for (i in 1:n){
 
 x11()
 image.plot(1:n,1:n,Mahalanobis_Distance)
+
+
+x11()
+plot(time,f.data_alpha_sim[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2)
+for(i in 2:(n-c)){
+  lines(time,f.data_alpha_sim[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in (n-c+1):n){
+  lines(time,f.data_alpha_sim[i,],type = 'l', col = 'blue', lwd = 2)
+}
+
+
+
+
+##### LOSS FUNCTION ####
+
+k = 2 # Suppose 2 clusters
+
 
 ##### Save Workspace ####
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
