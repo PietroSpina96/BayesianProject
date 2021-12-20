@@ -3,8 +3,8 @@
 #### CLUSTERING ON SIMULATED DATA: Cmap ####
 
 
-#setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
-setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
+setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
+#setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
 
 load('Simulated_WP.RData')
 data<-data1
@@ -76,7 +76,7 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
   Maha_dis <- matrix(0,nrow=n, ncol=n_clust)
   for (i in 1:n){
     for (k in 1:n_clust) {
-      Maha_dis[i,k] <- Mahalanobis_Distance[y0[k],i]
+      Maha_dis[i,k] <- Mahalanobis_Distance[i,y0[k]]
     }
     index <- which.min(Maha_dis[i,])
     c_lab[i] <- index
@@ -84,15 +84,17 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
   
   # define the matrix of the centroids (random centroids)
   centroids_random <- matrix(0,nrow = n_clust,ncol = dim(data)[2])
-  for (k in 1:n_clust)
+  for (k in 1:n_clust){
     centroids_random[k,] <- data[y0[k],]
+  }
   
   loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = centroids_random, label = c_lab, data = data)
   
   # update each centroid as the mean of the clusters data
   centroids_mean<-matrix(0,nrow = n_clust, ncol = dim(data)[2])
-  for (k in 1:n_clust)
-    centroids_mean[k,] <- colMeans(data[which(c_lab=='k'),])
+  for (k in 1:n_clust){
+    centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
+  }
   
   loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, data = data)
   
@@ -111,7 +113,7 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
     loss_value1 <- loss_value2
     
     for (k in 1:n_clust){
-      centroids_mean[k,] <- colMeans(data[which(c_lab=='k'),])
+      centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
     }
       
     loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, data = data)
@@ -127,12 +129,15 @@ clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, eig = eig, toll 
 c_opt <- clust$label
 c1 <- clust$centroids[1,]
 c2 <- clust$centroids[2,]
+#c3 <- clust$centroids[3,]
+
 show(c_opt)  #label switching 
 
 
 # Theoretical optimal plot vs clustering plot
 data1 <- data[which(c_opt=='1'),]
 data2 <- data[which(c_opt=='2'),]
+#data3 <- data[which(c_opt=='3'),]
 
 x11()
 par(mfrow = c(1,2))
@@ -152,11 +157,16 @@ for (i in 2:dim(data1)[1]){
 for (i in 1:dim(data2)[1]){
   lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
 }
+#for (i in 1:dim(data3)[1]){
+  #lines(time,data3[i,],type = 'l', col = 'forestgreen',lwd = 2)
+#}
 lines(time,c1,type = 'l', lwd = 4)
 lines(time,c2,type = 'l', lwd = 4)
+#lines(time,c3,type = 'l', lwd = 4)
 
 rm(data1)
 rm(data2)
+#rm(data3)
 
 
 # Theoretical optimal plot vs clustering plot SMOOTHED
