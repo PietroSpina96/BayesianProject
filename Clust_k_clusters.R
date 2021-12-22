@@ -55,6 +55,7 @@ gibbs_loss <- function(n_clust, centroids, label ,data){
 # The function works with n_clust=k
 # alpha is the smoothing parameter
 # toll is the tolerance for the while loop
+# eps is the tolerance for the max-norm for the 'collapse' version. 
 
 fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll, eps, data){
   
@@ -139,35 +140,49 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll, eps, data){
     loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, data = data)
   } 
   
-  # controllo per unione di clusters. ci vorrebbe un while?
-  for (k in 1:(n_clust-1)){
-    for (j in (k+1):n_clust){
-      
-      diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
-      dis_centroids <- norm(as.matrix(diff_centroids),type = '2')
-      # dis_centroids <- alpha_Mahalanobis(alpha,c1,c3,)
-      
-      if (dis_centroids < eps){
-        indexes <- which(c_lab==j)
-        c_lab[indexes] <- k
+  # union of similar clusters 
+  flag <- 0
+  while (flag == 0) {
+    
+    for (k in 1:(n_clust-1)){
+      for (j in (k+1):n_clust){
+        
+        diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
+        dis_centroids <- norm(as.matrix(diff_centroids),type = 'i')
+        
+        if (dis_centroids <= eps){
+          indexes <- which(c_lab==j)
+          c_lab[indexes] <- k
+        }
       }
     }
-  }
-  
-  # convert the label vector to observe the levels and then reconvert to return a vector
-  c_lab <- as.factor(c_lab)
-  
-  labels <- levels(c_lab)
-  k_new <- length(labels)
-  
-  c_lab<-as.numeric(c_lab)
-  
-  if (k_new < n_clust){
-    centroids_mean <- matrix(0, nrow=k_new , ncol=dim(data)[2] )
     
+    # convert the label vector to observe the levels and then reconvert to return a vector
+    c_lab <- as.factor(c_lab)
+    labels <- levels(c_lab)
+    k_new <- length(labels)
+    c_lab<-as.numeric(c_lab)
+    
+    centroids_mean_post <- matrix(0, nrow=k_new , ncol=dim(data)[2] )
     for (k in 1:k_new) {
-      centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
+      centroids_mean_post[k,] <- colMeans(data[which(c_lab==k),])
     }
+    
+    if (k_new == n_clust) {
+      flag_matr <- matrix(0, nrow = k_new, ncol = dim(data)[2])
+      
+      for (k in 1:k_new){
+        for (i in 1:dim(data)[2]) {
+          if (centroids_mean_post[k,i] == centroids_mean[k,i])
+            flag_matr[k,i] <- 1
+        }
+      }
+      if (sum(flag_matr) == k_new*(dim(data)[2]))
+        flag <-1
+    }
+    n_clust <- k_new
+    centroids_mean <- centroids_mean_post
+    
   }
   
   return(list("label" = c_lab, "centroids" = centroids_mean))
@@ -177,7 +192,7 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll, eps, data){
 ################################################################################
 # Application on the simulated data
 
-# Simulated data plot
+# Simulated data plot 
 x11()
 plot(time,data[1,],type = 'l', ylim = c(-3.5,7.5), col = 'firebrick2', lwd = 2)
 for(i in 2:(n-c)){
@@ -189,9 +204,9 @@ for (i in (n-c+1):n){
 title('Simulated data')
 
 k <- 3
-#eps <- 10       # model 1
-#eps <- 20         # model 2
-eps <- 10        # model 3
+#eps <- 1       # model 1
+eps <- 1.5         # model 2
+#eps <- 1.3        # model 3
   
 clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, eig = eig, toll = 1e-6, eps = eps , data = data)
 c_opt <- clust$label
@@ -200,21 +215,24 @@ show(c_opt)  #label switching
 c1 <- clust$centroids[1,]
 c2 <- clust$centroids[2,]
 c3 <- clust$centroids[3,]
+#c4 <- clust$centroids[4,]
 
 
-# Check
+# # Check
 # diff_centroids <- c1 - c2
-# dis_centroids <- norm(as.matrix(diff_centroids),type='2')
+# diff_centroids <- c3 - c4
+# diff_centroids <- c1 - c3
+# dis_centroids <- norm(as.matrix(diff_centroids),type='i')
 # show(dis_centroids)
 
 # Theoretical optimal plot vs clustering plot
 data1 <- data[which(c_opt=='1'),]
 data2 <- data[which(c_opt=='2'),]
 data3 <- data[which(c_opt=='3'),]
+#data4 <- data[which(c_opt=='4'),]
 
 x11()
 par(mfrow = c(1,2))
-
 plot(time,data[1,],type = 'l', ylim = c(-3.5,9), col = 'firebrick2', lwd = 2, main = "Main and contaminated processes")
 for(i in 2:(n-c)){
   lines(time,data[i,],type = 'l', col = 'firebrick2',lwd = 2)
@@ -230,16 +248,22 @@ for (i in 2:dim(data1)[1]){
 for (i in 1:dim(data2)[1]){
   lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
 }
-for (i in 1:dim(data3)[1]){
-  lines(time,data3[i,],type = 'l', col = 'forestgreen',lwd = 2)
-}
+# for (i in 1:dim(data3)[1]){
+#   lines(time,data3[i,],type = 'l', col = 'forestgreen',lwd = 2)
+# }
+# for (i in 1:dim(data4)[1]){
+#   lines(time,data4[i,],type = 'l', col = 'purple',lwd = 2)
+# }
 lines(time,c1,type = 'l', lwd = 3)
 lines(time,c2,type = 'l', lwd = 3)
-lines(time,c3,type = 'l', lwd = 3)
+# lines(time,c3,type = 'l', lwd = 3)
+# lines(time,c4,type = 'l', lwd = 3)
 
 rm(data1)
 rm(data2)
-rm(data3)
+# rm(data3)
+# rm(data4)
+
 
 ##############
 # Theoretical optimal plot vs clustering plot SMOOTHED
