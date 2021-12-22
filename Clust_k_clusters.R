@@ -207,7 +207,11 @@ k <- 3
 #eps <- 1       # model 1
 eps <- 1.5         # model 2
 #eps <- 1.3        # model 3
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> 5eb24240ac694d43fa5d6b1e01903ac4327a2d7b
 clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, eig = eig, toll = 1e-6, eps = eps , data = data)
 c_opt <- clust$label
 show(c_opt)  #label switching 
@@ -383,4 +387,16 @@ rm(data2)
 #   
 #   return(list("label" = c_lab, "centroids" = centroids_mean))
 #   
+<<<<<<< HEAD
 # }
+=======
+# }
+
+
+
+
+
+
+
+
+>>>>>>> 5eb24240ac694d43fa5d6b1e01903ac4327a2d7b
