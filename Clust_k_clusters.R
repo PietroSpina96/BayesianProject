@@ -10,15 +10,24 @@ load('Simulated_WP.RData')
 
 # Choose the model for the simulation:
 # simulated data - model 1
-data<-data1
+data <- data1
+eig <- eig_1
 rm(data1)
+rm(data2)
+rm(data3)
 
 # simulated data - model 2
-data<-data2
+data <- data2
+eig <- eig_2
+rm(data1)
 rm(data2)
+rm(data3)
 
 # simulated data - model 3
-data<-data3
+data <- data3
+eig <- eig_3
+rm(data1)
+rm(data2)
 rm(data3)
 
 
@@ -167,10 +176,22 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll, eps, data){
 
 ################################################################################
 # Application on the simulated data
+
+# Simulated data plot
+x11()
+plot(time,data[1,],type = 'l', ylim = c(-3.5,7.5), col = 'firebrick2', lwd = 2)
+for(i in 2:(n-c)){
+  lines(time,data[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in (n-c+1):n){
+  lines(time,data[i,],type = 'l', col = 'blue', lwd = 2)
+}
+title('Simulated data')
+
 k <- 3
 #eps <- 10       # model 1
-eps <- 25         # model 2
-#eps <- 25        # model 3
+#eps <- 20         # model 2
+eps <- 10        # model 3
   
 clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, eig = eig, toll = 1e-6, eps = eps , data = data)
 c_opt <- clust$label
@@ -182,7 +203,7 @@ c3 <- clust$centroids[3,]
 
 
 # Check
-# diff_centroids <- c1 -c3
+# diff_centroids <- c1 - c2
 # dis_centroids <- norm(as.matrix(diff_centroids),type='2')
 # show(dis_centroids)
 
@@ -194,7 +215,7 @@ data3 <- data[which(c_opt=='3'),]
 x11()
 par(mfrow = c(1,2))
 
-plot(time,data[1,],type = 'l', ylim = c(-3,9), col = 'firebrick2', lwd = 2, main = "Main and contaminated processes")
+plot(time,data[1,],type = 'l', ylim = c(-3.5,9), col = 'firebrick2', lwd = 2, main = "Main and contaminated processes")
 for(i in 2:(n-c)){
   lines(time,data[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
@@ -202,16 +223,16 @@ for (i in (n-c+1):n){
   lines(time,data[i,],type = 'l', col = 'blue', lwd = 2)
 }
 
-plot(time,data1[1,],type = 'l', ylim = c(-3,9), col = 'firebrick2', lwd = 2, main = "Clustered data")
+plot(time,data1[1,],type = 'l', ylim = c(-3.5,9), col = 'firebrick2', lwd = 2, main = "Clustered data")
 for (i in 2:dim(data1)[1]){
   lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
 for (i in 1:dim(data2)[1]){
   lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
 }
- for (i in 1:dim(data3)[1]){
-   lines(time,data3[i,],type = 'l', col = 'forestgreen',lwd = 2)
- }
+for (i in 1:dim(data3)[1]){
+  lines(time,data3[i,],type = 'l', col = 'forestgreen',lwd = 2)
+}
 lines(time,c1,type = 'l', lwd = 3)
 lines(time,c2,type = 'l', lwd = 3)
 lines(time,c3,type = 'l', lwd = 3)
