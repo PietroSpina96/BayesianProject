@@ -48,6 +48,8 @@ for (i in 1:t_points){
   }
 }
 
+
+
 # Plot of the covariance matrix
 time<-seq(1,t_points)
 x11()
