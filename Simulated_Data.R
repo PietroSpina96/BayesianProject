@@ -334,7 +334,7 @@ for (i in 1:n){
 
 # Simulated data plot
 x11()
-plot(time,data2[1,],type = 'l', ylim = c(-3,9), col = 'firebrick2', lwd = 2)
+plot(time,data2[1,],type = 'l', ylim = c(-3.5,9), col = 'firebrick2', lwd = 2)
 for(i in 2:(n-c)){
   lines(time,data2[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
@@ -374,7 +374,7 @@ x11()
 image.plot(1:n,1:n,Mahalanobis_Distance_2)
 
 x11()
-plot(time,f.data_alpha_sim_2[1,],type = 'l', ylim = c(-3,9), col = 'firebrick2', lwd = 2)
+plot(time,f.data_alpha_sim_2[1,],type = 'l', ylim = c(-3.5,9), col = 'firebrick2', lwd = 2)
 for(i in 2:(n-c)){
   lines(time,f.data_alpha_sim_2[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
