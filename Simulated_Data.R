@@ -39,34 +39,34 @@ for (i in 1:t_points){
 # Create simulated data
 set.seed(1234)
 m <- rep(0,t_points)
-random_process <- generate_gauss_fdata(n, m, Cov = K_1)
+random_process_1 <- generate_gauss_fdata(n, m, Cov = K_1)
 
-main_proc <- function(t,points){
+main_proc_1 <- function(t,points){
   X <- rep(0,points)
   X[t] <- 30 * t * (1-t)^(3/2)
 }
 
-cont_proc <- function(t,points){
+cont_proc_1 <- function(t,points){
   X <- rep(0,points)
   X[t] <- 30 * t^(3/2) * (1-t)
 }
 
 for (i in 1:(n-c)){
   for (j in 1:t_points){
-    data[i,j] <- main_proc(time[j],t_points)
+    data[i,j] <- main_proc_1(time[j],t_points)
   }
 }
 
 for (i in (n-c+1):n){
   for (j in 1:t_points){
-    data[i,j] <- cont_proc(time[j],t_points)
+    data[i,j] <- cont_proc_1(time[j],t_points)
   }
 }
 
 data1 <- matrix(0, nrow = n, ncol = t_points)
 for (i in 1:n){
   for (j in 1:t_points){
-    data1[i,j] <- data[i,j] + random_process[i,j]
+    data1[i,j] <- data[i,j] + random_process_1[i,j]
   }
 }
 
@@ -125,40 +125,40 @@ scalar_prod<- function (f1,f2) {
 
 
 # Smoothed data
-eig <- eigen(K_1)
-values <- eig$values
-vectors <- eig$vectors
+eig_1 <- eigen(K_1)
+values_1 <- eig_1$values
+vectors_1 <- eig_1$vectors
 
 alpha <- 0.1
-f.data_alpha_sim <- matrix(0, nrow = n, ncol = t_points)
+f.data_alpha_sim_1 <- matrix(0, nrow = n, ncol = t_points)
 for (i in 1:n){
-  f.data_alpha_sim[i,] <- f_alpha_approx(data1[i,],alpha,values,vectors)
+  f.data_alpha_sim_1[i,] <- f_alpha_approx(data1[i,],alpha,values_1,vectors_1)
 }
 
 x11()
 plot(time, data1[1,], type = 'l', lwd = 2)
-lines(time, f_alpha_approx(data1[1,],1,values,vectors), type = 'l', lwd = 2, col = 'firebrick2')
-lines(time, f_alpha_approx(data1[1,],0.1,values,vectors), type = 'l', lwd = 2, col = 'blue')
-lines(time, f_alpha_approx(data1[1,],0.01,values,vectors), type = 'l', lwd = 2, col = 'forestgreen')
+lines(time, f_alpha_approx(data1[1,],1,values_1,vectors_1), type = 'l', lwd = 2, col = 'firebrick2')
+lines(time, f_alpha_approx(data1[1,],0.1,values_1,vectors_1), type = 'l', lwd = 2, col = 'blue')
+lines(time, f_alpha_approx(data1[1,],0.01,values_1,vectors_1), type = 'l', lwd = 2, col = 'forestgreen')
 
 # alpha-Mahalanobis distance matrix 
-Mahalanobis_Distance <- matrix(0, nrow = n, ncol = n)
+Mahalanobis_Distance_1 <- matrix(0, nrow = n, ncol = n)
 for (i in 1:n){
   for (j in 1:n){
-    Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,data1[i,],data1[j,],values,vectors)
+    Mahalanobis_Distance_1[i,j] <- alpha_Mahalanobis(alpha,data1[i,],data1[j,],values_1,vectors_1)
   }
 }
 
 x11()
-image.plot(1:n,1:n,Mahalanobis_Distance)
+image.plot(1:n,1:n,Mahalanobis_Distance_1)
 
 x11()
-plot(time,f.data_alpha_sim[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2)
+plot(time,f.data_alpha_sim_1[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2)
 for(i in 2:(n-c)){
-  lines(time,f.data_alpha_sim[i,],type = 'l', col = 'firebrick2',lwd = 2)
+  lines(time,f.data_alpha_sim_1[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
 for (i in (n-c+1):n){
-  lines(time,f.data_alpha_sim[i,],type = 'l', col = 'blue', lwd = 2)
+  lines(time,f.data_alpha_sim_1[i,],type = 'l', col = 'blue', lwd = 2)
 }
 
 ################################################################################
@@ -186,10 +186,10 @@ for (i in 1:t_points){
 }
 
 # Create simulated data
-set.seed(1234)
+set.seed(123)
 m <- rep(0,t_points)   # mean
 random_process_3 <- generate_gauss_fdata(n, m, Cov = K_3)
-mu <- runif (1, min = 0.25, max = 0.75)
+mu_3 <- runif (1, min = 0.25, max = 0.75)
 
 main_proc_3 <- function(t,points){
   X <- rep(0,points)
@@ -209,7 +209,7 @@ for (i in 1:(n-c)){
 
 for (i in (n-c+1):n){
   for (j in 1:t_points){
-    data[i,j] <- cont_proc_3(time[j],mu = mu,t_points)
+    data[i,j] <- cont_proc_3(time[j],mu = mu_3,t_points)
   }
 }
 
@@ -234,8 +234,8 @@ title('Simulated data - model 3')
 ##########
 # Smoothed data
 eig_3 <- eigen(K_3)
-values_3 <- eig$values
-vectors_3 <- eig$vectors
+values_3 <- eig_3$values
+vectors_3 <- eig_3$vectors
 
 alpha <- 0.1
 f.data_alpha_sim_3<- matrix(0, nrow = n, ncol = t_points)
@@ -245,9 +245,9 @@ for (i in 1:n){
 
 x11()
 plot(time, data3[1,], type = 'l', lwd = 2)
-lines(time, f_alpha_approx(data3[1,],1,values,vectors), type = 'l', lwd = 2, col = 'firebrick2')
-lines(time, f_alpha_approx(data3[1,],0.1,values,vectors), type = 'l', lwd = 2, col = 'blue')
-lines(time, f_alpha_approx(data3[1,],0.01,values,vectors), type = 'l', lwd = 2, col = 'forestgreen')
+lines(time, f_alpha_approx(data3[1,],1,values_3,vectors_3), type = 'l', lwd = 2, col = 'firebrick2')
+lines(time, f_alpha_approx(data3[1,],0.1,values_3,vectors_3), type = 'l', lwd = 2, col = 'blue')
+lines(time, f_alpha_approx(data3[1,],0.01,values_3,vectors_3), type = 'l', lwd = 2, col = 'forestgreen')
 title ('Curves comparison for alpha: best alpha=0.1')
 
 # alpha-Mahalanobis distance matrix 
@@ -297,11 +297,11 @@ for (i in 1:t_points){
 }
 
 # Create simulated data
-set.seed(1234)
+set.seed(154)
 m <- rep(0,t_points)   # mean
 random_process_2 <- generate_gauss_fdata(n, m, Cov = K_2)
-mu <- runif (1, min = 0.25, max = 0.75)
-u <- rbinom(1, 1, prob = 0.5)
+mu_2 <- runif (1, min = 0.25, max = 0.75)
+u_2 <- rbinom(1, 1, prob = 0.5)
 
 main_proc_2 <- function(t,points){
   X <- rep(0,points)
@@ -321,7 +321,7 @@ for (i in 1:(n-c)){
 
 for (i in (n-c+1):n){
   for (j in 1:t_points){
-    data[i,j] <- cont_proc_2(time[j],mu = mu,u = u,t_points)
+    data[i,j] <- cont_proc_2(time[j],mu = mu_2,u = u_2,t_points)
   }
 }
 
@@ -346,8 +346,8 @@ title('Simulated data - model 2')
 ##########
 # Smoothed data
 eig_2 <- eigen(K_2)
-values_2 <- eig$values
-vectors_2 <- eig$vectors
+values_2 <- eig_2$values
+vectors_2 <- eig_2$vectors
 
 alpha <- 0.1
 f.data_alpha_sim_2<- matrix(0, nrow = n, ncol = t_points)
@@ -357,9 +357,9 @@ for (i in 1:n){
 
 x11()
 plot(time, data2[1,], type = 'l', lwd = 2)
-lines(time, f_alpha_approx(data2[1,],1,values,vectors), type = 'l', lwd = 2, col = 'firebrick2')
-lines(time, f_alpha_approx(data2[1,],0.1,values,vectors), type = 'l', lwd = 2, col = 'blue')
-lines(time, f_alpha_approx(data2[1,],0.01,values,vectors), type = 'l', lwd = 2, col = 'forestgreen')
+lines(time, f_alpha_approx(data2[1,],1,values_2,vectors_2), type = 'l', lwd = 2, col = 'firebrick2')
+lines(time, f_alpha_approx(data2[1,],0.1,values_2,vectors_2), type = 'l', lwd = 2, col = 'blue')
+lines(time, f_alpha_approx(data2[1,],0.01,values_2,vectors_2), type = 'l', lwd = 2, col = 'forestgreen')
 title ('Curves comparison for alpha: best alpha=0.1')
 
 # alpha-Mahalanobis distance matrix 
