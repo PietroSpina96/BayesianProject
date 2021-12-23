@@ -380,28 +380,126 @@ title('Smoothed simulated data - model 3')
 
 
 #################### DATA SIMULATION - MODEL 4 #################################
+# The following model is taken from the fda library 
+
+data4 <- t(CanadianWeather$dailyAv[,,1])
+n <- dim(data4)[1]
+t_points<-365
+time<- 1:365
+
+# Plot of the data
+x11()
+matplot(t(data4),type='l',xlab='Day',ylab='Temperature')
+
+x11()
+plot(time,data4[1,],ylim=c(-40,30))
+for (i in 2:dim(data4)[1])
+  lines(time,data4[i,])
+
+# Covariance matrix and plot
+K_4 <- cov(data4)
+
+x11()
+image.plot(time,time,K_4,main='Covariance matrix')
+
+# Eigenvalues and eigenfunctions of the covariance matrix
+eig_4 <- eigen(K_4)
+values_4 <- eig_4$values
+vectors_4 <- eig_4$vectors
+
+x11()
+plot(time, data4[1,], type = 'l', lwd = 2)
+lines(time, f_alpha_approx(data4[1,],1,values_4,vectors_4), type = 'l', lwd = 2, col = 'firebrick2')
+lines(time, f_alpha_approx(data4[1,],10,values_4,vectors_4), type = 'l', lwd = 2, col = 'blue')
+lines(time, f_alpha_approx(data4[1,],100,values_4,vectors_4), type = 'l', lwd = 2, col = 'forestgreen')
+title ('Curves comparison for alpha: best alpha=10')
+
+
+alpha <- 10
+f.data_alpha_sim_4<- matrix(0, nrow = n, ncol = t_points)
+for (i in 1:n){
+  f.data_alpha_sim_4[i,] <- f_alpha_approx(data4[i,],alpha,values_4,vectors_4)
+}
+
+# alpha-Mahalanobis distance matrix 
+Mahalanobis_Distance_4 <- matrix(0, nrow = n, ncol = n)
+for (i in 1:n){
+  for (j in 1:n){
+    Mahalanobis_Distance_4[i,j] <- alpha_Mahalanobis(alpha,data4[i,],data4[j,],values_4,vectors_4)
+  }
+}
+
+x11()
+image.plot(1:n,1:n,Mahalanobis_Distance_4)
+
+x11()
+plot(time,f.data_alpha_sim_4[1,],type = 'l', ylim = c(-40,30), col = 'firebrick2', lwd = 2)
+for(i in 2:n)
+  lines(time,f.data_alpha_sim_4[i,],type = 'l', col = 'firebrick2',lwd = 2)
+title('Smoothed simulated data - model 4')
 
 
 
+################ DATA SIMULATION - MODEL 5 #####################################
+# The following model is taken from Secchi's TDE (19.07.2019). There are three clusters
+
+data5 <- read.table('data_model5.txt',header=TRUE)
+data5 <- data5[,1:365]
+data5 <- as.matrix(data5)
+t_points <- 365
+time <- 1:365
+n <- dim(data5)[1]
+
+x11()
+matplot(t(data5),type='l',main='Data5',xlab='time',ylab='Values',ylim=range(data5))
+
+x11()
+plot(time,data5[1,],ylim=c(9,28),type='l')
+for (i in 2:n)
+  lines(time,data5[i,])
+
+# Covariance matrix and plot
+K_5 <- cov(data5)
+
+x11()
+image.plot(time,time,K_5,main='Covariance matrix')
+
+# Eigenvalues and eigenfunctions of the covariance matrix
+eig_5 <- eigen(K_5)
+values_5 <- eig_5$values
+vectors_5 <- eig_5$vectors
+
+x11()
+plot(time, data5[1,], type = 'l', lwd = 2)
+lines(time, f_alpha_approx(data5[1,],1,values_5,vectors_5), type = 'l', lwd = 2, col = 'firebrick2')
+lines(time, f_alpha_approx(data5[1,],0.1,values_5,vectors_5), type = 'l', lwd = 2, col = 'blue')
+lines(time, f_alpha_approx(data5[1,],0.01,values_5,vectors_5), type = 'l', lwd = 2, col = 'forestgreen')
+title ('Curves comparison for alpha: best alpha=10')
 
 
+alpha <- 10
+f.data_alpha_sim_5<- matrix(0, nrow = n, ncol = t_points)
+for (i in 1:n){
+  f.data_alpha_sim_5[i,] <- f_alpha_approx(data5[i,],alpha,values_5,vectors_5)
+}
 
+# alpha-Mahalanobis distance matrix 
+Mahalanobis_Distance_5 <- matrix(0, nrow = n, ncol = n)
+for (i in 1:n){
+  for (j in 1:n){
+    Mahalanobis_Distance_5[i,j] <- alpha_Mahalanobis(alpha,data5[i,],data5[j,],values_5,vectors_5)
+  }
+}
 
+x11()
+image.plot(1:n,1:n,Mahalanobis_Distance_5)
 
+x11()
+plot(time,f.data_alpha_sim_5[1,],type = 'l', ylim = c(-40,30), col = 'firebrick2', lwd = 2)
+for(i in 2:n)
+  lines(time,f.data_alpha_sim_5[i,],type = 'l', col = 'firebrick2',lwd = 2)
+title('Smoothed simulated data - model 5')
 
-
-
-
-
-
-
-
-
-
-
-
-#### Remove data ####
-rm(data)
 
 ##### Save Workspace ####
 #setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
