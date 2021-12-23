@@ -10,23 +10,32 @@ load('Simulated_WP.RData')
 # simulated data - model 1
 data <- data1
 eig <- eig_1
-rm(data1)
-rm(data2)
-rm(data3)
+rm(list=c('data1','data2','data3','data4','data5'))
+rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5'))
 
 # simulated data - model 2
 data <- data2
 eig <- eig_2
-rm(data1)
-rm(data2)
-rm(data3)
+rm(list=c('data1','data2','data3','data4','data5'))
+rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5'))
 
 # simulated data - model 3
 data <- data3
 eig <- eig_3
-rm(data1)
-rm(data2)
-rm(data3)
+rm(list=c('data1','data2','data3','data4','data5'))
+rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5'))
+
+# simulated data - model 4
+data <- data4
+eig <- eig_4
+rm(list=c('data1','data2','data3','data4','data5'))
+rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5'))
+
+# simulated data - model 5
+data <- data5
+eig <- eig_5
+rm(list=c('data1','data2','data3','data4','data5'))
+rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5'))
 
 
 #### Loss function ####
@@ -192,7 +201,7 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll, eps, data){
 
 
 ##### Application on the simulated data ####
-# Simulated  data plot 
+# Simulated  data plot for model 1,2,3
 x11()
 plot(time,data[1,],type = 'l', ylim = c(-3.5,7.5), col = 'firebrick2', lwd = 2)
 for(i in 2:(n-c)){
@@ -203,10 +212,15 @@ for (i in (n-c+1):n){
 }
 title('Simulated data')
 
+# Simulated  data plot for model 4,5
+x11()
+matplot(t(data),type='l',main='Data',xlab='time',ylab='Values',ylim=range(data))
+
 
 k <- 2
+alpha <- 10
 #eps <- 1       # model 1
-#eps <- 0        # model 2
+eps <- 0        # model 2
 #eps <- 1.3        # model 3
 
 clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, eig = eig, toll = 1e-10, eps = 0, data = data)
