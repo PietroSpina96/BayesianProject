@@ -1,7 +1,7 @@
 #### CLUSTERING ON SIMULATED DATA: Cmap ####
 
-#setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject") #Pietro
-setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
+setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject") #Pietro
+#setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
 
 load('Simulated_WP.RData')
 
@@ -119,6 +119,7 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll, eps, data){
 
   while(abs(loss_value1 - loss_value2) >= toll){
     c_lab <- rep(0,n)
+    
 
     Maha_dis_k <- matrix(0,nrow=n, ncol=n_clust)
     for (i in 1:n){
@@ -139,6 +140,9 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll, eps, data){
 
   # union of similar clusters
   flag <- 0
+  if (eps == 0){
+    flag <- 1
+  }
   while (flag == 0) {
 
     for (k in 1:(n_clust-1)){
@@ -182,7 +186,7 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll, eps, data){
 
   }
 
-  return(list("label" = c_lab, "centroids" = centroids_mean))
+  return(list("label" = c_lab, "centroids" = centroids_mean, "loss" = loss_value2))
 
 }
 
@@ -200,18 +204,18 @@ for (i in (n-c+1):n){
 title('Simulated data')
 
 
-k <- 3
+k <- 2
 #eps <- 1       # model 1
-eps <- 1.5         # model 2
+#eps <- 0        # model 2
 #eps <- 1.3        # model 3
 
-clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, eig = eig, toll = 1e-6, eps = eps , data = data)
+clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, eig = eig, toll = 1e-10, eps = 0, data = data)
 c_opt <- clust$label
 show(c_opt)  #label switching 
 
 c1 <- clust$centroids[1,]
 c2 <- clust$centroids[2,]
-c3 <- clust$centroids[3,]
+#c3 <- clust$centroids[3,]
 #c4 <- clust$centroids[4,]
 
 
@@ -225,7 +229,7 @@ c3 <- clust$centroids[3,]
 # Theoretical optimal plot vs clustering plot
 data1 <- data[which(c_opt=='1'),]
 data2 <- data[which(c_opt=='2'),]
-data3 <- data[which(c_opt=='3'),]
+#data3 <- data[which(c_opt=='3'),]
 #data4 <- data[which(c_opt=='4'),]
 
 x11()
@@ -242,6 +246,12 @@ plot(time,data1[1,],type = 'l', ylim = c(-3.5,9), col = 'firebrick2', lwd = 2, m
 for (i in 2:dim(data1)[1]){
   lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
+for (i in 1:dim(data2)[1]){
+  lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
+}
+#for (i in 1:dim(data3)[1]){
+#  lines(time,data3[i,],type = 'l', col = 'forestgreen',lwd = 2)
+#}
 
 lines(time,c1,type = 'l', lwd = 3)
 lines(time,c2,type = 'l', lwd = 3)
