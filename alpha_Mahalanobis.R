@@ -106,6 +106,7 @@ eigenft<-eigenvf$vectors
 
 #calcolo la distanza al quadrato
 alpha_Mahalanobis <- function(alpha,f1,f2,lambda, eigenft) {
+  t_points <- length(f1)
   dis<-coeff<-prod<-rep(0,t_points)
   
   for (j in 1:t_points){
@@ -121,6 +122,7 @@ alpha_Mahalanobis <- function(alpha,f1,f2,lambda, eigenft) {
 
 # approximation of the function f with f_alpha
 f_alpha_approx <-function(f,alpha,lambda,eigenft){
+  t_points <- length(f)
   coeff<-prod<-res<-rep(0,t_points)
   approx<-matrix(0,t_points,t_points)
   
@@ -137,6 +139,7 @@ f_alpha_approx <-function(f,alpha,lambda,eigenft){
 
 # norm and inner product wrt sample covariance function K
 norm2_K <- function (f,lambda,eigenft){
+  t_points <- length(f)
   norm_vect<-prod<-rep(0,t_points)
   
   for (j in 1:t_points){
@@ -149,6 +152,7 @@ norm2_K <- function (f,lambda,eigenft){
 }
 
 inner_product_K<- function(f,g,lambda,eigenft) {
+  t_points <- length(f)
   prod_vect<-prod_f<-prod_g<-rep(0,t_points)
   
   for (j in 1:t_points){
