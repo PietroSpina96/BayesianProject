@@ -63,7 +63,7 @@ gibbs_loss <- function(n_clust, centroids, label ,data){
 # alpha is the smoothing parameter
 # toll is the tolerance for the while loop
 
-fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
+fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
   
   n <- dim(data)[1]
   
@@ -89,6 +89,7 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
   c_lab <- rep(0,n)
   
   # eigenvalues and eigenfunctions for the alpha-mahalanobis function
+  eig <- eigen(cov_matrix)
   values <- eig$values
   vectors <- eig$vectors
   
@@ -126,6 +127,15 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
   loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, data = data)
   
   while(abs(loss_value1 - loss_value2) >= toll){
+    flag <- 1
+    while (flag <= n_clust) {
+      
+      eig <- eigen(data[which(c_lab==flag),])
+      eig_dynamic <- paste0("X_", flag)
+      assign(eig_dynamic, eig)
+      flag <- flag + 1
+    }
+    
     c_lab <- rep(0,n)
     
     Maha_dis_k <- matrix(0,nrow=n, ncol=n_clust)
