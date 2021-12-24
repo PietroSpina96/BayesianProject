@@ -65,6 +65,7 @@ gibbs_loss <- function(n_clust, centroids, label ,data){
 
 fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
   
+  t_points <- dim(data)[2]
   n <- dim(data)[1]
   
   # index of each centroid randomly defined through sampling
@@ -111,7 +112,7 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
   }
   
   # define the matrix of the centroids (random centroids)
-  centroids_random <- matrix(0,nrow = n_clust,ncol = dim(data)[2])
+  centroids_random <- matrix(0,nrow = n_clust,ncol = t_points)
   for (k in 1:n_clust){
     centroids_random[k,] <- data[y0[k],]
   }
@@ -119,7 +120,7 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
   loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = centroids_random, label = c_lab, data = data)
   
   # update each centroid as the mean of the clusters data
-  centroids_mean<-matrix(0,nrow = n_clust, ncol = dim(data)[2])
+  centroids_mean<-matrix(0,nrow = n_clust, ncol = t_points)
   for (k in 1:n_clust){
     centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
   }
@@ -129,11 +130,23 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
   while(abs(loss_value1 - loss_value2) >= toll){
     flag <- 1
     while (flag <= n_clust) {
-      
-      eig <- eigen(data[which(c_lab==flag),])
-      eig_dynamic <- paste0("X_", flag)
-      assign(eig_dynamic, eig)
+      data_k <- data[which(c_lab==flag),]
+      cov_k <- cov(data_k)
+      eig <- eigen(cov_k)
+      eig_dynamic <- paste0("eig_", flag)
+      assign(eig_dynamic, eig, .GlobalEnv)
       flag <- flag + 1
+    }
+    
+    values_k <- matrix(0, nrow = n_clust, ncol = t_points )
+    vectors_k <- matrix(0, nrow = t_points * n_clust, ncol = t_points )
+    while (flag <= n_clust) {
+      data_k <- data[which(c_lab==flag),]
+      cov_k <- cov(data_k)
+      eig <- eigen(cov_k)
+      
+      values_k[flag,]<- eig$values
+      vectors_k[(flag-1)*t_points + 1:(t_points*flag),] <- eig$vectors
     }
     
     c_lab <- rep(0,n)
@@ -141,7 +154,8 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
     Maha_dis_k <- matrix(0,nrow=n, ncol=n_clust)
     for (i in 1:n){
       for (k in 1:n_clust) {
-        Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,],values,vectors)
+        Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,],eig_k$values,eig_k$vectors)
+        # Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,],values_k[k,],vectors_k[(k-1)*t_points + 1:(t_points*k),])
       }
       index <- which.min(Maha_dis_k[i,])
       c_lab[i] <- index
