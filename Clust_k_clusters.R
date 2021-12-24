@@ -171,7 +171,7 @@ matplot(t(data),type='l',main='Data',xlab='time',ylab='Values',ylim=range(data))
 
 # Application on the data
 k <- 2
-alpha <- 10
+# alpha <- 10 #modello 4-5
 
 clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, eig = eig, toll = 1e-2,  data = data)
 c_opt <- clust$label
