@@ -10,32 +10,39 @@ load('Simulated_WP.RData')
 # simulated data - model 1
 data <- data1
 eig <- eig_1
-rm(list=c('data1','data2','data3','data4','data5'))
-rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5'))
+rm(list=c('data1','data2','data3','data4','data5','data6'))
+rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5','eig_6'))
 
 # simulated data - model 2
 data <- data2
 eig <- eig_2
-rm(list=c('data1','data2','data3','data4','data5'))
-rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5'))
+rm(list=c('data1','data2','data3','data4','data5','data6'))
+rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5','eig_6'))
 
 # simulated data - model 3
 data <- data3
 eig <- eig_3
-rm(list=c('data1','data2','data3','data4','data5'))
-rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5'))
+rm(list=c('data1','data2','data3','data4','data5','data6'))
+rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5','eig_6'))
 
 # simulated data - model 4
 data <- data4
 eig <- eig_4
-rm(list=c('data1','data2','data3','data4','data5'))
-rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5'))
+rm(list=c('data1','data2','data3','data4','data5','data6'))
+rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5','eig_6'))
 
 # simulated data - model 5
 data <- data5
 eig <- eig_5
-rm(list=c('data1','data2','data3','data4','data5'))
-rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5'))
+rm(list=c('data1','data2','data3','data4','data5','data6'))
+rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5','eig_6'))
+
+# simulated data - model 6
+data <- data6
+eig <- eig_6
+rm(list=c('data1','data2','data3','data4','data5','data6'))
+rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5','eig_6'))
+
 
 
 #### Loss function ####
@@ -276,7 +283,7 @@ rm(data2)
 
 
 
-#### K_CLUST FUNCTION MERGING USING LOSS MINIMIZATION ####
+#### CLUSTERING FUNCTION MERGING USING LOSS MINIMIZATION ####
 # The parameter eig corresponds to the output of the eigen function (list of eigenvalues and eigenvectors)
 # The function works with n_clust=k
 # alpha is the smoothing parameter
