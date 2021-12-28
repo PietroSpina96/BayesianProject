@@ -196,28 +196,30 @@ x11()
 matplot(t(data),type='l',main='Data',xlab='time',ylab='Values',ylim=range(data))
 
 # Application on the data
-k <- 2
+k <- 3
 # alpha <- 10 #modello 4-5
 
-clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, cov_matrix = K_1, toll = 1e-2,  data = data)
+clust <- fda_clustering_mahalanobis(n_clust = k, alpha = 0, cov_matrix = cov(data), toll = 1e-2,  data = data)
 c_opt <- clust$label
 show(c_opt)  #label switching 
 
 c1 <- clust$centroids[1,]
 c2 <- clust$centroids[2,]
-#c3 <- clust$centroids[3,]
+c3 <- clust$centroids[3,]
 #c4 <- clust$centroids[4,]
 
 
 # Theoretical optimal plot vs clustering plot
 data1 <- data[which(c_opt=='1'),]
 data2 <- data[which(c_opt=='2'),]
-#data3 <- data[which(c_opt=='3'),]
+data3 <- data[which(c_opt=='3'),]
 #data4 <- data[which(c_opt=='4'),]
+
+# Plot model 1
 
 x11()
 par(mfrow = c(1,2))
-plot(time,data[1,],type = 'l', ylim = c(-3.5,9), col = 'firebrick2', lwd = 2, main = "Main and contaminated processes")
+plot(time,data[1,],type = 'l', ylim = c(-3.5,9), lwd = 2, main = "Main and contaminated processes")
 for(i in 2:(n-c)){
   lines(time,data[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
@@ -249,6 +251,27 @@ rm(data1)
 rm(data2)
 # rm(data3)
 # rm(data4)
+
+# Plot Model 6
+
+x11()
+par(mfrow = c(1,2))
+plot(time,data[1,],type = 'l', ylim = c(-3.5,4), lwd = 2, main = "Data")
+for(i in 2:n){
+  lines(time,data[i,],type = 'l',lwd = 2)
+}
+
+
+plot(time,data1[1,],type = 'l', ylim = c(-3.5,4), col = 'firebrick2', lwd = 2, main = "Clustered data")
+for (i in 2:dim(data1)[1]){
+  lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in 1:dim(data2)[1]){
+  lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
+}
+for (i in 1:dim(data3)[1]){
+ lines(time,data3[i,],type = 'l', col = 'forestgreen',lwd = 2)
+}
 
 
 
