@@ -90,7 +90,7 @@ importMatrix <- function(x, type, position)
 }
 
 
-################################################
+#### PROVA DI GIULIA C ####
 
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
 load("functional_WP.RData")
@@ -128,8 +128,6 @@ Xk=clust$y0.centers.final
 matplot(t(y0), type='l', xlab='x', ylab='orig.func')
 
 matplot(t(Xk), type='l', xlab='x', ylab='centroids')
-
-###############################################
 
 #clusters without the ith unit
 clust_min_i<-function(i,x,y0){
@@ -181,26 +179,22 @@ lambda=10^(-4)
 P=exp(-lambda*D)
 
 
-########################################################################################
-########################################################################################
-#### CLUSTERING ON SIMULATED DATA: Cmap ####
 
-#setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
-setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
+#### CLUSTERING ON REAL DATA TRIAL ####
 
-load('Simulated_WP.RData')
-data<-data1
-rm(data1)
+setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
+load("functional_WP.RData")
+library(fda.usc)
+library(fda)
+library(fields)
 
-
-#### Loss function ####
-gibbs_loss <- function(n_clust, centroids, label ,data){
+gibbs_loss <- function(n_clust, centroids, eig ,label ,data){
   res = rep(0,n_clust)
   
   for (k in 1:n_clust){
     for (i in 1:n){
       if (label[i] == k){
-        sum_partial = alpha_Mahalanobis(alpha,data[i,],centroids[[k]],eig$values,eig$vectors)
+        sum_partial = alpha_Mahalanobis(alpha,data[i,],centroids[k,],eig$values,eig$vectors)
         res[k] = res[k] + sum_partial
       }
     }
@@ -210,30 +204,35 @@ gibbs_loss <- function(n_clust, centroids, label ,data){
   return(tot)
 }
 
-
-#### Clustering function ####
-# The parameter eig corresponds to the output of the eigen function (list of eigenvalues and eigenvectors)
-# The function works with n_clust=2 and not generic k ( for the moment)
-# alpha is the smoothing parameter
-# toll is the tolerance for the while loop
-
-fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
+fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
   
+  t_points <- dim(data)[2]
   n <- dim(data)[1]
   
   # index of each centroid randomly defined through sampling
-  y0.1 <- sample(1:n,1)
-  y0.2 <- sample(1:n,1)
+  y0 <- rep(0,n_clust)
+  vect_sample <- 1:n
   
-  while (y0.2 == y0.1) {
-    y0.2 <- sample(1:n,1)
+  y0[1] <- sample(vect_sample,1)
+  
+  for (k in 2:n_clust) {
+    value <- y0[k-1]
+    
+    for (i in 1:length(vect_sample)){
+      if (vect_sample[i] == value)
+        t = i
+    }
+    
+    vect_sample <- vect_sample[-t]
+    y0[k] <- sample(vect_sample,1)
   }
   
   # vector of labels
   c_lab <- rep(0,n)
   
   # eigenvalues and eigenfunctions for the alpha-mahalanobis function
-  values <- eig$values
+  eig <- eigen(cov_matrix)
+  values <- eig$values 
   vectors <- eig$vectors
   
   Mahalanobis_Distance <- matrix(0, nrow = n, ncol = n)
@@ -243,109 +242,105 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, eig, toll,data){
     }
   }
   
-  # i-th unit belongs to cluster1 if the distance(centroid1, i-th unit) is less than the distance(centroid2,i-th unit)
+  # i-th unit belongs to cluster_k if the distance(centroid_k,i-th unit) is the smallest one
+  Maha_dis <- matrix(0,nrow=n, ncol=n_clust)
   for (i in 1:n){
-    if (Mahalanobis_Distance[y0.1,i] < Mahalanobis_Distance[y0.2,i]){
-      c_lab[i] <- 1
+    for (k in 1:n_clust) {
+      Maha_dis[i,k] <- Mahalanobis_Distance[i,y0[k]]
     }
-    if (Mahalanobis_Distance[y0.1,i] >= Mahalanobis_Distance[y0.2,i])
-      c_lab[i] <- 2
+    index <- which.min(Maha_dis[i,])
+    c_lab[i] <- index
   }
   
-  loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = list(data[y0.1,], data[y0.2,]), label = c_lab, data = data)
-
-  # update each centroid as the mean of the clusters data
-  centroid1 <- colMeans(data[which(c_lab=='1'),])
-  centroid2 <- colMeans(data[which(c_lab=='2'),])
+  # define the matrix of the centroids (random centroids)
+  centroids_random <- matrix(0,nrow = n_clust,ncol = t_points)
+  for (k in 1:n_clust){
+    centroids_random[k,] <- data[y0[k],]
+  }
   
-  loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = list(centroid1, centroid2), label = c_lab, data = data)
+  loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = centroids_random, 
+                            eig = eig,label = c_lab, data = data)
+  
+  # update each centroid as the mean of the clusters data
+  centroids_mean<-matrix(0,nrow = n_clust, ncol = t_points)
+  for (k in 1:n_clust){
+    if ( is.null(dim(data[which(c_lab==k),])[1]) == TRUE ) {
+      centroids_mean[k,] <- data[which(c_lab==k),]
+    }
+    else centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
+  }
+  
+  loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, 
+                            eig = eig, label = c_lab, data = data)
   
   while(abs(loss_value1 - loss_value2) >= toll){
+    
     c_lab <- rep(0,n)
     
+    Maha_dis_k <- matrix(0,nrow=n, ncol=n_clust)
     for (i in 1:n){
-      if (alpha_Mahalanobis(alpha,centroid1,data[i,],values,vectors) < alpha_Mahalanobis(alpha,centroid2,data[i,],values,vectors)){
-        c_lab[i] <- 1
+      for (k in 1:n_clust) {
+        Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,],values,vectors)
       }
-      else c_lab[i] <- 2
+      index <- which.min(Maha_dis_k[i,])
+      c_lab[i] <- index
     }
+    
     loss_value1 <- loss_value2
     
-    centroid1 <- colMeans(data[which(c_lab=='1'),])
-    centroid2 <- colMeans(data[which(c_lab=='2'),])
+    for (k in 1:n_clust){
+      if ( is.null(dim(data[which(c_lab==k),])[1]) == TRUE ){
+        centroids_mean[k,] <- data[which(c_lab==k),]
+      }
+      else centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
+    }
     
-    loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = list(centroid1, centroid2), label = c_lab, data = data)
+    loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, eig = eig
+                              ,label = c_lab, data = data)
   }
   
-  return(list("label" = c_lab, "centroid1" = centroid1, "centroid2" = centroid2))
+  return(list("label" = c_lab, "centroids" = centroids_mean, "loss" = loss_value2))
   
 }
 
-# Application on the simulated data
-k <- 2
-clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, eig = eig, toll = 1e-6, data = data)
-c_opt <- clust$label
-c1 <- clust$centroid1
-c2 <- clust$centroid2
-show(c_opt)  #label switching 
+f.data.clust <- fda_clustering_mahalanobis(n_clust = 2, alpha = 10000,
+                                           cov_matrix = cov(f.data$ausxSL$data),
+                                           toll = 1e-2, data = f.data$ausxSL$data)
+c_opt <- f.data.clust$label
+show(c_opt)
+show(f.data.clust$loss)
+
+c1 <- f.data.clust$centroids[1,]
+c2 <- f.data.clust$centroids[2,]
+#c3 <- f.data.clust$centroids[3,]
+#c4 <- clust$centroids[4,]
 
 
-# Theoretical optimal plot vs clustering plot
-data1 <- data[which(c_opt=='1'),]
-data2 <- data[which(c_opt=='2'),]
-
-x11()
-par(mfrow = c(1,2))
-
-plot(time,data[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2, main = "Main and contaminated processes")
-for(i in 2:(n-c)){
-  lines(time,data[i,],type = 'l', col = 'firebrick2',lwd = 2)
-}
-for (i in (n-c+1):n){
-  lines(time,data[i,],type = 'l', col = 'blue', lwd = 2)
-}
-
-plot(time,data1[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2, main = "Clustered data")
-for (i in 2:dim(data1)[1]){
-  lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
-}
-for (i in 1:dim(data2)[1]){
-  lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
-}
-lines(time,c1,type = 'l', lwd = 4)
-lines(time,c2,type = 'l', lwd = 4)
-
-rm(data1)
-rm(data2)
-
-
-# Theoretical optimal plot vs clustering plot SMOOTHED
-data1 <- f.data_alpha_sim[which(c_opt=='1'),]
-data2 <- f.data_alpha_sim[which(c_opt=='2'),]
+data1 <- f.data$ausxSL$data[which(c_opt=='1'),]
+data2 <- f.data$ausxSL$data[which(c_opt=='2'),]
+#data3 <- f.data$ausxSL$data[which(c_opt=='3'),]
 
 x11()
 par(mfrow = c(1,2))
-
-plot(time,f.data_alpha_sim[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2, main = "Smooth processes")
-for(i in 2:(n-c)){
-  lines(time,f.data_alpha_sim[i,],type = 'l', col = 'firebrick2',lwd = 2)
-}
-for (i in (n-c+1):n){
-  lines(time,f.data_alpha_sim[i,],type = 'l', col = 'blue', lwd = 2)
+plot(time,f.data$ausxSL$data[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', lwd = 2, main = "Data")
+for(i in 2:n){
+  lines(time,f.data$ausxSL$data[i,],type = 'l',lwd = 2)
 }
 
-plot(time,data1[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2, main = "Clustered smoothed data")
+plot(time,data1[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', col = 'gold', lwd = 2, main = "Clustered data")
 for (i in 2:dim(data1)[1]){
-  lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
+  lines(time,data1[i,],type = 'l', col = 'gold',lwd = 2)
 }
 for (i in 1:dim(data2)[1]){
-  lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
+  lines(time,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
 }
-lines(time,f_alpha_approx(c1,alpha,eig$values,eig$vectors),type = 'l', lwd = 4)
-lines(time,f_alpha_approx(c2,alpha,eig$values,eig$vectors),type = 'l', lwd = 4)
+for (i in 1:dim(data3)[1]){
+  lines(time,data3[i,],type = 'l', col = 'gold',lwd = 2)
+}
 
-rm(data1)
-rm(data2)
+
+
+
 
 
 
