@@ -166,6 +166,8 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
 ##### Application on the simulated data ####
 
 # Simulated  data plot for model 1,2,3
+n <- dim(data)[1]
+t_points <- dim(data)[2]
 x11()
 plot(time,data[1,],type = 'l', ylim = c(-3.5,7.5), col = 'firebrick2', lwd = 2)
 for(i in 2:(n-c)){
@@ -182,10 +184,10 @@ x11()
 matplot(t(data),type='l',main='Data',xlab='time',ylab='Values',ylim=range(data))
 
 # Application on the data
-k <- 3
-alpha <- ...
+k <- 2
+alpha <- 0.1
 
-clust <- fda_clustering_mahalanobis(n_clust = k, alpha = 0, cov_matrix = cov(data), toll = 1e-2,  data = data)
+clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, cov_matrix = K_1, toll = 1e-2,  data = data)
 c_opt <- clust$label
 show(c_opt)  #label switching 
 
