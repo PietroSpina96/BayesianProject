@@ -26,10 +26,10 @@ colnames(data) <- c("AGE", "SEX", "EZIOLOGIA", "LATE", "MESIC", "MESIR", "FRMN",
                     "MLSEP", "MLSEP2", "GOSE", "LCF", "DRS")
 attach(data)
 options("scipen"=100, "digits"=4)
-
+detach(data)
 #View(data)
 
-setwd('C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/potenziali_evocati')
+setwd('./potenziali_evocati')
 res <- list()
 latency <- c("SL", "ML")
 late <- c("sx", "dx")
