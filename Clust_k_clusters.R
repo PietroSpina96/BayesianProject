@@ -48,7 +48,9 @@ rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5','eig_6'))
 #### Loss function ####
 #centroids è una matrice avente n_clust righe e ogni riga è un centroide
 gibbs_loss <- function(n_clust, centroids, label ,data){
+  n <- dim(data)[1]
   res = rep(0,n_clust)
+  sum_partial <- 0
   
   for (k in 1:n_clust){
     for (i in 1:n){
@@ -160,22 +162,6 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
   
 }
 
-# For general function
-# flag <- 1
-# while (flag <= n_clust) {
-#   
-#   data_k <- data[which(c_lab==flag),]
-#   eig <- eigen(cov_fun(data_k))
-#   eig_dynamic <- paste0("eig_", flag)
-#   assign(eig_dynamic, eig, .GlobalEnv)
-#   flag <- flag + 1
-#   
-# }
-
-
-
-
-
 
 ##### Application on the simulated data ####
 
@@ -191,13 +177,13 @@ for (i in (n-c+1):n){
 title('Simulated data')
 
 
-# Simulated  data plot for model 4,5
+# Simulated  data plot for model 4,5,6
 x11()
 matplot(t(data),type='l',main='Data',xlab='time',ylab='Values',ylim=range(data))
 
 # Application on the data
 k <- 3
-# alpha <- 10 #modello 4-5
+alpha <- ...
 
 clust <- fda_clustering_mahalanobis(n_clust = k, alpha = 0, cov_matrix = cov(data), toll = 1e-2,  data = data)
 c_opt <- clust$label
@@ -216,7 +202,6 @@ data3 <- data[which(c_opt=='3'),]
 #data4 <- data[which(c_opt=='4'),]
 
 # Plot model 1
-
 x11()
 par(mfrow = c(1,2))
 plot(time,data[1,],type = 'l', ylim = c(-3.5,9), lwd = 2, main = "Main and contaminated processes")
@@ -246,21 +231,19 @@ lines(time,c2,type = 'l', lwd = 3)
 # lines(time,c3,type = 'l', lwd = 3)
 # lines(time,c4,type = 'l', lwd = 3)
 
-
 rm(data1)
 rm(data2)
 # rm(data3)
 # rm(data4)
 
-# Plot Model 6
 
+# Plot Model 6
 x11()
 par(mfrow = c(1,2))
 plot(time,data[1,],type = 'l', ylim = c(-3.5,4), lwd = 2, main = "Data")
 for(i in 2:n){
   lines(time,data[i,],type = 'l',lwd = 2)
 }
-
 
 plot(time,data1[1,],type = 'l', ylim = c(-3.5,4), col = 'firebrick2', lwd = 2, main = "Clustered data")
 for (i in 2:dim(data1)[1]){
@@ -636,6 +619,14 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
   t_points <- dim(data)[2]
   n <- dim(data)[1]
   
+  # vector of labels
+  c_lab <- rep(0,n)
+  
+  # eigenvalues and eigenfunctions for the alpha-mahalanobis function
+  eig <- eigen(cov_matrix)
+  values <- eig$values 
+  vectors <- eig$vectors
+  
   # index of each centroid randomly defined through sampling
   y0 <- rep(0,n_clust)
   vect_sample <- 1:n
@@ -654,13 +645,6 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
     y0[k] <- sample(vect_sample,1)
   }
   
-  # vector of labels
-  c_lab <- rep(0,n)
-  
-  # eigenvalues and eigenfunctions for the alpha-mahalanobis function
-  eig <- eigen(cov_matrix)
-  values <- eig$values 
-  vectors <- eig$vectors
   
   Mahalanobis_Distance <- matrix(0, nrow = n, ncol = n)
   for (i in 1:n){
@@ -685,7 +669,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
     centroids_random[k,] <- data[y0[k],]
   }
   
-  loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = centroids_random, label = c_lab, data = data)
+  loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = centroids_random, label = c_lab, eig = eig,data = data)
   
   # update each centroid as the mean of the clusters data
   centroids_mean<-matrix(0,nrow = n_clust, ncol = t_points)
@@ -693,43 +677,118 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
     centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
   }
   
-  loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, data = data)
+  loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, eig = eig, data = data)
+  
+  values_matrix <- matrix (0, nrow = t_points, ncol = n_clust)
+  vector_matrix <- matrix (0, nrow = (n_clust*t_points), ncol = t_points )
+  
+  values_k <- rep(0,t_points)
+  vector_k <- matrix (0, nrow = t_points, ncol = t_points)
   
   while(abs(loss_value1 - loss_value2) >= toll){
+    loss_value1 <- loss_value2
     
-    flag <- 1
-    while (flag <= n_clust) {
-      
-      data_k <- data[which(c_lab==flag),]
-      eig <- eigen(cov(data_k))
-      eig_dynamic <- paste0("eig_", flag)
-      assign(eig_dynamic, eig, .GlobalEnv)
-      flag <- flag + 1
-      
+    for (k in 1:n_clust){
+      data_k <- data[which(c_lab ==k),]
+      cov_k <- cov(data_k)
+      eig_k <- eigen(cov_k)
+      values_matrix[,k] <- eig_k$values
+      vector_matrix[((k-1)*t_points + 1):(k*t_points),] <- eig_k$vectors
     }
-    
-    c_lab <- rep(0,n)
     
     Maha_dis_k <- matrix(0,nrow=n, ncol=n_clust)
     for (i in 1:n){
       for (k in 1:n_clust) {
-        Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,],eig$values,eig$vectors)
+        values_k <- values_matrix[,k]
+        vector_k <- vector_matrix[((k-1)*t_points + 1):(k*t_points),]
+        Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,],values_k,vector_k)
       }
       index <- which.min(Maha_dis_k[i,])
       c_lab[i] <- index
     }
     
-    loss_value1 <- loss_value2
-    
     for (k in 1:n_clust){
-      centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
+      if (is.null(dim(data[which(c_lab==k),])[1]) == TRUE) {
+        centroids_mean[k,] <- data[which(c_lab ==k),]
+      }
+      else 
+        centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
     }
     
-    loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, data = data)
+    loss_value2 <- gibbs_loss_k(n_clust = n_clust, centroids = centroids_mean, label = c_lab, values_matrix, vector_matrix, data = data)
   }
   
   return(list("label" = c_lab, "centroids" = centroids_mean, "loss" = loss_value2))
   
 }
+
+gibbs_loss <- function(n_clust, centroids, label , eig, data){
+  n <- dim(data)[1]
+  res = rep(0,n_clust)
+  sum_partial <- 0
+  
+  for (k in 1:n_clust){
+    for (i in 1:n){
+      if (label[i] == k){
+        sum_partial = alpha_Mahalanobis(alpha,data[i,],centroids[k,],eig$values,eig$vectors)
+        res[k] = res[k] + sum_partial
+      }
+    }
+  }
+  
+  tot = sum(res)
+  return(tot)
+}
+
+# Modified for eigenvalues/eigenvectros related to the clusters. Both functions are called in the code
+gibbs_loss_k <- function(n_clust, centroids, label , values_matrix, vector_matrix, data){
+  t_points <- dim(data)[2]
+  n <- dim(data)[1]
+  
+  res = rep(0,n_clust)
+  sum_partial <- 0
+  
+  values_k <- rep(0,t_points)
+  vector_k <- matrix(0, t_points, t_points)
+  
+  for (k in 1:n_clust){
+    values_k <- values_matrix[,k]
+    vector_k <- vector_matrix[((k-1)*t_points + 1):(k*t_points),]
+    for (i in 1:n){
+      if (label[i] == k){
+        sum_partial = alpha_Mahalanobis(alpha,data[i,],centroids[k,],eig$values,eig$vectors)
+        res[k] = res[k] + sum_partial
+      }
+    }
+  }
+  
+  tot = sum(res)
+  return(tot)
+}
+
+# Application on the data
+k <- 3
+alpha <- 0
+
+clust <- fda_clustering_mahalanobis_updated(n_clust = k, alpha = 0, cov_matrix = cov(data), toll = 1e-2,  data = data)
+c_opt <- clust$label
+show(c_opt)  #label switching 
+
+
+
+
+
+
+#### Function that could be used ####
+# flag <- 1
+# while (flag <= n_clust) {
+#   
+#   data_k <- data[which(c_lab==flag),]
+#   eig <- eigen(cov(data_k))
+#   eig_dynamic <- paste0("eig_", flag)
+#   assign(eig_dynamic, eig, .GlobalEnv)
+#   flag <- flag + 1
+#   
+# }
 
 
