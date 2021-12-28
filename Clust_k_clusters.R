@@ -674,7 +674,11 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
   # update each centroid as the mean of the clusters data
   centroids_mean<-matrix(0,nrow = n_clust, ncol = t_points)
   for (k in 1:n_clust){
-    centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
+    if (is.null(dim(data[which(c_lab==k),])[1]) == TRUE) {
+      centroids_mean[k,] <- data[which(c_lab ==k),]
+    }
+    else 
+      centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
   }
   
   loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, eig = eig, data = data)
