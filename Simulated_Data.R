@@ -68,14 +68,6 @@ for (i in 1:n){
   }
 }
 
-#
-
-library(fields)
-x11()
-image.plot(time,time,K_1)
-x11()
-image.plot(time,time,cov(data))
-
 
 # Simulated data plot
 x11()
@@ -94,6 +86,8 @@ title('Simulated data - model 1')
 
 #alpha_approximation
 f_alpha_approx <-function(f,alpha,lambda,eigenft){
+  t_points <- length(f)
+  
   coeff<-prod<-res<-rep(0,t_points)
   approx<-matrix(0,t_points,t_points)
   
@@ -110,6 +104,7 @@ f_alpha_approx <-function(f,alpha,lambda,eigenft){
 
 #alpha-mahalanobis distance
 alpha_Mahalanobis <- function(alpha,f1,f2,lambda, eigenft) {
+  t_points <- length(f1)
   dis<-coeff<-prod<-rep(0,t_points)
   
   for (j in 1:t_points){
@@ -387,13 +382,15 @@ for (i in (n-c+1):n){
 }
 title('Smoothed simulated data - model 3')
 
+save.image("~/R/Project_BS/BayesianProject/Simulated_WP.RData") #GiuliaR
+
 
 #################### DATA SIMULATION - MODEL 4 #################################
 # The following model is taken from the fda library 
 
 data4 <- t(CanadianWeather$dailyAv[,,1])
 n <- dim(data4)[1]
-t_points<-365
+t_points <- 365
 time<- 1:365
 
 # Plot of the data
@@ -516,20 +513,20 @@ library(fda)
 library(kma)
 
 data(kma.data)
-time6 <- as.vector(kma.data$x)
-t_points6 <- 200
-n6 <- dim(data6)[1]
-
 data6 <- kma.data$y0
 # y1_6 <- kma.data$y1
 
+time <- as.vector(kma.data$x)
+t_points <- 200
+n <- dim(data6)[1]
+
 x11()
-matplot(time6,t(data6),type='l')
+matplot(t(data6),type='l')
 
 K_6 <- cov(data6)
 
 x11()
-image.plot(time6,time6,K_6,main='Covariance matrix')
+image.plot(time,time,K_6,main='Covariance matrix')
 
 # Eigenvalues and eigenfunctions of the covariance matrix
 eig_6 <- eigen(K_6)
@@ -537,23 +534,25 @@ values_6 <- eig_6$values
 vectors_6 <- eig_6$vectors
 
 alpha <- 0
-f.data_alpha_sim_6<- matrix(0, nrow = n6, ncol = t_points6)
-for (i in 1:n6){
+f.data_alpha_sim_6<- matrix(0, nrow = n, ncol = t_points)
+for (i in 1:n){
   f.data_alpha_sim_6[i,] <- f_alpha_approx(data6[i,],alpha,values_6,vectors_6)
 }
 
 # alpha-Mahalanobis distance matrix 
-Mahalanobis_Distance_6 <- matrix(0, nrow = n6, ncol = n6)
-for (i in 1:n6){
-  for (j in 1:n6){
+Mahalanobis_Distance_6 <- matrix(0, nrow = n, ncol = n)
+for (i in 1:n){
+  for (j in 1:n){
     Mahalanobis_Distance_6[i,j] <- alpha_Mahalanobis(alpha,data6[i,],data6[j,],values_6,vectors_6)
   }
 }
 
 x11()
-image.plot(1:n6,1:n6,Mahalanobis_Distance_6)
+image.plot(1:n,1:n,Mahalanobis_Distance_6)
 
-
+# Remove useless variables
+rm(list=c('data','kma.data','random_process_1','random_process_2','random_process_3'))
+rm(list=c('mu_2','mu_3','u_2'))
 
 
 
