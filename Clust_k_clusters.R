@@ -237,7 +237,7 @@ rm(data2)
 # rm(data4)
 
 
-# Plot Model 6
+# Plot Model 4,5,6
 x11()
 par(mfrow = c(1,2))
 plot(time,data[1,],type = 'l', ylim = c(-3.5,4), lwd = 2, main = "Data")
