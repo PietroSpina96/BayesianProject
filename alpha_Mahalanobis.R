@@ -56,7 +56,7 @@ lines(f.data$ausxSL$argvals, X_bar, type = 'l', lwd=3, col = 'firebrick2')
 
 
 # Covariance matrix for the data: K_hat_R is the covariance matrix computed through the R function cov
-K_hat_R <- cov(f.data$ausxSL$data)
+K_hat_R <- cov(f.data$ausxSL$data) 
 
 # Plot of the covariance matrix
 x11()

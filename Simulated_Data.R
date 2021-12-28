@@ -68,6 +68,15 @@ for (i in 1:n){
   }
 }
 
+#
+
+library(fields)
+x11()
+image.plot(time,time,K_1)
+x11()
+image.plot(time,time,cov(data))
+
+
 # Simulated data plot
 x11()
 plot(time,data1[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2)
