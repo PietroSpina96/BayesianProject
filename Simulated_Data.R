@@ -510,6 +510,54 @@ for(i in 2:n)
 title('Smoothed simulated data - model 5')
 
 
+################ DATA SIMULATION - MODEL 6 #####################################
+library(fdakma)
+library(fda)
+library(kma)
+
+data(kma.data)
+time6 <- as.vector(kma.data$x)
+t_points6 <- 200
+n6 <- dim(data6)[1]
+
+data6 <- kma.data$y0
+# y1_6 <- kma.data$y1
+
+x11()
+matplot(time6,t(data6),type='l')
+
+K_6 <- cov(data6)
+
+x11()
+image.plot(time6,time6,K_6,main='Covariance matrix')
+
+# Eigenvalues and eigenfunctions of the covariance matrix
+eig_6 <- eigen(K_6)
+values_6 <- eig_6$values
+vectors_6 <- eig_6$vectors
+
+alpha <- 0
+f.data_alpha_sim_6<- matrix(0, nrow = n6, ncol = t_points6)
+for (i in 1:n6){
+  f.data_alpha_sim_6[i,] <- f_alpha_approx(data6[i,],alpha,values_6,vectors_6)
+}
+
+# alpha-Mahalanobis distance matrix 
+Mahalanobis_Distance_6 <- matrix(0, nrow = n6, ncol = n6)
+for (i in 1:n6){
+  for (j in 1:n6){
+    Mahalanobis_Distance_6[i,j] <- alpha_Mahalanobis(alpha,data6[i,],data6[j,],values_6,vectors_6)
+  }
+}
+
+x11()
+image.plot(1:n6,1:n6,Mahalanobis_Distance_6)
+
+
+
+
+
+
 ##### Save Workspace ####
 #setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
 #save.image("Simulated_WP.RData")
