@@ -539,6 +539,13 @@ for (i in 1:n){
   f.data_alpha_sim_6[i,] <- f_alpha_approx(data6[i,],alpha,values_6,vectors_6)
 }
 
+x11()
+plot(time, data6[1,], type = 'l', lwd = 2)
+lines(time, f_alpha_approx(data6[1,],0,values_6,vectors_6), type = 'l', lwd = 2, col = 'firebrick2')
+lines(time, f_alpha_approx(data6[1,],0.1,values_6,vectors_6), type = 'l', lwd = 2, col = 'blue')
+lines(time, f_alpha_approx(data6[1,],0.01,values_6,vectors_6), type = 'l', lwd = 2, col = 'forestgreen')
+title ('Curves comparison for alpha: best alpha=0')
+
 # alpha-Mahalanobis distance matrix 
 Mahalanobis_Distance_6 <- matrix(0, nrow = n, ncol = n)
 for (i in 1:n){
@@ -550,12 +557,11 @@ for (i in 1:n){
 x11()
 image.plot(1:n,1:n,Mahalanobis_Distance_6)
 
+
+
 # Remove useless variables
 rm(list=c('data','kma.data','random_process_1','random_process_2','random_process_3'))
 rm(list=c('mu_2','mu_3','u_2'))
-
-
-
 
 ##### Save Workspace ####
 #setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
