@@ -1,0 +1,24 @@
+Note:
+1) Il nostro modello richiede che il numero di clusters risulti essere fissato a priori e pari a K ed inoltre va a minimizzare la loss function sommando sulle unità stat e sul numero di clusters. Questo vuol dire che maggiore è il numero di clusters, minore sarà la vicinanza di ogni unità dal corrispondente cluster e minore sarà il valore della loss function. Dunque è logico aspettarsi che fissato un numero K di cluster, la loss sia minimizzata esattamente con quei k clusters e non con un numero inferiore. 
+Tutto questo per dire che non è possibile costruire un modello in cui, passato K, si trovi un numero di clusters inferiore a quello dichiarato e dunque l'approccio di Corradin non può funzionare con il nostro modello.
+
+1a) Abbiamo anche creato una funzione che una volta trovata la label c_lab ottimale fissato il numero di clusters, va a controllare che la distanza dei centroidi risulti essere superiore ad una certa soglia. Così facendo, se vengono generati tanti clusters ma vicini tra di loro (perchè il valore imposto da K è superiore al valore effettivo di clusters) li va ad unire restituendo una partizione ottimale ma meno efficiente in termine di Loss function, che non avrà più valore minimo perchè il numero di clusters si è abbassato.
+I problemi di questo metodo sono:
+1_ La loss non è effettivamente minimizzata
+2_ La soglia da imporre dipende dai dati e costituisce un ulteriore parametro da fissare " a occhio".
+
+2) Corradin ha detto di costruire un Cmap in cui gli autovalori e gli autovettori vengono aggiornati ad ogni definizione di clusters (ogni volta che riallochiamo le unità nei k clusters). 
+Nel caso di dati simulati questo non è possibile perchè i dati sono generati dalla somma di un processo gaussiano (avente una covarianza fissata e non dipendente dal cluster) e dai dati che invece dipendono dal cluster. Però, la covarianza che usiamo nell'algoritmo non è quella dei dati ma è quella del processo stocastico e dunque è sempre la stessa indipendentemente dal cluster e dunque non è necessario aggiornare gli autovalori e gli autovettori. 
+Perchè usiamo questa matrice di covarianza (K_1) e non quella dei dati? Perchè ci siamo resi conto che funziona bene e predice risultati corretti, cosa che invece non otteniamo passando la covarianza dei dati (problema che si genera in generale passando dai dati simulati a quelli reali).
+
+Se invece decidessimo di passare la matrice covarianza dei dati reali, allora ad ogni riallocazione delle unità in nuovi clusters dovremmo ricalcolare gli autovalori e autovettori della matrice cov e passarli alla funzione gibbs-loss. Questo procedimento permetterebbe di ottenere risultati ancora più precisi rispetto al caso base perchè auto-val-vett sono specifici del cluster e non vengono più passati costanti. Davvero?
+
+3) Il modello creato (fda_alpha_mahalnobis e gibbs_loss) funziona bene quando la prior che assumiamo risulta essere fissata a priori in modo uniforme (prior uniforme sul numero di clusters) e dalla teoria sappiamo che massimizzare la posterior distribution corrisponde a minimizzare la loss senza che la prior appaia in qualche modo. Infatti, essendo una costante scompare nel modello.
+
+Quando andremo a generalizzare la prior uniforme, considerandone una non standard e suggerita dai prof (avevano detto qualcosa ma non cosa di preciso), allora dovremo rivedere il modello andando a considerare una nuova funzione da massimizzare in quanto non varrà più l'equivalenza con la prior non uniforme. Nel senso che finchè la prior è uniforme, vale l'equivalenza tra massimizzazione della posterior e minimizzazione della loss, ma quando la prior generalizza allora non vale più questa equivalenza e dobbiamo ricavarci la massimizzazione della posterior. 
+
+4) Il problema del definire autovalori e autovettori di ogni cluster è dovuto al fatto che quando una qualche iterazione genera un cluster con una sola unità, non si può calcolare la matrice varianza-covarianza e dunque non si può andare avanti. Non si può neanche definire una covarianza nulla perchè nel nostro caso dà distanza zero.
+
+Per risolvere il problema:
+- nella primissima iterazione di generazione casuale dei centroidi, runniamo la funzione finchè ci restituisca tutti i clusters con almeno due unità ciascuno.
+- nelle successive iterazioni dobbiamo chiedere ai cluster di avere almeno due unità ciascuno e questo può andare a discapito della loss minimizzata, però sembra essere l'unica alternativa possibile al momento.
