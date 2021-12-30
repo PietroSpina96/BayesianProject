@@ -696,18 +696,15 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
   # update each centroid as the mean of the clusters data
   centroids_mean<-matrix(0,nrow = n_clust, ncol = t_points)
     
-  for (k in 1:n_clust){
-    if (sum(c_lab == k) == 1) {
-        centroids_mean[k,] <- data[which(c_lab ==k),]
-    }
-    else 
-       centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
-    }
+  for (k in 1:n_clust)
+    centroids_mean[k,] <- colMeans(data[which(c_lab == k),])
+    
     
   loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, 
                               label = c_lab, eig = eig, data = data)
   
 
+  # Create the vector and the matrix that will contain eigenvalues/eigenvectors of a single cluster
   values_k <- rep(0,t_points)
   vector_k <- matrix (0, nrow = t_points, ncol = t_points)
   
@@ -719,7 +716,6 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
     loss_value1 <- loss_value2
     
     # while cycle to check there are no single unit clusters in the intermediate steps. 
-    # Si potrebbe togliere a questo punto
     flag_2 <- 1
     while (flag_2 != 0) {
       
@@ -729,13 +725,14 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
       vector_matrix <- matrix (0, nrow = (n_clust_new*t_points), ncol = t_points )
       
       for (k in 1:n_clust_new){
-        # data_k <- data[which(c_lab == clust_new[k]),]
         data_k <- data[which(c_lab == k),]
         cov_k <- cov(data_k)
         eig_k <- eigen(cov_k)
-        values_matrix[,k] <- eig_k$values
+        values_matrix[,k] <- abs(eig_k$values)
         vector_matrix[((k-1)*t_points + 1):(k*t_points),] <- eig_k$vectors
       }
+      
+      c_lab <- rep(0,n)
       
       Maha_dis_k <- matrix(0,nrow=n, ncol=n_clust_new)
       for (i in 1:n){
@@ -748,15 +745,9 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
         c_lab[i] <- index
       }
       
+      # If the number of clusters decreases:
       clust_new <- levels(factor(c_lab))
-      
-      if (n_clust_new > length(clust_new)) {
-        # Devo capire quale cluster sparisce e devo ridefinirli
-        ...
-      }
-      
       n_clust_new <- length(clust_new)
-      
       
       centroids_mean<-matrix(0,nrow = n_clust_new, ncol = t_points)
       for (k in 1:n_clust_new){
@@ -837,6 +828,35 @@ clust <- fda_clustering_mahalanobis_updated(n_clust = k, alpha = alpha, cov_matr
                                             toll = 1e-2,  data = data)
 c_opt <- clust$label
 show(c_opt)  #label switching 
+
+# Theoretical optimal plot vs clustering plot
+c1 <- clust$centroids[1,]
+c2 <- clust$centroids[2,]
+c3 <- clust$centroids[3,]
+
+data1 <- data[which(c_opt=='1'),]
+data2 <- data[which(c_opt=='2'),]
+data3 <- data[which(c_opt=='3'),]
+
+
+# Plot Model 4,5,6
+x11()
+par(mfrow = c(1,2))
+plot(time,data[1,],type = 'l', ylim = c(-3.5,4), lwd = 2, main = "Data")
+for(i in 2:n){
+  lines(time,data[i,],type = 'l',lwd = 2)
+}
+
+plot(time,data1[1,],type = 'l', ylim = c(-3.5,4), col = 'firebrick2', lwd = 2, main = "Clustered data")
+for (i in 2:dim(data1)[1]){
+  lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in 1:dim(data2)[1]){
+  lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
+}
+for (i in 1:dim(data3)[1]){
+  lines(time,data3[i,],type = 'l', col = 'forestgreen',lwd = 2)
+}
 
 
 
