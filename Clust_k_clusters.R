@@ -638,7 +638,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
   y0 <- rep(0,n_clust)
   vect_sample <- 1:n
   
-  # while cycle checks that there are no single unit clusters in the intial step
+  # while cycle checks that there are no single unit clusters in the initial step
   flag_1 <- 1
   while (flag_1 != 0) {
     
@@ -684,9 +684,8 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
     }
     
     for (k in 1:n_clust){
-      if ( is.null(dim(data[which(c_lab ==k),])[1] == TRUE )) {
-        flag_1 <- flag_1 + 1 # flag gets updated if there are single unit clusters
-      }
+      if (sum(c_lab == k) == 1)
+        flag_1 <- flag_1 + 1   # flag gets updated if there are single unit clusters
     }
     
   }
@@ -698,7 +697,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
   centroids_mean<-matrix(0,nrow = n_clust, ncol = t_points)
     
   for (k in 1:n_clust){
-    if (is.null(dim(data[which(c_lab==k),])[1]) == TRUE) {
+    if (sum(c_lab == k) == 1) {
         centroids_mean[k,] <- data[which(c_lab ==k),]
     }
     else 
@@ -708,67 +707,81 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
   loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, 
                               label = c_lab, eig = eig, data = data)
   
-  values_matrix <- matrix (0, nrow = t_points, ncol = n_clust)
-  vector_matrix <- matrix (0, nrow = (n_clust*t_points), ncol = t_points )
-  
+
   values_k <- rep(0,t_points)
   vector_k <- matrix (0, nrow = t_points, ncol = t_points)
+  
+  # just to initialize
+  n_clust_new <- n_clust
   
   while(abs(loss_value1 - loss_value2) >= toll){
 
     loss_value1 <- loss_value2
     
-    # while cycle to check there are no single unit clusters in the intermediate steps
+    # while cycle to check there are no single unit clusters in the intermediate steps. 
+    # Si potrebbe togliere a questo punto
     flag_2 <- 1
     while (flag_2 != 0) {
       
       flag_2 <- 0
-      n_clust_new <- levels(factor(c_lab))
       
-      for (k in 1:length(n_clust_new)){
-        data_k <- data[which(c_lab == n_clust_new[k]),]
+      values_matrix <- matrix (0, nrow = t_points, ncol = n_clust_new)
+      vector_matrix <- matrix (0, nrow = (n_clust_new*t_points), ncol = t_points )
+      
+      for (k in 1:n_clust_new){
+        # data_k <- data[which(c_lab == clust_new[k]),]
+        data_k <- data[which(c_lab == k),]
         cov_k <- cov(data_k)
         eig_k <- eigen(cov_k)
         values_matrix[,k] <- eig_k$values
         vector_matrix[((k-1)*t_points + 1):(k*t_points),] <- eig_k$vectors
       }
       
-      Maha_dis_k <- matrix(0,nrow=n, ncol=n_clust)
+      Maha_dis_k <- matrix(0,nrow=n, ncol=n_clust_new)
       for (i in 1:n){
-        for (k in 1:length(n_clust_new)) {
+        for (k in 1:n_clust_new) {
           values_k <- values_matrix[,k]
           vector_k <- vector_matrix[((k-1)*t_points + 1):(k*t_points),]
-          Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,]
-                                               ,values_k,vector_k)
+          Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,],values_k,vector_k)
         }
         index <- which.min(Maha_dis_k[i,])
         c_lab[i] <- index
       }
       
-      for (k in 1:length(n_clust_new)){
-        if (is.null(dim(data[which(c_lab==k),])[1]) == TRUE) {
-          centroids_mean[k,] <- data[which(c_lab ==k),]
-        }
-        else 
-          centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
+      clust_new <- levels(factor(c_lab))
+      
+      if (n_clust_new > length(clust_new)) {
+        # Devo capire quale cluster sparisce e devo ridefinirli
+        ...
       }
       
-      flag_2 <- 0
-      for (k in 1:length(n_clust_new)){
-        if ( is.null(dim(data[which(c_lab ==k),])[1] == TRUE )) {
+      n_clust_new <- length(clust_new)
+      
+      
+      centroids_mean<-matrix(0,nrow = n_clust_new, ncol = t_points)
+      for (k in 1:n_clust_new){
+        if (sum(c_lab == k) == 1) {
+          centroids_mean[k,] <- data[which(c_lab == k),]
+        }
+        else 
+          centroids_mean[k,] <- colMeans(data[which(c_lab == k),])
+      }
+      
+      for (k in 1:n_clust_new){
+        if (sum(c_lab == k) == 1) {
           flag_2 <- flag_2 + 1 # flag gets updated if there are single unit clusters
         }
       }
       
     }
     
-    loss_value2 <- gibbs_loss_k(n_clust = n_clust, centroids = centroids_mean, 
+    loss_value2 <- gibbs_loss_k(n_clust = n_clust_new, centroids = centroids_mean, 
                                 label = c_lab, values_matrix, vector_matrix, data = data)
     
   }
   
   return(list("label" = c_lab, "centroids" = centroids_mean, "loss" = loss_value2,
-              "K" = length(n_clust_new)))
+              "K" = n_clust_new))
   
 }
 
@@ -806,7 +819,7 @@ gibbs_loss_k <- function(n_clust, centroids, label , values_matrix, vector_matri
     vector_k <- vector_matrix[((k-1)*t_points + 1):(k*t_points),]
     for (i in 1:n){
       if (label[i] == k){
-        sum_partial = alpha_Mahalanobis(alpha,data[i,],centroids[k,],eig$values,eig$vectors)
+        sum_partial = alpha_Mahalanobis(alpha,data[i,],centroids[k,],values_k,vector_k)
         res[k] = res[k] + sum_partial
       }
     }
@@ -820,7 +833,7 @@ gibbs_loss_k <- function(n_clust, centroids, label , values_matrix, vector_matri
 k <- 3
 alpha <- 0
 
-clust <- fda_clustering_mahalanobis_updated(n_clust = k, alpha = 0, cov_matrix = cov(data),
+clust <- fda_clustering_mahalanobis_updated(n_clust = k, alpha = alpha, cov_matrix = cov(data),
                                             toll = 1e-2,  data = data)
 c_opt <- clust$label
 show(c_opt)  #label switching 
