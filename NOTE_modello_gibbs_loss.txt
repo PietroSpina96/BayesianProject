@@ -22,3 +22,7 @@ Quando andremo a generalizzare la prior uniforme, considerandone una non standar
 Per risolvere il problema:
 - nella primissima iterazione di generazione casuale dei centroidi, runniamo la funzione finchè ci restituisca tutti i clusters con almeno due unità ciascuno.
 - nelle successive iterazioni dobbiamo chiedere ai cluster di avere almeno due unità ciascuno e questo può andare a discapito della loss minimizzata, però sembra essere l'unica alternativa possibile al momento.
+
+Ulteriori problematiche:
+- La loss sembra aumentare quando si vanno a calcolare autovalori e autovettori intra-cluster
+- Sembra che inevitabilmente il numero di cluster si riduca
