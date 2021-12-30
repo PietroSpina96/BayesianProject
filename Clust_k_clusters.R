@@ -723,9 +723,10 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
     while (flag_2 != 0) {
       
       flag_2 <- 0
+      n_clust_new <- levels(factor(c_lab))
       
-      for (k in 1:n_clust){
-        data_k <- data[which(c_lab ==k),]
+      for (k in 1:length(n_clust_new)){
+        data_k <- data[which(c_lab == n_clust_new[k]),]
         cov_k <- cov(data_k)
         eig_k <- eigen(cov_k)
         values_matrix[,k] <- eig_k$values
@@ -734,7 +735,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
       
       Maha_dis_k <- matrix(0,nrow=n, ncol=n_clust)
       for (i in 1:n){
-        for (k in 1:n_clust) {
+        for (k in 1:length(n_clust_new)) {
           values_k <- values_matrix[,k]
           vector_k <- vector_matrix[((k-1)*t_points + 1):(k*t_points),]
           Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,]
@@ -744,7 +745,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
         c_lab[i] <- index
       }
       
-      for (k in 1:n_clust){
+      for (k in 1:length(n_clust_new)){
         if (is.null(dim(data[which(c_lab==k),])[1]) == TRUE) {
           centroids_mean[k,] <- data[which(c_lab ==k),]
         }
@@ -753,7 +754,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
       }
       
       flag_2 <- 0
-      for (k in 1:n_clust){
+      for (k in 1:length(n_clust_new)){
         if ( is.null(dim(data[which(c_lab ==k),])[1] == TRUE )) {
           flag_2 <- flag_2 + 1 # flag gets updated if there are single unit clusters
         }
@@ -766,7 +767,8 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
     
   }
   
-  return(list("label" = c_lab, "centroids" = centroids_mean, "loss" = loss_value2))
+  return(list("label" = c_lab, "centroids" = centroids_mean, "loss" = loss_value2,
+              "K" = length(n_clust_new)))
   
 }
 
@@ -818,7 +820,8 @@ gibbs_loss_k <- function(n_clust, centroids, label , values_matrix, vector_matri
 k <- 3
 alpha <- 0
 
-clust <- fda_clustering_mahalanobis_updated(n_clust = k, alpha = 0, cov_matrix = cov(data), toll = 1e-2,  data = data)
+clust <- fda_clustering_mahalanobis_updated(n_clust = k, alpha = 0, cov_matrix = cov(data),
+                                            toll = 1e-2,  data = data)
 c_opt <- clust$label
 show(c_opt)  #label switching 
 
