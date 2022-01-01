@@ -12,6 +12,50 @@ setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
 load("Simulated_WP.RData")
 
 
+#### Functions for alpha-Mahalanobis approximation ####
+
+#alpha_approximation
+f_alpha_approx <-function(f,alpha,lambda,eigenft){
+  t_points <- length(f)
+  
+  coeff<-prod<-res<-rep(0,t_points)
+  approx<-matrix(0,t_points,t_points)
+  
+  for (j in 1:t_points) {
+    
+    coeff[j]<-lambda[j]/(lambda[j]+alpha)
+    prod[j]<-scalar_prod(f,eigenft[,j])
+    approx[,j]<- as.numeric(coeff[j]*prod[j])*eigenft[,j]
+    res<-res+approx[,j]
+    
+  }
+  return(res)
+}
+
+#alpha-mahalanobis distance
+alpha_Mahalanobis <- function(alpha,f1,f2,lambda, eigenft) {
+  t_points <- length(f1)
+  dis<-coeff<-prod<-rep(0,t_points)
+  
+  for (j in 1:t_points){
+    
+    coeff[j]<-lambda[j]/(lambda[j]+alpha)^2
+    prod[j]<-(scalar_prod(f1-f2,eigenft[,j]))^2
+    dis[j]<-coeff[j]*prod[j]
+    
+  }
+  res<-sum(dis)
+  return(res)
+}
+
+#scalar product
+scalar_prod<- function (f1,f2) {
+  # f sono vettori colonna
+  res<- t(f1)%*%f2
+  return(res)
+}
+
+
 ###################### DATA SIMULATION - MODEL 1 ###############################
 
 n <- 100
@@ -81,51 +125,6 @@ for (i in (n-c+1):n){
 title('Simulated data - model 1')
 
 
-#### alpha-Mahalanobis distance calculation ####
-# functions
-
-#alpha_approximation
-f_alpha_approx <-function(f,alpha,lambda,eigenft){
-  t_points <- length(f)
-  
-  coeff<-prod<-res<-rep(0,t_points)
-  approx<-matrix(0,t_points,t_points)
-  
-  for (j in 1:t_points) {
-    
-    coeff[j]<-lambda[j]/(lambda[j]+alpha)
-    prod[j]<-scalar_prod(f,eigenft[,j])
-    approx[,j]<- as.numeric(coeff[j]*prod[j])*eigenft[,j]
-    res<-res+approx[,j]
-    
-  }
-  return(res)
-}
-
-#alpha-mahalanobis distance
-alpha_Mahalanobis <- function(alpha,f1,f2,lambda, eigenft) {
-  t_points <- length(f1)
-  dis<-coeff<-prod<-rep(0,t_points)
-  
-  for (j in 1:t_points){
-    
-    coeff[j]<-lambda[j]/(lambda[j]+alpha)^2
-    prod[j]<-(scalar_prod(f1-f2,eigenft[,j]))^2
-    dis[j]<-coeff[j]*prod[j]
-    
-  }
-  res<-sum(dis)
-  return(res)
-}
-
-#scalar product
-scalar_prod<- function (f1,f2) {
-  # f sono vettori colonna
-  res<- t(f1)%*%f2
-  return(res)
-}
-
-
 # Smoothed data
 eig_1 <- eigen(K_1)
 values_1 <- eig_1$values
@@ -163,6 +162,7 @@ for (i in (n-c+1):n){
   lines(time,f.data_alpha_sim_1[i,],type = 'l', col = 'blue', lwd = 2)
 }
 
+time123 <- time
 
 #################### DATA SIMULATION - MODEL 2 #################################
 
@@ -391,7 +391,7 @@ save.image("~/R/Project_BS/BayesianProject/Simulated_WP.RData") #GiuliaR
 data4 <- t(CanadianWeather$dailyAv[,,1])
 n <- dim(data4)[1]
 t_points <- 365
-time<- 1:365
+time <- 1:365
 
 # Plot of the data
 x11()
@@ -444,7 +444,7 @@ for(i in 2:n)
   lines(time,f.data_alpha_sim_4[i,],type = 'l', col = 'firebrick2',lwd = 2)
 title('Smoothed simulated data - model 4')
 
-
+time45 <- time
 
 ################ DATA SIMULATION - MODEL 5 #####################################
 # The following model is taken from Secchi's TDE (19.07.2019). There are three clusters
@@ -557,11 +557,13 @@ for (i in 1:n){
 x11()
 image.plot(1:n,1:n,Mahalanobis_Distance_6)
 
+time6 <- time
 
 
 # Remove useless variables
 rm(list=c('data','kma.data','random_process_1','random_process_2','random_process_3'))
 rm(list=c('mu_2','mu_3','u_2'))
+rm(list = c('n','t_points','time'))
 
 ##### Save Workspace ####
 #setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
