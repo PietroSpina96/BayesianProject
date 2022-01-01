@@ -390,7 +390,7 @@ gibbs_loss_k <- function(n_clust, centroids, label , values_matrix, vector_matri
     vector_k <- vector_matrix[((k-1)*t_points + 1):(k*t_points),]
     for (i in 1:n){
       if (label[i] == k){
-        sum_partial = alpha_Mahalanobis(alpha,data[i,],centroids[k,],eig$values,eig$vectors)
+        sum_partial = alpha_Mahalanobis(alpha,data[i,],centroids[k,],values_k,vector_k)
         res[k] = res[k] + sum_partial
       }
     }
