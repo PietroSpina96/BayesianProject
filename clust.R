@@ -190,8 +190,10 @@ library(fda)
 library(fields)
 
 ##### Code ####
-gibbs_loss <- function(n_clust, centroids, eig ,label ,data){
+gibbs_loss <- function(n_clust, centroids, label , eig, data){
+  n <- dim(data)[1]
   res = rep(0,n_clust)
+  sum_partial <- 0
   
   for (k in 1:n_clust){
     for (i in 1:n){
@@ -261,7 +263,7 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
   }
   
   loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = centroids_random, 
-                            eig = eig,label = c_lab, data = data)
+                            label = c_lab, eig = eig, data = data)
   
   # update each centroid as the mean of the clusters data
   centroids_mean<-matrix(0,nrow = n_clust, ncol = t_points)
@@ -273,7 +275,7 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
   }
   
   loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, 
-                            eig = eig, label = c_lab, data = data)
+                             label = c_lab, eig = eig, data = data)
   
   while(abs(loss_value1 - loss_value2) >= toll){
     
@@ -297,8 +299,8 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
       else centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
     }
     
-    loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, eig = eig
-                              ,label = c_lab, data = data)
+    loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, 
+                              label = c_lab, eig = eig, data = data)
   }
   
   return(list("label" = c_lab, "centroids" = centroids_mean, "loss" = loss_value2))
@@ -354,8 +356,10 @@ for (i in 1:dim(data3)[1]){
 
 ##### Code ####
 
-gibbs_loss <- function(n_clust, centroids, eig ,label ,data){
+gibbs_loss <- function(n_clust, centroids, label , eig, data){
+  n <- dim(data)[1]
   res = rep(0,n_clust)
+  sum_partial <- 0
   
   for (k in 1:n_clust){
     for (i in 1:n){
