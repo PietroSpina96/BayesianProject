@@ -78,6 +78,9 @@ for (i in 1:t_points){
   }
 }
 
+x11()
+image.plot(time,time,K_1,main='Covariance matrix')
+
 # Create simulated data
 set.seed(1234)
 m <- rep(0,t_points)
@@ -129,6 +132,7 @@ title('Simulated data - model 1')
 eig_1 <- eigen(K_1)
 values_1 <- eig_1$values
 vectors_1 <- eig_1$vectors
+
 
 alpha <- 0.1
 f.data_alpha_sim_1 <- matrix(0, nrow = n, ncol = t_points)
@@ -382,190 +386,161 @@ for (i in (n-c+1):n){
 }
 title('Smoothed simulated data - model 3')
 
-save.image("~/R/Project_BS/BayesianProject/Simulated_WP.RData") #GiuliaR
+###################### DATA SIMULATION - MODEL 4 ###############################
+n <- 100
+n1 <- 25
+
+t_points <- 200
+time <- seq(0,2*pi,(2*pi)/(t_points - 1))
+
+# Covariance function
+cov_M4 <- function(s,t, a_cov, rho_cov){
+  K <- (a_cov^2)*exp((-0.5)*norm(s-t,type='2')/rho_cov^2)
+  return(K)
+}
+
+# Covariance Matrix
+K_4_1 <- matrix(0, nrow = t_points, ncol = t_points)
+for (i in 1:t_points){
+  for (j in 1:t_points){
+    K_4_1[i,j] <- cov_M4(time[i],time[j],2,0.5)
+  }
+}
+
+K_4_2 <- matrix(0, nrow = t_points, ncol = t_points)
+for (i in 1:t_points){
+  for (j in 1:t_points){
+    K_4_2[i,j] <- cov_M4(time[i],time[j],0.5,2)
+  }
+}
+
+# Create simulated data
+set.seed(123564)
+m <- rep(0,t_points)
+random_process_cluster_1 <- generate_gauss_fdata(n1, m, Cov = K_4_1)
+random_process_cluster_2 <- generate_gauss_fdata(n - n1, m, Cov = K_4_2)
+random_process_cluster <- rbind(random_process_cluster_1,random_process_cluster_2)
+
+cluster_1 <- function(t,points){
+  X <- rep(0,points)
+  X[t] <- sin(t)
+}
+
+cluster_2 <- function(t,points){
+  X <- rep(0,points)
+  X[t] <- cos(t)
+}
+
+data4 <- matrix(0, nrow = n, ncol = t_points)
+for (i in 1:n1){
+  for (j in 1:t_points){
+    data4[i,j] <- cluster_1(time[j],t_points) + random_process_cluster[i,j]
+  }
+}
+
+for (i in (n1 + 1):n){
+  for (j in 1:t_points){
+    data4[i,j] <- cluster_2(time[j],t_points) + random_process_cluster[i,j]
+  }
+}
 
 
-#################### DATA SIMULATION - MODEL 4 #################################
-# The following model is taken from the fda library 
-
-data4 <- t(CanadianWeather$dailyAv[,,1])
-n <- dim(data4)[1]
-t_points <- 365
-time <- 1:365
-
-# Plot of the data
+# Simulated data plot
 x11()
-matplot(t(data4),type='l',xlab='Day',ylab='Temperature')
+plot(time,data4[1,],type = 'l', ylim = c(-10,10), col = 'firebrick2', lwd = 2)
+for(i in 2:n1){
+  lines(time,data4[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in (n1 + 1):n){
+  lines(time,data4[i,],type = 'l', col = 'blue', lwd = 2)
+}
+title('Simulated data - model 4')
+
+
+# Covariance matrix of the data
+cov_4 <- cov(data4)
 
 x11()
-plot(time,data4[1,],ylim=c(-40,30))
-for (i in 2:dim(data4)[1])
-  lines(time,data4[i,])
+image.plot(time,time,cov_4,main='Covariance matrix')
 
-# Covariance matrix and plot
-K_4 <- cov(data4)
+# Smoothed data for the second cluster
+eig_4_2 <- eigen(K_4_2)
+values_4_2 <- eig_4_2$values
+vectors_4_2 <- eig_4_2$vectors
 
+alpha <- 0.1
 x11()
-image.plot(time,time,K_4,main='Covariance matrix')
+plot(time, data4[n1+1,], type = 'l', lwd = 2)
+lines(time, f_alpha_approx(data4[n1+1,],1,values_4_2,vectors_4_2), type = 'l', lwd = 2, col = 'firebrick2')
+lines(time, f_alpha_approx(data4[n1+1,],0.1,values_4_2,vectors_4_2), type = 'l', lwd = 2, col = 'blue')
+lines(time, f_alpha_approx(data4[n1+1,],0.01,values_4_2,vectors_4_2), type = 'l', lwd = 2, col = 'forestgreen')
+title('Best value for alpha is 0.1 for the second cluster')
 
-# Eigenvalues and eigenfunctions of the covariance matrix
-eig_4 <- eigen(K_4)
-values_4 <- eig_4$values
-vectors_4 <- eig_4$vectors
+# Smoothed data for the first cluster
+eig_4_1 <- eigen(K_4_1)
+values_4_1 <- eig_4_1$values
+vectors_4_1 <- eig_4_1$vectors
 
 x11()
 plot(time, data4[1,], type = 'l', lwd = 2)
-lines(time, f_alpha_approx(data4[1,],1,values_4,vectors_4), type = 'l', lwd = 2, col = 'firebrick2')
-lines(time, f_alpha_approx(data4[1,],10,values_4,vectors_4), type = 'l', lwd = 2, col = 'blue')
-lines(time, f_alpha_approx(data4[1,],100,values_4,vectors_4), type = 'l', lwd = 2, col = 'forestgreen')
-title ('Curves comparison for alpha: best alpha=10')
+lines(time, f_alpha_approx(data4[1,],1,values_4_1,vectors_4_1), type = 'l', lwd = 2, col = 'firebrick2')
+lines(time, f_alpha_approx(data4[1,],0.1,values_4_1,vectors_4_1), type = 'l', lwd = 2, col = 'blue')
+lines(time, f_alpha_approx(data4[1,],0.01,values_4_1,vectors_4_1), type = 'l', lwd = 2, col = 'forestgreen')
+title('Best value for alpha is 0.1 for the first cluster')
 
-
-alpha <- 10
-f.data_alpha_sim_4<- matrix(0, nrow = n, ncol = t_points)
-for (i in 1:n){
-  f.data_alpha_sim_4[i,] <- f_alpha_approx(data4[i,],alpha,values_4,vectors_4)
-}
 
 # alpha-Mahalanobis distance matrix 
 Mahalanobis_Distance_4 <- matrix(0, nrow = n, ncol = n)
-for (i in 1:n){
-  for (j in 1:n){
-    Mahalanobis_Distance_4[i,j] <- alpha_Mahalanobis(alpha,data4[i,],data4[j,],values_4,vectors_4)
+for (i in 1:n1){
+  for (j in 1:n1){
+    Mahalanobis_Distance_4[i,j] <- alpha_Mahalanobis(alpha,data4[i,],data4[j,],values_4_1,vectors_4_1)
+  }
+}
+for (i in (n1+1):n){
+  for (j in (n1+1):n){
+    Mahalanobis_Distance_4[i,j] <- alpha_Mahalanobis(alpha,data4[i,],data4[j,],values_4_2,vectors_4_2)
   }
 }
 
 x11()
 image.plot(1:n,1:n,Mahalanobis_Distance_4)
 
-x11()
-plot(time,f.data_alpha_sim_4[1,],type = 'l', ylim = c(-40,30), col = 'firebrick2', lwd = 2)
-for(i in 2:n)
-  lines(time,f.data_alpha_sim_4[i,],type = 'l', col = 'firebrick2',lwd = 2)
-title('Smoothed simulated data - model 4')
+time4 <- time
 
-time45 <- time
-
-################ DATA SIMULATION - MODEL 5 #####################################
-# The following model is taken from Secchi's TDE (19.07.2019). There are three clusters
-
-data5 <- read.table('data_model5.txt',header=TRUE)
-data5 <- data5[,1:365]
-data5 <- as.matrix(data5)
-t_points <- 365
-time <- 1:365
-n <- dim(data5)[1]
-
-x11()
-matplot(t(data5),type='l',main='Data5',xlab='time',ylab='Values',ylim=range(data5))
-
-x11()
-plot(time,data5[1,],ylim=c(9,28),type='l')
-for (i in 2:n)
-  lines(time,data5[i,])
-
-# Covariance matrix and plot
-K_5 <- cov(data5)
-
-x11()
-image.plot(time,time,K_5,main='Covariance matrix')
-
-# Eigenvalues and eigenfunctions of the covariance matrix
-eig_5 <- eigen(K_5)
-values_5 <- eig_5$values
-vectors_5 <- eig_5$vectors
-
-x11()
-plot(time, data5[1,], type = 'l', lwd = 2)
-lines(time, f_alpha_approx(data5[1,],1,values_5,vectors_5), type = 'l', lwd = 2, col = 'firebrick2')
-lines(time, f_alpha_approx(data5[1,],0.1,values_5,vectors_5), type = 'l', lwd = 2, col = 'blue')
-lines(time, f_alpha_approx(data5[1,],0.01,values_5,vectors_5), type = 'l', lwd = 2, col = 'forestgreen')
-title ('Curves comparison for alpha: best alpha=10')
+# f.data_alpha_sim_4 <- matrix(0, nrow = n, ncol = t_points)
+# for (i in 1:n1){
+#   f.data_alpha_sim_4[i,] <- f_alpha_approx(data4[i,],alpha,values_4_1,vectors_4_1)
+# }
+# for (i in (n1+1):n){
+#   f.data_alpha_sim_4[i,] <- f_alpha_approx(data4[i,],alpha,values_4_2,vectors_4_2)
+# }
+# x11()
+# plot(time,f.data_alpha_sim_4[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2)
+# for(i in 2:n1){
+#   lines(time,f.data_alpha_sim_4[i,],type = 'l', col = 'firebrick2',lwd = 2)
+# }
+# for (i in (n1+1):n){
+#   lines(time,f.data_alpha_sim_4[i,],type = 'l', col = 'blue', lwd = 2)
+# }
+# title('Smoothed data')
 
 
-alpha <- 10
-f.data_alpha_sim_5<- matrix(0, nrow = n, ncol = t_points)
-for (i in 1:n){
-  f.data_alpha_sim_5[i,] <- f_alpha_approx(data5[i,],alpha,values_5,vectors_5)
-}
 
-# alpha-Mahalanobis distance matrix 
-Mahalanobis_Distance_5 <- matrix(0, nrow = n, ncol = n)
-for (i in 1:n){
-  for (j in 1:n){
-    Mahalanobis_Distance_5[i,j] <- alpha_Mahalanobis(alpha,data5[i,],data5[j,],values_5,vectors_5)
-  }
-}
+##### FINAL WORKSPACE #### 
+# Remove useless variables and functions
+rm(list=c('data','random_process_1','random_process_2','random_process_3'))
+rm(list=c('random_process_cluster_1','random_process_cluster_2','random_process_cluster'))
+rm(list=c('mu_2','mu_3','u_2','i','j','m','c'))
+rm(list = c('n','t_points','time','n1'))
+rm(list=c('values_1','values_2','values_3','vectors_1','vectors_2','vectors_3'))
 
-x11()
-image.plot(1:n,1:n,Mahalanobis_Distance_5)
-
-x11()
-plot(time,f.data_alpha_sim_5[1,],type = 'l', ylim = c(-40,30), col = 'firebrick2', lwd = 2)
-for(i in 2:n)
-  lines(time,f.data_alpha_sim_5[i,],type = 'l', col = 'firebrick2',lwd = 2)
-title('Smoothed simulated data - model 5')
+rm(list=c('cont_proc_1','cont_proc_2','cont_proc_3'))
+rm(list=c('main_proc_1','main_proc_2','main_proc_3'))
+rm(list=c('cov_M1','cov_M2','cov_M3','cov_M4'))
+rm(list=c('cluster_1','cluster_2'))
 
 
-################ DATA SIMULATION - MODEL 6 #####################################
-library(fdakma)
-library(fda)
-library(kma)
-
-data(kma.data)
-data6 <- kma.data$y0
-# y1_6 <- kma.data$y1
-
-time <- as.vector(kma.data$x)
-t_points <- 200
-n <- dim(data6)[1]
-
-x11()
-matplot(t(data6),type='l')
-
-K_6 <- cov(data6)
-
-x11()
-image.plot(time,time,K_6,main='Covariance matrix')
-
-# Eigenvalues and eigenfunctions of the covariance matrix
-eig_6 <- eigen(K_6)
-values_6 <- eig_6$values
-vectors_6 <- eig_6$vectors
-
-alpha <- 0
-f.data_alpha_sim_6<- matrix(0, nrow = n, ncol = t_points)
-for (i in 1:n){
-  f.data_alpha_sim_6[i,] <- f_alpha_approx(data6[i,],alpha,values_6,vectors_6)
-}
-
-x11()
-plot(time, data6[1,], type = 'l', lwd = 2)
-lines(time, f_alpha_approx(data6[1,],0,values_6,vectors_6), type = 'l', lwd = 2, col = 'firebrick2')
-lines(time, f_alpha_approx(data6[1,],0.1,values_6,vectors_6), type = 'l', lwd = 2, col = 'blue')
-lines(time, f_alpha_approx(data6[1,],0.01,values_6,vectors_6), type = 'l', lwd = 2, col = 'forestgreen')
-title ('Curves comparison for alpha: best alpha=0')
-
-# alpha-Mahalanobis distance matrix 
-Mahalanobis_Distance_6 <- matrix(0, nrow = n, ncol = n)
-for (i in 1:n){
-  for (j in 1:n){
-    Mahalanobis_Distance_6[i,j] <- alpha_Mahalanobis(alpha,data6[i,],data6[j,],values_6,vectors_6)
-  }
-}
-
-x11()
-image.plot(1:n,1:n,Mahalanobis_Distance_6)
-
-time6 <- time
-
-
-# Remove useless variables
-rm(list=c('data','kma.data','random_process_1','random_process_2','random_process_3'))
-rm(list=c('mu_2','mu_3','u_2'))
-rm(list = c('n','t_points','time'))
-
-##### Save Workspace ####
+# Save Workspace
 #setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
 #save.image("Simulated_WP.RData")
 
