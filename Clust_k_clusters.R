@@ -11,54 +11,39 @@ load('Simulated_WP.RData')
 data <- data1
 eig <- eig_1
 time <- time123
-rm(list=c('data1','data2','data3','data4','data5','data6'))
-rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5','eig_6'))
-rm(list=c('time123','time45','time6'))
+rm(list=c('data1','data2','data3','data4'))
+rm(list=c('eig_1','eig_2','eig_3'))
+rm(list=c('time123','time4'))
 
 # simulated data - model 2
 data <- data2
 eig <- eig_2
 time <- time123
-rm(list=c('data1','data2','data3','data4','data5','data6'))
-rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5','eig_6'))
-rm(list=c('time123','time45','time6'))
+rm(list=c('data1','data2','data3','data4'))
+rm(list=c('eig_1','eig_2','eig_3'))
+rm(list=c('time123','time4'))
 
 # simulated data - model 3
 data <- data3
 eig <- eig_3
 time <- time123
-rm(list=c('data1','data2','data3','data4','data5','data6'))
-rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5','eig_6'))
-rm(list=c('time123','time45','time6'))
+rm(list=c('data1','data2','data3','data4'))
+rm(list=c('eig_1','eig_2','eig_3'))
+rm(list=c('time123','time4'))
 
-# simulated data - model 4
+# simulated data - model 4. 
+# The covariance matrix of data4 is cov_4 and K_4_1 and K_4_2 are the covariance matrices of the two clusters
+# No eig has been computed 
 data <- data4
-eig <- eig_4
-time <- time45
-rm(list=c('data1','data2','data3','data4','data5','data6'))
-rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5','eig_6'))
-rm(list=c('time123','time45','time6'))
-
-# simulated data - model 5
-data <- data5
-eig <- eig_5
-time <- time45
-rm(list=c('data1','data2','data3','data4','data5','data6'))
-rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5','eig_6'))
-rm(list=c('time123','time45','time6'))
-
-# simulated data - model 6
-data <- data6
-eig <- eig_6
-time <- time6
-rm(list=c('data1','data2','data3','data4','data5','data6'))
-rm(list=c('eig_1','eig_2','eig_3','eig_4','eig_5','eig_6'))
-rm(list=c('time123','time45','time6'))
+time <- time4
+rm(list=c('data1','data2','data3','data4'))
+rm(list=c('eig_1','eig_2','eig_3'))
+rm(list=c('time123','time4'))
 
 
 
 #### LOSS FUNCTION ####
-# centroids is a matrix with nrow = n_clust and nco = t_points
+# centroids is a matrix with nrow = n_clust and ncol = t_points
 # eig is the list of eigenvalues and eigenvectors
 
 gibbs_loss <- function(n_clust, centroids, label , eig, data){
@@ -237,26 +222,6 @@ rm(data2)
 # rm(data4)
 
 
-# Plot model 4,5,6
-x11()
-par(mfrow = c(1,2))
-plot(time,data[1,],type = 'l', ylim = c(-3.5,4), lwd = 2, main = "Data")
-for(i in 2:n){
-  lines(time,data[i,],type = 'l',lwd = 2)
-}
-
-plot(time,data1[1,],type = 'l', ylim = c(-3.5,4), col = 'firebrick2', lwd = 2, main = "Clustered data")
-for (i in 2:dim(data1)[1]){
-  lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
-}
-for (i in 1:dim(data2)[1]){
-  lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
-}
-for (i in 1:dim(data3)[1]){
- lines(time,data3[i,],type = 'l', col = 'forestgreen',lwd = 2)
-}
-
-
 
 # ##### Theoretical optimal plot vs clustering plot SMOOTHED ####
 # data1 <- f.data_alpha_sim[which(c_opt=='1'),]
@@ -382,7 +347,7 @@ fda_clustering_mahalanobis_warning <- function(n_clust, alpha, cov_matrix, toll,
       diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
       dis_centroids <- norm(as.matrix(diff_centroids),type = 'i')
       
-      eps <- 1.6
+      eps <- # funzione per eps
       if (dis_centroids <= eps )
         flag <- flag + 1
     }
@@ -1021,26 +986,6 @@ data2 <- data[which(c_opt=='2'),]
 data3 <- data[which(c_opt=='3'),]
 
 
-# Plot Model 4,5,6
-x11()
-par(mfrow = c(1,2))
-plot(time,data[1,],type = 'l', ylim = c(-3.5,4), lwd = 2, main = "Data")
-for(i in 2:n){
-  lines(time,data[i,],type = 'l',lwd = 2)
-}
-
-plot(time,data1[1,],type = 'l', ylim = c(-3.5,4), col = 'firebrick2', lwd = 2, main = "Clustered data")
-for (i in 2:dim(data1)[1]){
-  lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
-}
-for (i in 1:dim(data2)[1]){
-  lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
-}
-for (i in 1:dim(data3)[1]){
-  lines(time,data3[i,],type = 'l', col = 'forestgreen',lwd = 2)
-}
-
-
 
 
 #### FUNCTIONS THAT COULD BE USED ####
@@ -1234,7 +1179,3 @@ for (i in 1:dim(data3)[1]){
 # title('Simulated data')
 # 
 # 
-# # Simulated  data plot for model 4,5,6
-# x11()
-# matplot(t(data),type='l',main='Data',xlab='time',ylab='Values',ylim=range(data))
-
