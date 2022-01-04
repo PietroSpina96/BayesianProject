@@ -4,6 +4,7 @@ setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject"
 #setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
 
 load('Simulated_WP.RData')
+load('Functions_WP.RData')
 
 
 # Choose the model for the simulation:
@@ -781,7 +782,7 @@ k <- 5
 clust <- fda_clustering_mahalanobis_union(n_clust = k, alpha = alpha, eig = eig,
                                           toll = 1e-10, data = data)
 
-
+ 
 #### CLUSTERING FUNCTION UPDATING COVARIANCE WITHIN CLUSTERS ####
 # There is only one while loop (flag_1 and not flag_2)
 fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,data){
@@ -810,7 +811,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
     y0[1] <- sample(vect_sample,1)
     
     for (k in 2:n_clust) {
-      value <- y0[k-1]
+      value <- y0[k-1] 
       
       for (i in 1:length(vect_sample)){
         if (vect_sample[i] == value)
@@ -866,7 +867,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
   loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, 
                             label = c_lab, eig = eig, data = data)
   
-  
+   
   # Create the vector and the matrix that will contain eigenvalues/eigenvectors of a single cluster
   values_k <- rep(0,t_points)
   vector_k <- matrix (0, nrow = t_points, ncol = t_points)
@@ -918,49 +919,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
 }
 
 
-gibbs_loss <- function(n_clust, centroids, label , eig, data){
-  n <- dim(data)[1]
-  res = rep(0,n_clust)
-  sum_partial <- 0
-  
-  for (k in 1:n_clust){
-    for (i in 1:n){
-      if (label[i] == k){
-        sum_partial = alpha_Mahalanobis(alpha,data[i,],centroids[k,],eig$values,eig$vectors)
-        res[k] = res[k] + sum_partial
-      }
-    }
-  }
-  
-  tot = sum(res)
-  return(tot)
-}
-
-# Modified for eigenvalues/eigenvectros related to the clusters. Both functions are called in the code
-gibbs_loss_k <- function(n_clust, centroids, label , values_matrix, vector_matrix, data){
-  t_points <- dim(data)[2]
-  n <- dim(data)[1]
-  
-  res = rep(0,n_clust)
-  sum_partial <- 0
-  
-  values_k <- rep(0,t_points)
-  vector_k <- matrix(0, t_points, t_points)
-  
-  for (k in 1:n_clust){
-    values_k <- values_matrix[,k]
-    vector_k <- vector_matrix[((k-1)*t_points + 1):(k*t_points),]
-    for (i in 1:n){
-      if (label[i] == k){
-        sum_partial = alpha_Mahalanobis(alpha,data[i,],centroids[k,],values_k,vector_k)
-        res[k] = res[k] + sum_partial
-      }
-    }
-  }
-  
-  tot = sum(res)
-  return(tot)
-}
+ 
 
 # Application on the data
 n <- dim(data)[1]
@@ -988,7 +947,7 @@ data3 <- data[which(c_opt=='3'),]
 
 
 
-#### FUNCTIONS THAT COULD BE USED ####
+ #### FUNCTIONS THAT COULD BE USED ####
 
 # # Check
 # diff_centroids <- c1 - c2
