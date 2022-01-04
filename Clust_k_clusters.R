@@ -171,7 +171,7 @@ t_points <- dim(data)[2]
 k <- 2
 alpha <- 0.1
 
-clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, cov_matrix = K_1, toll = 1e-2,  data = data)
+clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, cov_matrix = cov(data), toll = 1e-2,  data = data)
 c_opt <- clust$label
 show(c_opt)  #label switching 
 
