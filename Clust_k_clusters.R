@@ -171,7 +171,7 @@ t_points <- dim(data)[2]
 k <- 2
 alpha <- 0.1
 
-clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, cov_matrix = cov(data), toll = 1e-2,  data = data)
+clust <- fda_clustering_mahalanobis(n_clust = k, alpha = alpha, cov_matrix = K_1, toll = 1e-2,  data = data)
 c_opt <- clust$label
 show(c_opt)  #label switching 
 
@@ -341,14 +341,18 @@ fda_clustering_mahalanobis_warning <- function(n_clust, alpha, cov_matrix, toll,
     loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, eig = eig, data = data)
   }
   
+  ## compute 'dists' distances matrix (to set smart tolerance + check small distances). Copia da Alessio
+  dists0=matrix(0,n_clust,n_clust) #distances 
   flag <- 0
   for (k in 1:(n_clust-1)){
     for (j in (k+1):n_clust){
       
       diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
       dis_centroids <- norm(as.matrix(diff_centroids),type = 'i')
+      print(sprintf(" - Clusters %d and %d - centroid distance = %f ",k,j,dis_centroids))
+      dists0[j,k]<-dists0[k,j]<-dis_centroids
       
-      eps <- # funzione per eps
+      eps <- median(dists0) # set epsilon as the median of initial distances (seems to work quite well)
       if (dis_centroids <= eps )
         flag <- flag + 1
     }
@@ -358,7 +362,7 @@ fda_clustering_mahalanobis_warning <- function(n_clust, alpha, cov_matrix, toll,
   if (flag > 0)
     print ("WARNING: the distance between some centroids is very small. Use a smaller K ")
   
-  return(list("label" = c_lab, "centroids" = centroids_mean, "loss" = loss_value2))
+  return(list("label" = c_lab, "centroids" = centroids_mean, "loss" = loss_value2, "eps" = eps))
   
 }
 
@@ -366,12 +370,14 @@ fda_clustering_mahalanobis_warning <- function(n_clust, alpha, cov_matrix, toll,
 n <- dim(data)[1]
 t_points <- dim(data)[2]
 
-k <- 3
+k <- 2
 alpha <- 0.1
 
 clust <- fda_clustering_mahalanobis_warning(n_clust = k, alpha = alpha, cov_matrix = K_1, toll = 1e-2,  data = data)
 c_opt <- clust$label
-show(c_opt)  #label switching 
+eps <- clust$eps
+show(c_opt) #label switching 
+show(eps)
 
 c1 <- clust$centroids[1,]
 c2 <- clust$centroids[2,]
