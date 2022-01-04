@@ -16,16 +16,23 @@ scalar_prod<- function (f1,f2) {
    return(res)
 }
 
-# equivalentemennte
-#scalar_prod_norm<- function (f1,f2) {
-# f sono vettori colonna
-#f1<-as.matrix(f1)
-#f2<-as.matrix(f2)
-#res<- (norm(f1+f2,'2')^2 - norm(f1-f2,'2')^2)/4
-#return(res)
-#}
+# # equivalently. Not loaded in the workspace
+# scalar_prod_norm<- function (f1,f2) {
+#    # f sono vettori colonna
+#    f1<-as.matrix(f1)
+#    f2<-as.matrix(f2)
+#    res<- (norm(f1+f2,'2')^2 - norm(f1-f2,'2')^2)/4
+#    return(res)
+# }
 
-#alpha-mahalanobis distance
+
+# alpha-mahalanobis distance
+# INPUT: 
+## alpha: smoothing parameter
+## lambda: eigenvalues 
+## eigenft: eigenfunctions (of the covariance matrix)
+
+# OUTPUT: alpha-mahalanobis distance (squared norm) between functions f1,f2
 alpha_Mahalanobis <- function(alpha,f1,f2,lambda, eigenft) {
    t_points <- length(f1)
    dis<-coeff<-prod<-rep(0,t_points)
@@ -42,6 +49,7 @@ alpha_Mahalanobis <- function(alpha,f1,f2,lambda, eigenft) {
 }
 
 #alpha_approximation of the function f with f_alpha
+# same input as above
 f_alpha_approx <-function(f,alpha,lambda,eigenft){
    t_points <- length(f)
    
@@ -60,6 +68,7 @@ f_alpha_approx <-function(f,alpha,lambda,eigenft){
 }
 
 # norm and inner product wrt sample covariance function K
+# same input as above
 norm2_K <- function (f,lambda,eigenft){
    t_points <- length(f)
    norm_vect<-prod<-rep(0,t_points)
@@ -90,6 +99,7 @@ inner_product_K<- function(f,g,lambda,eigenft) {
 
 
 # Covariance function estimator K_hat
+# It has been replaced by the R_covariance function: there is a slightly difference in the elements
 kernel_estimator <- function(process,med,n,s,t,points){
   est <- rep(0,points)
   for (i in 1:n) {
@@ -102,7 +112,15 @@ kernel_estimator <- function(process,med,n,s,t,points){
  
  
 ##### Model Functions ####
- ###### Gibbs loss ####
+###### Gibbs loss ####
+# INPUT:
+## n_clust: number of clusters fixed a priori
+## centroids: matrix of the centroids (random or mean) with nrow=n_clust 
+## label: vector of labels
+## eig: list of eigenvalues and eigenfunctions
+## data == dataset
+
+# OUTPUT: value of the gibbs loss
 gibbs_loss <- function(n_clust, centroids, label , eig, data){
    n <- dim(data)[1]
    res = rep(0,n_clust)
@@ -121,7 +139,12 @@ gibbs_loss <- function(n_clust, centroids, label , eig, data){
    return(tot)
 }
  
-# Modified for eigenvalues/eigenvectros related to the clusters. Both functions are called in the code
+# Modified for eigenvalues/eigenvectors related to the clusters. Both functions are called in the code
+# INPUT: 
+## values_matrix: matrix that contains the eigenvalues of all clusters
+## vector_matrix: matrix that contains the eigenvectors of all clusters
+
+# OUTPUT: value of the gibbs loss
 gibbs_loss_k <- function(n_clust, centroids, label , values_matrix, vector_matrix, data){
    t_points <- dim(data)[2]
    n <- dim(data)[1]
@@ -148,11 +171,13 @@ gibbs_loss_k <- function(n_clust, centroids, label , values_matrix, vector_matri
 } 
  
 ###### Original Clustering Function ####
-# The function works with n_clust=k
-# alpha is the smoothing parameter of the data
-# toll is the tolerance for the while loop
-# cov_matrix is the covariance matrix of the data
+# INPUT:
+## n_clust: number of clusters
+## alpha: smoothing parameter of the data
+## toll: tolerance for the while loop
+## cov_matrix: covariance matrix of the data
 
+# OUTPUT: list(clusters_vector_label, centroids, loss_value)
 fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
    
    t_points <- dim(data)[2]
@@ -261,8 +286,10 @@ require(gtools) # combinations()
 fda_clustering_mahalanobis_union <- function(n_clust, alpha, eig, toll, eps=0, data){
    max_clust <- n_clust
    print(sprintf(" ** CLUSTERING: up to k=%d clusters ** ",max_clust))
+   
    n <- dim(data)[1]
    t_points <- dim(data)[2]
+   
    # index of each centroid randomly defined through sampling
    y0 <- rep(0,max_clust)
    vect_sample <- 1:n
@@ -280,9 +307,11 @@ fda_clustering_mahalanobis_union <- function(n_clust, alpha, eig, toll, eps=0, d
    # vector of labels
    print("Calculating a-Mahalanobis distances...")
    c_lab <- rep(0,n)
+   
    #   and eigenfunctions for the alpha-mahalanobis function
    values <- eig$values
    vectors <- eig$vectors
+   
    Mahalanobis_Distance <- matrix(0, nrow = n, ncol = n)
    for (i in 1:n)
       for (j in 1:n)
@@ -303,17 +332,20 @@ fda_clustering_mahalanobis_union <- function(n_clust, alpha, eig, toll, eps=0, d
    centroids_random <- matrix(0,nrow = max_clust,ncol = t_points)
    for (k in 1:max_clust)
       centroids_random[k,] <- data[y0[k],]
+   
    loss_value1 <- gibbs_loss(n_clust = max_clust, centroids = centroids_random, 
                              label = c_lab, data = data)
    # update each centroid as the mean of the clusters data
    centroids_mean<-matrix(0,nrow = max_clust, ncol = t_points)
    for (k in 1:n_clust)
       centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
+   
    loss_value2 <- gibbs_loss(n_clust = max_clust, centroids = centroids_mean, 
                              label = c_lab, data = data)
    
    while(abs(loss_value1 - loss_value2) >= toll){
       c_lab <- rep(0,n)
+      
       Maha_dis_k <- matrix(0,nrow=n, ncol=max_clust)
       for (i in 1:n){
          for (k in 1:max_clust) 
@@ -321,7 +353,9 @@ fda_clustering_mahalanobis_union <- function(n_clust, alpha, eig, toll, eps=0, d
          index <- which.min(Maha_dis_k[i,])
          c_lab[i] <- index
       }
+      
       loss_value1 <- loss_value2
+      
       for (k in 1:n_clust)
          centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
    }
@@ -436,6 +470,7 @@ fda_clustering_mahalanobis_union <- function(n_clust, alpha, eig, toll, eps=0, d
 
 
 ###### Clustering Function Updating Covariances ####
+# INPUT: same input of fda_clustering_mahalanobis
 
 fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,data){
    
