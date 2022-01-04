@@ -10,51 +10,7 @@ library(roahd)
 setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
 
 load("Simulated_WP.RData")
-
-
-#### Functions for alpha-Mahalanobis approximation ####
-
-#alpha_approximation
-f_alpha_approx <-function(f,alpha,lambda,eigenft){
-  t_points <- length(f)
-  
-  coeff<-prod<-res<-rep(0,t_points)
-  approx<-matrix(0,t_points,t_points)
-  
-  for (j in 1:t_points) {
-    
-    coeff[j]<-lambda[j]/(lambda[j]+alpha)
-    prod[j]<-scalar_prod(f,eigenft[,j])
-    approx[,j]<- as.numeric(coeff[j]*prod[j])*eigenft[,j]
-    res<-res+approx[,j]
-    
-  }
-  return(res)
-}
-
-#alpha-mahalanobis distance
-alpha_Mahalanobis <- function(alpha,f1,f2,lambda, eigenft) {
-  t_points <- length(f1)
-  dis<-coeff<-prod<-rep(0,t_points)
-  
-  for (j in 1:t_points){
-    
-    coeff[j]<-lambda[j]/(lambda[j]+alpha)^2
-    prod[j]<-(scalar_prod(f1-f2,eigenft[,j]))^2
-    dis[j]<-coeff[j]*prod[j]
-    
-  }
-  res<-sum(dis)
-  return(res)
-}
-
-#scalar product
-scalar_prod<- function (f1,f2) {
-  # f sono vettori colonna
-  res<- t(f1)%*%f2
-  return(res)
-}
-
+load('Functions_WP.RData') 
 
 ###################### DATA SIMULATION - MODEL 1 ###############################
 
