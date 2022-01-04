@@ -1,8 +1,18 @@
+library(ggplot2)
+library(dplyr) # pipe (%>%)
+library(tidyr) # gather()
+library(tibble) # add_column()
+library(gridExtra) # grid.arrange()
+require(gtools) # combinations()
+# library(viridis) # color palette
+
+
 #### FUNCTIONS ####
 
 
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject") #Pietro
 #setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
+# setwd("C:\Users\imthe\OneDrive - Politecnico di Milano\6.1 Bayesian\Proj\GitBayesianProject") #Alessio
 
 load('Functions_WP.RData')
 
@@ -114,11 +124,11 @@ kernel_estimator <- function(process,med,n,s,t,points){
 ##### Model Functions ####
 ###### Gibbs loss ####
 # INPUT:
-## n_clust: number of clusters fixed a priori
+## n_clust:   number of clusters fixed a priori
 ## centroids: matrix of the centroids (random or mean) with nrow=n_clust 
-## label: vector of labels
-## eig: list of eigenvalues and eigenfunctions
-## data == dataset
+## label:     vector of labels
+## eig:       list of eigenvalues and eigenfunctions
+## data:      dataset
 
 # OUTPUT: value of the gibbs loss
 gibbs_loss <- function(n_clust, centroids, label , eig, data){
@@ -172,9 +182,9 @@ gibbs_loss_k <- function(n_clust, centroids, label , values_matrix, vector_matri
  
 ###### Original Clustering Function ####
 # INPUT:
-## n_clust: number of clusters
-## alpha: smoothing parameter of the data
-## toll: tolerance for the while loop
+## n_clust:    number of clusters
+## alpha:      smoothing parameter of the data
+## toll:       tolerance for the while loop
 ## cov_matrix: covariance matrix of the data
 
 # OUTPUT: list(clusters_vector_label, centroids, loss_value)
@@ -268,205 +278,6 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
    return(list("label" = c_lab, "centroids" = centroids_mean, "loss" = loss_value2))
    
 } 
-
-
-###### Clustering Function with Merging ####
-# eps is the tolerance for the union of clusters (eps = 0 -> original function)
-#     automatically set based on mean centroids distances
-# also outputs the comparison plot, but sometimes applies wrong colors
-#TODO: fix messed-up colors in some random cases
-library(ggplot2)
-library(dplyr) # pipe (%>%)
-library(tidyr) # gather()
-library(tibble) # add_column()
-library(gridExtra) # grid.arrange()
-require(gtools) # combinations()
-# library(viridis) # color palette
-
-fda_clustering_mahalanobis_union <- function(n_clust, alpha, eig, toll, eps=0, data){
-   max_clust <- n_clust
-   print(sprintf(" ** CLUSTERING: up to k=%d clusters ** ",max_clust))
-   
-   n <- dim(data)[1]
-   t_points <- dim(data)[2]
-   
-   # index of each centroid randomly defined through sampling
-   y0 <- rep(0,max_clust)
-   vect_sample <- 1:n
-   y0[1] <- sample(vect_sample,1)
-   
-   for (k in 2:max_clust) {
-      value <- y0[k-1]
-      for (i in 1:length(vect_sample))
-         if (vect_sample[i] == value)
-            t = i
-      vect_sample <- vect_sample[-t]
-      y0[k] <- sample(vect_sample,1)
-   }
-   
-   # vector of labels
-   print("Calculating a-Mahalanobis distances...")
-   c_lab <- rep(0,n)
-   
-   #   and eigenfunctions for the alpha-mahalanobis function
-   values <- eig$values
-   vectors <- eig$vectors
-   
-   Mahalanobis_Distance <- matrix(0, nrow = n, ncol = n)
-   for (i in 1:n)
-      for (j in 1:n)
-         Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,data[i,],data[j,],values,vectors)
-   
-   # i-th unit belongs to cluster_k if the distance(centroid_k,i-th unit) is the smallest one
-   print("Assigning clusters...")
-   Maha_dis <- matrix(0,nrow=n, ncol=max_clust)
-   for (i in 1:n){
-      for (k in 1:max_clust) 
-         Maha_dis[i,k] <- Mahalanobis_Distance[i,y0[k]]
-      index <- which.min(Maha_dis[i,])
-      c_lab[i] <- index
-   }
-   
-   # define the matrix of the centroids (random centroids)
-   print("Compute centroids...")
-   centroids_random <- matrix(0,nrow = max_clust,ncol = t_points)
-   for (k in 1:max_clust)
-      centroids_random[k,] <- data[y0[k],]
-   
-   loss_value1 <- gibbs_loss(n_clust = max_clust, centroids = centroids_random, 
-                             label = c_lab, data = data)
-   # update each centroid as the mean of the clusters data
-   centroids_mean<-matrix(0,nrow = max_clust, ncol = t_points)
-   for (k in 1:n_clust)
-      centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
-   
-   loss_value2 <- gibbs_loss(n_clust = max_clust, centroids = centroids_mean, 
-                             label = c_lab, data = data)
-   
-   while(abs(loss_value1 - loss_value2) >= toll){
-      c_lab <- rep(0,n)
-      
-      Maha_dis_k <- matrix(0,nrow=n, ncol=max_clust)
-      for (i in 1:n){
-         for (k in 1:max_clust) 
-            Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,],values,vectors)
-         index <- which.min(Maha_dis_k[i,])
-         c_lab[i] <- index
-      }
-      
-      loss_value1 <- loss_value2
-      
-      for (k in 1:n_clust)
-         centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
-   }
-   
-   # -> PLOT: prepare data to plot (df)
-   df <- centroids_mean %>% t() %>% as.data.frame() %>% 
-      add_column(x=1:dim(centroids_mean)[2]) %>% ##############TODO: x=time
-      gather(group, y, -x)
-   cluster_colors <- rainbow(max_clust) # generate colors
-   # -> PLOT: current clusters (now just saved, actually plotted later with clustered colors)
-   theplot.before <- ggplot(df, aes(x, y, color = group)) + geom_line(size=1)
-   # theplot.before
-   
-   ## compute 'dists' distances matrix (to set smart tolerance + check small distances)
-   dists0=matrix(0,max_clust,max_clust) #distances (with original k=max_clust)
-   for (k in 1:(max_clust-1)){
-      for (j in (k+1):max_clust){
-         diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
-         dis_centroids <- norm(as.matrix(diff_centroids),type = 'i')
-         print(sprintf(" - Clusters %d and %d - centroid distance = %.2f",k,j,dis_centroids))
-         dists0[j,k]<-dists0[k,j]<-dis_centroids
-      }
-   }
-   # DO: union of close clusters
-   eps=median(dists0) # set epsilon as the median of initial distances (seems to work quite well)
-   flag <- if(eps) 0 else 1 # 0 = check closeness (enter the while)
-   do.union <- !flag
-   clusts <- 1:max_clust # keep track of the mergings, eg. (1,2,3,4,5) -> (1,2,1,1,5)
-   print("=> Original clusters vector:")
-   print(clusts)
-   while (do.union & !flag & n_clust>1){ # check closeness
-      print(sprintf("Searching clusters to merge with tolerance eps=%.2f...",eps))
-      did.a.merge=FALSE
-      # dists=matrix(0,n_clust,n_clust) #distances (updated every while-loop)
-      clusts.unique <- clusts %>% unique()
-      clusts.combs <- combinations( clusts.unique%>%length(), 2, clusts.unique )
-      # for (k in 1:(n_clust-1))
-      #   for (j in (k+1):n_clust){
-      # for (k in clusts.combs[,1])
-      for (i in 1:(clusts.unique%>%length())){
-         k<-clusts.combs[i,1]
-         j<-clusts.combs[i,2]
-         # diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
-         # diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
-         # d<-dists[j,k]<-dists[k,j]<-norm(as.matrix(diff_centroids),type = 'i')
-         # d<-norm(as.matrix(diff_centroids),type = 'i')
-         d <- dists0[j,k]
-         if (d < eps){ # then merge cluster j into k
-            c_lab[ which(c_lab==j) ] <- k
-            cluster_colors[j] <- cluster_colors[k]
-            clusts[j] <- k
-            print(sprintf(" -> MERGED: cluster %d into %d. (centroid distance = %.2f)",j,k,d))
-            did.a.merge=TRUE
-         }
-      }
-      if(did.a.merge){
-         print("=> Updated clusters vector:")
-         print(clusts)
-      }
-      
-      # convert the label vector to observe the levels and then reconvert to return a vector
-      c_lab <- as.factor(c_lab)
-      labels <- levels(c_lab)
-      k_new <- length(labels)
-      c_lab <- as.numeric(c_lab)
-      
-      centroids_mean_post <- matrix(0, nrow=k_new , ncol=t_points )
-      for (k in 1:k_new)
-         centroids_mean_post[k,] <- colMeans(data[which(c_lab==k),])
-      
-      if (k_new == n_clust) {
-         flag_matr <- matrix(0, nrow = k_new, ncol = t_points)
-         
-         for (k in 1:k_new)
-            for (i in 1:t_points) 
-               if (centroids_mean_post[k,i] == centroids_mean[k,i])
-                  flag_matr[k,i] <- 1
-         
-         if (sum(flag_matr) == k_new*(t_points))
-            flag <- 1
-      }
-      n_clust <- k_new
-      centroids_mean <- centroids_mean_post
-   }
-   
-   # PLOTs
-   if(do.union){ # PLOT before+after (unmerged + merged)
-      print(sprintf("Merging done. Obtained %d clusters.",n_clust))
-      # -> PLOT: prepare data to plot (df)
-      df <- centroids_mean_post %>% t() %>% as.data.frame() %>% 
-         add_column(x=1:dim(centroids_mean_post)[2]) %>%
-         gather(group, y, -x)
-      # merged clusters plot
-      theplot.after <- ggplot(df, aes(x, y, color = group)) + geom_line(size=1)
-      # assign colors
-      theplot.before = theplot.before + scale_color_manual(values=cluster_colors)
-      theplot.after  = theplot.after  + scale_color_manual(values=cluster_colors %>% unique())
-      # show
-      grid.arrange(theplot.before, theplot.after, nrow = 1)
-   } else { #PLOT before only (didn't merge anything)
-      print(sprintf("Done.",n_clust))
-      theplot.before
-   }
-   
-   return(list("label" = c_lab,
-               "centroids" = centroids_mean,
-               "loss" = loss_value2
-               # "plot" = grid.arrange(theplot.before, theplot.after, nrow=1)
-   ))
-}
-
 
 
 ###### Clustering Function Updating Covariances ####
@@ -605,6 +416,125 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
    
 }
  
+
+
+######  Merging clusters ####
+# looks at centroids_mean and detects if some clusters are too close and should be merged.
+# eps = tolerance for the union of clusters (eps = 0 -> no merging),
+#       automatically set based on mean centroids distances
+## INPUT: centroids_mean   = clusters
+##        eps              = merging tolerance (*optional)
+## OUTPUT: centroids_mean (reduced)
+#TODO: fix messed-up cluster tracking in some random cases
+
+clusters_union <- function(clust, eps=0){
+   print("  **  MERGING CLOSE CLUSTERS  **  ")
+   centroids_mean <- clust$centroids
+   c_lab <- clust$label
+   max_clust <- dim(centroids_mean)[1]
+   t_points <- dim(centroids_mean)[2]
+   
+   ## compute 'dists' distances matrix (to set smart tolerance + check small distances)
+   print("Calculating clusters' centroids distances...")
+   dists=matrix(0,max_clust,max_clust) #distances (with original k=max_clust)
+   for (k in 1:(max_clust-1)){
+      for (j in (k+1):max_clust){
+         diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
+         dis_centroids <- norm(as.matrix(diff_centroids),type = 'i')
+         print(sprintf(" - Clusters %d and %d - centroid distance = %.2f",k,j,dis_centroids))
+         dists[j,k]<-dists[k,j]<-dis_centroids
+      }
+   }
+   
+   # DO: union of close clusters
+   clusts <- 1:max_clust # keep track of the mergings, eg. (1,2,3,4,5) -> (1,2,1,1,5)
+   print("=> Initial clusters vector:")
+   print(clusts)
+   
+   eps <- median(dists) # set epsilon as the median of initial distances (seems to work quite well)
+   do.union <- TRUE
+   n_clust <- max_clust
+   while (do.union & n_clust>1){ # check closeness
+      print(sprintf("Searching clusters to merge with tolerance eps=%.2f...",eps))
+      did.a.merge <- FALSE
+      clusts.unique <- clusts %>% unique() # eg. (1,2,1,1,5) -> (1,2,5)
+      clusts.combs <- combinations( clusts.unique%>%length(), 2, clusts.unique ) # creates a n_clust-by-2 matrix with all combinations of cluster couples
+      # for (k in 1:(n_clust-1))
+      #   for (j in (k+1):n_clust){
+      # for (k in clusts.combs[,1])
+      for (i in 1:(clusts.unique%>%length())){
+         k<-clusts.combs[i,1]
+         j<-clusts.combs[i,2]
+         # diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
+         # diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
+         # d<-dists[j,k]<-dists[k,j]<-norm(as.matrix(diff_centroids),type = 'i')
+         # d<-norm(as.matrix(diff_centroids),type = 'i')
+         d <- dists[j,k]
+         if (d < eps){ # then merge cluster j into k
+            did.a.merge <- TRUE
+            c_lab[ which(c_lab==j) ] <- k
+            # cluster_colors[j] <- cluster_colors[k]
+            clusts[j] <- k
+            print(sprintf(" -> MERGED: cluster %d into %d. (centroid distance = %.2f)",j,k,d))
+         }
+      }
+      if(did.a.merge){
+         print("=> Updated clusters vector:")
+         print(clusts)
+      }
+      
+      # how many labels left
+      k_new <- c_lab %>% unique() %>% length()
+      
+      # compute new centroids
+      centroids_mean_post <- matrix(0, nrow=k_new , ncol=t_points)
+      for (k in 1:k_new)
+         centroids_mean_post[k,] <- colMeans(data[which(c_lab==(clusts%>%unique())[k]),])
+      
+      if (k_new == n_clust) {
+         flag_matr <- matrix(0, nrow = k_new, ncol = t_points)
+         
+         for (k in 1:k_new)
+            for (i in 1:t_points) 
+               if (centroids_mean_post[k,i] == centroids_mean[k,i])
+                  flag_matr[k,i] <- 1
+               
+         if (sum(flag_matr) == k_new*(t_points))
+            do.union <- FALSE
+      }
+      n_clust <- k_new
+      centroids_mean <- centroids_mean_post
+   }
+   print(sprintf("==> Merging done. Obtained %d clusters (starting from %d).",n_clust,max_clust))
+   
+   return(list("label" = c_lab,
+               "centroids" = centroids_mean,
+               #"loss" = loss_value2, # maybe again meglio una funzione a parte?
+               "K" = n_clust))
+}
+
+
+###### PLOT clusters ####
+# plots (x,y)=(time,centroids_mean) with colors
+clusters_plot <- function(time, centroids_mean, colors){
+   ## INPUT: time             = x (vector: n)
+   ##        centroids_mean   = y (matrix: k by n)
+   ##        colors           = cluster hex colors (vector: n)(*optional)
+   ## OUTPUT: the plot object
+   
+   if(missing(colors)) colors <- rainbow(dim(centroids_mean)[1]) # rainbow(n)
+   
+   df <- centroids_mean %>% t() %>% as.data.frame() %>% 
+      add_column(x=time) %>%
+      gather(group, y, -x)
+   
+   theplot <- ggplot(df, aes(x, y, color = group)) + 
+      geom_line(size=1) +
+      scale_color_manual(values=colors)
+   
+   return(theplot)
+}
+
 ##### Save WP ####
  
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
