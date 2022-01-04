@@ -486,7 +486,7 @@ title('Smoothed data')
 # Remove useless variables and functions
 rm(list=c('data','random_process_1','random_process_2','random_process_3'))
 rm(list=c('random_process_cluster_1','random_process_cluster_2','random_process_cluster'))
-rm(list=c('mu_2','mu_3','u_2','i','j','m','c'))
+rm(list=c('mu_2','mu_3','u_2','i','j','m'))
 rm(list = c('n','t_points','time','n1'))
 rm(list=c('values_1','values_2','values_3','vectors_1','vectors_2','vectors_3'))
 
