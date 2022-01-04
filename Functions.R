@@ -545,7 +545,7 @@ norm2_K <- function (f,lambda,eigenft){
 ##### Save WP ####
  
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
-save.image("Funtions_WP.RData")
+save.image("Functions_WP.RData")
  
  
  

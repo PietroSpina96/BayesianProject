@@ -507,22 +507,22 @@ image.plot(1:n,1:n,Mahalanobis_Distance_4)
 
 time4 <- time
 
-# f.data_alpha_sim_4 <- matrix(0, nrow = n, ncol = t_points)
-# for (i in 1:n1){
-#   f.data_alpha_sim_4[i,] <- f_alpha_approx(data4[i,],alpha,values_4_1,vectors_4_1)
-# }
-# for (i in (n1+1):n){
-#   f.data_alpha_sim_4[i,] <- f_alpha_approx(data4[i,],alpha,values_4_2,vectors_4_2)
-# }
-# x11()
-# plot(time,f.data_alpha_sim_4[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2)
-# for(i in 2:n1){
-#   lines(time,f.data_alpha_sim_4[i,],type = 'l', col = 'firebrick2',lwd = 2)
-# }
-# for (i in (n1+1):n){
-#   lines(time,f.data_alpha_sim_4[i,],type = 'l', col = 'blue', lwd = 2)
-# }
-# title('Smoothed data')
+f.data_alpha_sim_4 <- matrix(0, nrow = n, ncol = t_points)
+for (i in 1:n1){
+  f.data_alpha_sim_4[i,] <- f_alpha_approx(data4[i,],alpha,values_4_1,vectors_4_1)
+}
+for (i in (n1+1):n){
+  f.data_alpha_sim_4[i,] <- f_alpha_approx(data4[i,],alpha,values_4_2,vectors_4_2)
+}
+x11()
+plot(time,f.data_alpha_sim_4[1,],type = 'l', ylim = c(-2,7.5), col = 'firebrick2', lwd = 2)
+for(i in 2:n1){
+  lines(time,f.data_alpha_sim_4[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in (n1+1):n){
+  lines(time,f.data_alpha_sim_4[i,],type = 'l', col = 'blue', lwd = 2)
+}
+title('Smoothed data')
 
 
 
