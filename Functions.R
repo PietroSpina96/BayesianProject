@@ -476,9 +476,9 @@ clusters_union <- function(clust, eps=0){
          d <- dists[j,k]
          if (d < eps){ # then merge cluster j into k
             did.a.merge <- TRUE
-            c_lab[ which(c_lab==j) ] <- k
+            c_lab[ which(c_lab==j) ] <- clusts[k]
             # cluster_colors[j] <- cluster_colors[k]
-            clusts[j] <- k
+            clusts[j] <- clusts[k]
             writeLines(sprintf(" -> MERGED: cluster %d into %d. (centroid distance = %.2f)",j,k,d))
          }
       }
