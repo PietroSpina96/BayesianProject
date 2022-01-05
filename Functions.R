@@ -1,3 +1,7 @@
+#### FUNCTIONS ####
+
+#### SETUP ####
+
 library(ggplot2)
 library(dplyr) # pipe (%>%)
 library(tidyr) # gather()
@@ -5,10 +9,6 @@ library(tibble) # add_column()
 library(gridExtra) # grid.arrange()
 require(gtools) # combinations()
 # library(viridis) # color palette
-
-
-#### FUNCTIONS ####
-
 
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject") #Pietro
 #setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
@@ -534,6 +534,131 @@ clusters_plot <- function(time, centroids_mean, colors){
    
    return(theplot)
 }
+
+# The following function is not loaded in the workspace
+#####  Clustering function merging using loss minimization ####
+# The parameter eig corresponds to the output of the eigen function (list of eigenvalues and eigenvectors)
+# The function works with n_clust=k
+# alpha is the smoothing parameter
+# toll is the tolerance for the while loop
+
+# fda_clustering_mahalanobis_merge <- function(n_clust, alpha, eig, toll,data){
+#    
+#    n <- dim(data)[1] 
+#    t_points <- dim(data)[2]
+#    
+#    # index of each centroid randomly defined through sampling
+#    y0 <- rep(0,n_clust)
+#    vect_sample <- 1:n
+#    
+#    y0[1] <- sample(vect_sample,1)
+#    
+#    for (k in 2:n_clust) {
+#       value <- y0[k-1]
+#       
+#       for (i in 1:length(vect_sample)){
+#          if (vect_sample[i] == value)
+#             t = i
+#       }
+#       
+#       vect_sample <- vect_sample[-t]
+#       y0[k] <- sample(vect_sample,1)
+#    }
+#    
+#    # matrix of labels
+#    c_lab_mat <- matrix(0, nrow = n_clust, ncol = n)
+#    
+#    # loss vector
+#    loss_vec <- rep(0,n_clust)
+#    
+#    # eigenvalues and eigenfunctions for the alpha-mahalanobis function
+#    values <- eig$values
+#    vectors <- eig$vectors
+#    
+#    Mahalanobis_Distance <- matrix(0, nrow = n, ncol = n)
+#    for (i in 1:n){
+#       for (j in 1:n){
+#          Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,data[i,],data[j,],values,vectors)
+#       }
+#    }
+#    
+#    for (l in 1:n_clust){
+#       
+#       # vector of labels
+#       c_lab <- rep(0,n)
+#       
+#       # starting centroids
+#       y00 <- rep(0,l)
+#       for (x in 1:l){
+#          y00[x] <- y0[x]
+#       }
+#       
+#       # i-th unit belongs to cluster_k if the distance(centroid_k,i-th unit) is the smallest one
+#       Maha_dis <- matrix(0,nrow=n, ncol=l)
+#       for (i in 1:n){
+#          for (k in 1:l) {
+#             Maha_dis[i,k] <- Mahalanobis_Distance[i,y00[k]]
+#          }
+#          index <-which.min(Maha_dis[i,])
+#          c_lab[i] <- index
+#       }
+#       
+#       # define the matrix of the centroids (random centroids)
+#       centroids_random <- matrix(0,nrow = l,ncol = t_points )
+#       for (k in 1:l){
+#          centroids_random[k,] <- data[y00[k],]
+#       }
+#       
+#       loss_value1 <- gibbs_loss(n_clust = l, centroids = centroids_random, label = c_lab, data = data)
+#       
+#       # update each centroid as the mean of the clusters data
+#       centroids_mean<-matrix(0,nrow = l, ncol = t_points )
+#       for (k in 1:l){
+#          centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
+#       }
+#       
+#       loss_value2 <- gibbs_loss(n_clust = l, centroids = centroids_mean, label = c_lab, data = data)
+#       
+#       Maha_dis_k <- matrix(0,nrow=n, ncol=l)
+#       for (i in 1:n ){
+#          for (k in 1:l) {
+#             Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,],values,vectors)
+#          }
+#          index2 <- which.min(Maha_dis_k[i,])
+#          c_lab[i] <- index2
+#       }
+#       
+#       loss_value1 <- loss_value2
+#       
+#       for (k in 1:l){
+#          centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
+#       }
+#       
+#       loss_value2 <- gibbs_loss(n_clust = l, centroids = centroids_mean, label = c_lab, data = data)
+#       
+#       loss_vec[l] <- loss_value2
+#       c_lab_mat[l,] <- c_lab
+#       
+#       if (l == 1){
+#          centr_mat <- centroids_mean
+#       } else {centr_mat <- rbind(centr_mat,centroids_mean)}
+#    } 
+#    
+#    loss <- min(loss_vec)
+#    index_loss <- match(loss,loss_vec)
+#    
+#    if (index_loss == 1){
+#       a <- 1
+#    } else {a <- sum(1:(index_loss-1)) + 1}
+#    
+#    if (index_loss == 1){
+#       b <- 1
+#    } else {b <- sum(1:index_loss)}
+#    
+#    return(list("label" = c_lab_mat[index_loss,], "centroids" = centr_mat[a:b,], "loss" = loss, "loss_vector" = loss_vec))
+#    
+# } 
+
 
 ##### Save WP ####
  
