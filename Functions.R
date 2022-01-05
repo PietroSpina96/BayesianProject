@@ -120,7 +120,22 @@ kernel_estimator <- function(process,med,n,s,t,points){
   return(estimator)
 }
  
- 
+# compute distances between centroids (used in cluster merging)
+centroids_dists <- function(centroids_mean,normtype='i'){
+   writeLines("Calculating clusters' centroids distances...")
+   max_clust <- dim(centroids_mean)[1]
+   dists=matrix(0,max_clust,max_clust) #distances (with original k=max_clust)
+   for (k in 1:(max_clust-1)){
+      for (j in (k+1):max_clust){
+         diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
+         dis_centroids <- norm(as.matrix(diff_centroids),type = normtype)
+         writeLines(sprintf(" - Clusters %d and %d - centroid distance = %.2f",k,j,dis_centroids))
+         dists[j,k]<-dists[k,j]<-dis_centroids
+      }
+   }
+   return(dists)
+}
+
 ##### Model Functions ####
 ###### Gibbs loss ####
 # INPUT:
@@ -180,7 +195,7 @@ gibbs_loss_k <- function(n_clust, centroids, label , values_matrix, vector_matri
    return(tot)
 } 
  
-###### Original Clustering Function ####
+###### Clustering Function (Original) ####
 # INPUT:
 ## n_clust:    number of clusters
 ## alpha:      smoothing parameter of the data
@@ -280,7 +295,7 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
 } 
 
 
-###### Clustering Function Updating Covariances ####
+###### Clustering Function + Updating Covs ####
 # INPUT: same input of fda_clustering_mahalanobis
 
 fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,data){
@@ -438,28 +453,20 @@ clusters_union <- function(clust, eps=0){
       return(clust)
    }
    ## compute 'dists' distances matrix (to set smart tolerance + check small distances)
-   writeLines("Calculating clusters' centroids distances...")
-   dists=matrix(0,max_clust,max_clust) #distances (with original k=max_clust)
-   for (k in 1:(max_clust-1)){
-      for (j in (k+1):max_clust){
-         diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
-         dis_centroids <- norm(as.matrix(diff_centroids),type = 'i')
-         writeLines(sprintf(" - Clusters %d and %d - centroid distance = %.2f",k,j,dis_centroids))
-         dists[j,k]<-dists[k,j]<-dis_centroids
-      }
-   }
+   dists <- centroids_dists(centroids_mean,'2')
    
    # DO: union of close clusters
    clusts <- 1:max_clust # keep track of the mergings, eg. (1,2,3,4,5) -> (1,2,1,1,5)
    writeLines(" => Initial clusters vector:")
    print(clusts)
    
-   if(missing(eps)) eps <- 1.678*sd(dists[which(dists>0)]) # set merging tolerance
-   # eps <- (median(dists)+mean(dists))/2 # set merging tolerance
+   # if(missing(eps)) eps <- median(dists) # set merging tolerance
+   if(missing(eps)) eps <- (median(dists)+mean(dists))/2 # set merging tolerance
+   # if(missing(eps)) eps <- 1.678*sd(dists[which(dists>0)]) # set merging tolerance
    do.merge <- TRUE
    n_clust <- max_clust
-   while (do.merge & n_clust>1){ # check closeness
-      writeLines(sprintf("Searching clusters to merge with tolerance eps=%.2f...",eps))
+   while (do.merge){ # check closeness
+      writeLines(sprintf("\nSearching clusters to merge with tolerance eps=%.2f...",eps))
       did.a.merge <- FALSE
       clusts.unique <- clusts %>% unique() # eg. (1,2,1,1,5) -> (1,2,5)
       clusts.combs <- combinations( clusts.unique%>%length(), 2, clusts.unique ) # creates a n_clust-by-2 matrix with all combinations of cluster couples
@@ -477,7 +484,6 @@ clusters_union <- function(clust, eps=0){
          if (d < eps){ # then merge cluster j into k
             did.a.merge <- TRUE
             c_lab[ which(c_lab==j) ] <- clusts[k]
-            # cluster_colors[j] <- cluster_colors[k]
             clusts[j] <- clusts[k]
             writeLines(sprintf(" -> MERGED: cluster %d into %d. (centroid distance = %.2f)",j,k,d))
          }
