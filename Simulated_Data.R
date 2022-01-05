@@ -4,13 +4,14 @@ library(fda.usc)
 library(fda)
 library(fields)
 library(roahd)
+# library(rstan)
 
 # Commentate i set delle directory non vostre
 #setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
 setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
 
 load("Simulated_WP.RData")
-load('Functions_WP.RData') 
+# load('Functions_WP.RData') 
 
 ###################### DATA SIMULATION - MODEL 1 ###############################
 
@@ -349,9 +350,8 @@ n1 <- 25
 t_points <- 200
 time <- seq(0,2*pi,(2*pi)/(t_points - 1))
 
-# Covariance function
-cov_M4 <- function(s,t, a_cov, rho_cov){
-  K <- (a_cov^2)*exp((-0.5)*norm(s-t,type='2')/rho_cov^2)
+cov_M4 <- function(s,t, a, rho){
+  K <- (a^2)*exp((-(s-t)^2)/(2*rho^2))
   return(K)
 }
 
@@ -369,6 +369,13 @@ for (i in 1:t_points){
     K_4_2[i,j] <- cov_M4(time[i],time[j],0.5,2)
   }
 }
+
+delta <- 1e-9
+for (i in 1:t_points){
+  K_4_1[i,i] <- K_4_1[i,i] + delta
+  K_4_2[i,i] <- K_4_2[i,i] + delta
+}
+
 
 # Create simulated data
 set.seed(123564)
@@ -480,6 +487,60 @@ for (i in (n1+1):n){
 }
 title('Smoothed data')
 
+# Model with stan
+# sim.stan = 
+# "
+# data{
+#   int<lower=1> N;
+#   real x[N];
+#   real <lower=0> a;
+#   real <lower=0> rho;
+# }
+# 
+# transformed data{
+#   matrix[N,N] K = cov_exp_quad(x, a, rho);
+# }
+# 
+# generated quantities{
+#   matrix[N, N] Cov = K;
+# }
+# "
+# 
+# # Cov K_4_1
+# sim_stan <- list(N = t_points,
+#                   x = time,
+#                   a = 2,
+#                   rho = 0.5)
+# 
+# fit <- stan(model_code = sim.stan,
+#             data = sim_stan,
+#             algorithm = "Fixed_param",
+#             warmup = 0,
+#             chains = 1,
+#             iter = 1)
+# 
+# samples <- rstan::extract(fit)
+# 
+# K_4_1 <- drop(samples$Cov)
+# 
+# # Cov K_4_2
+# sim_stan <- list(N = t_points,
+#                  x = time,
+#                  a = 0.5,
+#                  rho = 2)
+# 
+# fit <- stan(model_code = sim.stan,
+#             data = sim_stan,
+#             algorithm = "Fixed_param",
+#             warmup = 0,
+#             chains = 1,
+#             iter = 1)
+# 
+# samples <- rstan::extract(fit)
+# 
+# K_4_2 <- drop(samples$Cov)
+
+
 
 
 ##### FINAL WORKSPACE #### 
@@ -487,7 +548,7 @@ title('Smoothed data')
 rm(list=c('data','random_process_1','random_process_2','random_process_3'))
 rm(list=c('random_process_cluster_1','random_process_cluster_2','random_process_cluster'))
 rm(list=c('mu_2','mu_3','u_2','i','j','m'))
-rm(list = c('n','t_points','time','n1'))
+rm(list = c('n','t_points','time','n1','delta'))
 rm(list=c('values_1','values_2','values_3','vectors_1','vectors_2','vectors_3'))
 
 rm(list=c('cont_proc_1','cont_proc_2','cont_proc_3'))
