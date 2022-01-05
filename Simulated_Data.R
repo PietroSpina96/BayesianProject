@@ -495,6 +495,8 @@ rm(list=c('main_proc_1','main_proc_2','main_proc_3'))
 rm(list=c('cov_M1','cov_M2','cov_M3','cov_M4'))
 rm(list=c('cluster_1','cluster_2'))
 
+rm(list=c('clusters_plot','clusters_union','fda_clustering_mahalanobis'))
+rm(list=c('fda_clustering_mahalanobis_union','fda_clustering_mahalanobis_updated','gibbs_loss','gibbs_loss_k'))
 
 # Save Workspace
 #setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
