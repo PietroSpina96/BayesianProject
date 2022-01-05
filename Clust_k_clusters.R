@@ -109,18 +109,18 @@ rm(data2)
 n <- dim(data)[1]
 t_points <- dim(data)[2]
 
-k <- 2
+k <- 6
 alpha <- 0.1
 
 clust1 <- fda_clustering_mahalanobis(n_clust=k, alpha=alpha, cov_matrix=cov(data),
                                      toll=1e-10, data=data)
 # do merge
-clust2 <- clusters_union(clust)
+clust2 <- clusters_union(clust1)
 # show both plots
-plot1 <- clusters_plot(time, clust1$centroids)
-plot2 <- clusters_plot(time, clust2$centroids)
+plot1 <- clusters_plot(time, clust1)
+plot2 <- clusters_plot(time, clust2)
 grid.arrange(plot1,plot2,nrow=1)
-
+#
  
 #### Clustering function updating covariance within clusters: fda_clustering_mahalanobis_updated ####
 n <- dim(data)[1]

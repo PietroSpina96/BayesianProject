@@ -428,41 +428,45 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
 #TODO: fix messed-up cluster tracking in some random cases
 
 clusters_union <- function(clust, eps=0){
-   print("  **  MERGING CLOSE CLUSTERS  **  ")
+   writeLines("  **  MERGING CLOSE CLUSTERS  **  ")
    centroids_mean <- clust$centroids
    c_lab <- clust$label
    max_clust <- dim(centroids_mean)[1]
    t_points <- dim(centroids_mean)[2]
-   
+   if(max_clust<3){
+      writeLines(sprintf("Only %d clusters, fine like that.\nExiting.",max_clust))
+      return(clust)
+   }
    ## compute 'dists' distances matrix (to set smart tolerance + check small distances)
-   print("Calculating clusters' centroids distances...")
+   writeLines("Calculating clusters' centroids distances...")
    dists=matrix(0,max_clust,max_clust) #distances (with original k=max_clust)
    for (k in 1:(max_clust-1)){
       for (j in (k+1):max_clust){
          diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
          dis_centroids <- norm(as.matrix(diff_centroids),type = 'i')
-         print(sprintf(" - Clusters %d and %d - centroid distance = %.2f",k,j,dis_centroids))
+         writeLines(sprintf(" - Clusters %d and %d - centroid distance = %.2f",k,j,dis_centroids))
          dists[j,k]<-dists[k,j]<-dis_centroids
       }
    }
    
    # DO: union of close clusters
    clusts <- 1:max_clust # keep track of the mergings, eg. (1,2,3,4,5) -> (1,2,1,1,5)
-   print("=> Initial clusters vector:")
+   writeLines(" => Initial clusters vector:")
    print(clusts)
    
-   eps <- median(dists) # set epsilon as the median of initial distances (seems to work quite well)
-   do.union <- TRUE
+   eps <- sd(dists[which(dists>0)]) # set merging tolerance
+   # eps <- (median(dists)+mean(dists))/2 # set merging tolerance
+   do.merge <- TRUE
    n_clust <- max_clust
-   while (do.union & n_clust>1){ # check closeness
-      print(sprintf("Searching clusters to merge with tolerance eps=%.2f...",eps))
+   while (do.merge & n_clust>1){ # check closeness
+      writeLines(sprintf("Searching clusters to merge with tolerance eps=%.2f...",eps))
       did.a.merge <- FALSE
       clusts.unique <- clusts %>% unique() # eg. (1,2,1,1,5) -> (1,2,5)
       clusts.combs <- combinations( clusts.unique%>%length(), 2, clusts.unique ) # creates a n_clust-by-2 matrix with all combinations of cluster couples
       # for (k in 1:(n_clust-1))
       #   for (j in (k+1):n_clust){
       # for (k in clusts.combs[,1])
-      for (i in 1:(clusts.unique%>%length())){
+      for (i in 1:(clusts.combs%>%dim())[1]){
          k<-clusts.combs[i,1]
          j<-clusts.combs[i,2]
          # diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
@@ -475,11 +479,11 @@ clusters_union <- function(clust, eps=0){
             c_lab[ which(c_lab==j) ] <- k
             # cluster_colors[j] <- cluster_colors[k]
             clusts[j] <- k
-            print(sprintf(" -> MERGED: cluster %d into %d. (centroid distance = %.2f)",j,k,d))
+            writeLines(sprintf(" -> MERGED: cluster %d into %d. (centroid distance = %.2f)",j,k,d))
          }
       }
       if(did.a.merge){
-         print("=> Updated clusters vector:")
+         writeLines(" => Updated clusters vector:")
          print(clusts)
       }
       
@@ -500,12 +504,15 @@ clusters_union <- function(clust, eps=0){
                   flag_matr[k,i] <- 1
                
          if (sum(flag_matr) == k_new*(t_points))
-            do.union <- FALSE
+            do.merge <- FALSE
       }
       n_clust <- k_new
       centroids_mean <- centroids_mean_post
    }
-   print(sprintf("==> Merging done. Obtained %d clusters (starting from %d).",n_clust,max_clust))
+   if(n_clust<max_clust)
+      writeLines(sprintf("==> Merging done. Obtained %d clusters (starting from %d).",n_clust,max_clust))
+   else
+      writeLines("No further merging needed, clusters are good!\nDone.")
    
    return(list("label" = c_lab,
                "centroids" = centroids_mean,
@@ -516,15 +523,15 @@ clusters_union <- function(clust, eps=0){
 
 ###### PLOT clusters ####
 # plots (x,y)=(time,centroids_mean) with colors
-clusters_plot <- function(time, centroids_mean, colors){
-   ## INPUT: time             = x (vector: n)
-   ##        centroids_mean   = y (matrix: k by n)
-   ##        colors           = cluster hex colors (vector: n)(*optional)
+clusters_plot <- function(time, clust, colors){
+   ## INPUT: time              = x (vector: n)
+   ##        clust$centroids   = y (matrix: k by n)
+   ##        colors            = cluster hex colors (vector: n)(*optional)
    ## OUTPUT: the plot object
    
-   if(missing(colors)) colors <- rainbow(dim(centroids_mean)[1]) # rainbow(n)
+   if(missing(colors)) colors <- rainbow(dim(clust$centroids)[1]) # rainbow(n)
    
-   df <- centroids_mean %>% t() %>% as.data.frame() %>% 
+   df <- clust$centroids %>% t() %>% as.data.frame() %>% 
       add_column(x=time) %>%
       gather(group, y, -x)
    
