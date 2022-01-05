@@ -109,16 +109,21 @@ rm(data2)
 n <- dim(data)[1]
 t_points <- dim(data)[2]
 
-k <- 6
+k <- 4
 alpha <- 0.1
 
 clust1 <- fda_clustering_mahalanobis(n_clust=k, alpha=alpha, cov_matrix=cov(data),
                                      toll=1e-10, data=data)
 # do merge
 clust2 <- clusters_union(clust1)
+# create colors for plot1 knowing the successive merging
+colors1 <- rainbow(k)
+for(i in 1:k)
+  colors1[i] <- colors1[clust2$v[i]]
+colors2 <- colors1 %>% unique
 # show both plots
-plot1 <- clusters_plot(time, clust1)
-plot2 <- clusters_plot(time, clust2)
+plot1 <- clusters_plot(time, clust1, colors1) + labs(title="Clusters")
+plot2 <- clusters_plot(time, clust2, colors2) + labs(title="Merged clusters")
 grid.arrange(plot1,plot2,nrow=1)
 #
  
