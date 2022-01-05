@@ -10,7 +10,7 @@ library(roahd)
 setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
 
 load("Simulated_WP.RData")
-load('Functions_WP.RData') 
+# load('Functions_WP.RData') 
 
 ###################### DATA SIMULATION - MODEL 1 ###############################
 
@@ -349,9 +349,8 @@ n1 <- 25
 t_points <- 200
 time <- seq(0,2*pi,(2*pi)/(t_points - 1))
 
-# Covariance function
-cov_M4 <- function(s,t, a_cov, rho_cov){
-  K <- (a_cov^2)*exp((-0.5)*norm(s-t,type='2')/rho_cov^2)
+cov_M4 <- function(s,t, a, rho){
+  K <- (a^2)*exp((-(s-t)^2)/(2*rho^2))
   return(K)
 }
 
