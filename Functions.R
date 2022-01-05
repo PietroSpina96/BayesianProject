@@ -454,7 +454,7 @@ clusters_union <- function(clust, eps=0){
    writeLines(" => Initial clusters vector:")
    print(clusts)
    
-   eps <- sd(dists[which(dists>0)]) # set merging tolerance
+   if(missing(eps)) eps <- 1.678*sd(dists[which(dists>0)]) # set merging tolerance
    # eps <- (median(dists)+mean(dists))/2 # set merging tolerance
    do.merge <- TRUE
    n_clust <- max_clust
@@ -516,20 +516,22 @@ clusters_union <- function(clust, eps=0){
    
    return(list("label" = c_lab,
                "centroids" = centroids_mean,
-               #"loss" = loss_value2, # maybe again meglio una funzione a parte?
-               "K" = n_clust))
+               #"loss" = loss_value2, # maybe again meglio una funzione a parte? o la ricalcolo qua?
+               "K" = n_clust,
+               "v" = clusts) # only used to manage colors in plot before/after merging
+          )
 }
 
 
 ###### PLOT clusters ####
 # plots (x,y)=(time,centroids_mean) with colors
-clusters_plot <- function(time, clust, colors){
+clusters_plot <- function(time, clust, cols){
    ## INPUT: time              = x (vector: n)
    ##        clust$centroids   = y (matrix: k by n)
-   ##        colors            = cluster hex colors (vector: n)(*optional)
+   ##        cols              = cluster hex colors (vector: n)(*optional)
    ## OUTPUT: the plot object
    
-   if(missing(colors)) colors <- rainbow(dim(clust$centroids)[1]) # rainbow(n)
+   if(missing(cols)) cols <- rainbow(dim(clust$centroids)[1])
    
    df <- clust$centroids %>% t() %>% as.data.frame() %>% 
       add_column(x=time) %>%
@@ -537,7 +539,8 @@ clusters_plot <- function(time, clust, colors){
    
    theplot <- ggplot(df, aes(x, y, color = group)) + 
       geom_line(size=1) +
-      scale_color_manual(values=colors)
+      scale_color_manual(values=cols) +
+      labs(x="time",y="centroids")
    
    return(theplot)
 }
