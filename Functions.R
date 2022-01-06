@@ -229,6 +229,12 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
    # vector of labels
    c_lab <- rep(0,n)
    
+   # covariance matrix must have positive eigenvalues
+   delta <- 1e-10
+   for (l in 1:t_points){
+      cov_matrix[l,l] <- cov_matrix[l,l] + delta
+   }
+   
    # eigenvalues and eigenfunctions for the alpha-mahalanobis function
    eig <- eigen(cov_matrix)
    values <- eig$values 
@@ -305,6 +311,12 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
    
    # vector of labels
    c_lab <- rep(0,n)
+   
+   # covariance matrix must have positive eigenvalues
+   delta <- 1e-10
+   for (l in 1:t_points){
+      cov_matrix[l,l] <- cov_matrix[l,l] + delta
+   }
    
    # eigenvalues and eigenfunctions for the alpha-mahalanobis function
    eig <- eigen(cov_matrix)
@@ -396,6 +408,10 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
       for (k in 1:n_clust){
          data_k <- data[which(c_lab == k),]
          cov_k <- cov(data_k)
+         
+         for (l in 1:t_points)
+            cov_k[l,l] <- cov_k[l,l] + delta
+         
          eig_k <- eigen(cov_k)
          values_matrix[,k] <- abs(eig_k$values)
          vector_matrix[((k-1)*t_points + 1):(k*t_points),] <- eig_k$vectors
@@ -558,7 +574,7 @@ clusters_plot <- function(time, clust, cols){
 # alpha is the smoothing parameter
 # toll is the tolerance for the while loop
 
-# fda_clustering_mahalanobis_merge <- function(n_clust, alpha, eig, toll,data){
+# fda_clustering_mahalanobis_merge <- function(n_clust, alpha, cov_matrix, toll,data){
 #    
 #    n <- dim(data)[1] 
 #    t_points <- dim(data)[2]
@@ -586,6 +602,12 @@ clusters_plot <- function(time, clust, cols){
 #    
 #    # loss vector
 #    loss_vec <- rep(0,n_clust)
+     
+     # covariance matrix must have positive eigenvalues
+#    delta <- 1e-10
+#    for (l in 1:t_points){
+#       cov_matrix[l,l] <- cov_matrix[l,l] + delta
+# }
 #    
 #    # eigenvalues and eigenfunctions for the alpha-mahalanobis function
 #    values <- eig$values
