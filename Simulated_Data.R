@@ -345,39 +345,40 @@ title('Smoothed simulated data - model 3')
 
 ###################### DATA SIMULATION - MODEL 4 ###############################
 n <- 100
-n1 <- 25
+n1 <- 40
 
 t_points <- 200
-time <- seq(0,2*pi,(2*pi)/(t_points - 1))
+time <- seq(0,1,(1)/(t_points - 1))
 
-cov_M4 <- function(s,t, a, rho){
-  K <- (a^2)*exp((-(s-t)^2)/(2*rho^2))
+cov_M4_1 <- function(s,t){
+  K <- 0.3 * exp(-abs(s - t)/0.3) 
   return(K)
 }
 
-# Covariance Matrix
+cov_M4_2 <- function(s,t){
+  K <- 1.5*exp(-abs(s - t)/3) 
+  return(K)
+}
+
 K_4_1 <- matrix(0, nrow = t_points, ncol = t_points)
 for (i in 1:t_points){
   for (j in 1:t_points){
-    K_4_1[i,j] <- cov_M4(time[i],time[j],2,0.5)
+    K_4_1[i,j] <- cov_M4_1(time[i],time[j])
   }
 }
 
 K_4_2 <- matrix(0, nrow = t_points, ncol = t_points)
 for (i in 1:t_points){
   for (j in 1:t_points){
-    K_4_2[i,j] <- cov_M4(time[i],time[j],0.5,2)
+    K_4_2[i,j] <- cov_M4_2(time[i],time[j])
   }
 }
 
-delta <- 1e-9
-for (i in 1:t_points){
-  K_4_1[i,i] <- K_4_1[i,i] + delta
-  K_4_2[i,i] <- K_4_2[i,i] + delta
-}
+x11()
+par(mfrow=c(1,2))
+image.plot(time,time,K_4_1,main='Covariance matrix')
+image.plot(time,time,K_4_2,main='Covariance matrix')
 
-
-# Create simulated data
 set.seed(123564)
 m <- rep(0,t_points)
 random_process_cluster_1 <- generate_gauss_fdata(n1, m, Cov = K_4_1)
@@ -391,7 +392,7 @@ cluster_1 <- function(t,points){
 
 cluster_2 <- function(t,points){
   X <- rep(0,points)
-  X[t] <- cos(t)
+  X[t] <- 30 * t * (1-t)^(3/2)
 }
 
 data4 <- matrix(0, nrow = n, ncol = t_points)
@@ -410,15 +411,14 @@ for (i in (n1 + 1):n){
 
 # Simulated data plot
 x11()
-plot(time,data4[1,],type = 'l', ylim = c(-10,10), col = 'firebrick2', lwd = 2)
+plot(time,data4[1,],type = 'l', ylim = c(-10,10), col = 'blue', lwd = 2)
 for(i in 2:n1){
-  lines(time,data4[i,],type = 'l', col = 'firebrick2',lwd = 2)
+  lines(time,data4[i,],type = 'l', col = 'blue',lwd = 2)
 }
 for (i in (n1 + 1):n){
-  lines(time,data4[i,],type = 'l', col = 'blue', lwd = 2)
+  lines(time,data4[i,],type = 'l', col = 'firebrick2', lwd = 2)
 }
 title('Simulated data - model 4')
-
 
 # Covariance matrix of the data
 cov_4 <- cov(data4)
@@ -487,59 +487,6 @@ for (i in (n1+1):n){
 }
 title('Smoothed data')
 
-# Model with stan
-# sim.stan = 
-# "
-# data{
-#   int<lower=1> N;
-#   real x[N];
-#   real <lower=0> a;
-#   real <lower=0> rho;
-# }
-# 
-# transformed data{
-#   matrix[N,N] K = cov_exp_quad(x, a, rho);
-# }
-# 
-# generated quantities{
-#   matrix[N, N] Cov = K;
-# }
-# "
-# 
-# # Cov K_4_1
-# sim_stan <- list(N = t_points,
-#                   x = time,
-#                   a = 2,
-#                   rho = 0.5)
-# 
-# fit <- stan(model_code = sim.stan,
-#             data = sim_stan,
-#             algorithm = "Fixed_param",
-#             warmup = 0,
-#             chains = 1,
-#             iter = 1)
-# 
-# samples <- rstan::extract(fit)
-# 
-# K_4_1 <- drop(samples$Cov)
-# 
-# # Cov K_4_2
-# sim_stan <- list(N = t_points,
-#                  x = time,
-#                  a = 0.5,
-#                  rho = 2)
-# 
-# fit <- stan(model_code = sim.stan,
-#             data = sim_stan,
-#             algorithm = "Fixed_param",
-#             warmup = 0,
-#             chains = 1,
-#             iter = 1)
-# 
-# samples <- rstan::extract(fit)
-# 
-# K_4_2 <- drop(samples$Cov)
-
 
 
 
@@ -548,12 +495,13 @@ title('Smoothed data')
 rm(list=c('data','random_process_1','random_process_2','random_process_3'))
 rm(list=c('random_process_cluster_1','random_process_cluster_2','random_process_cluster'))
 rm(list=c('mu_2','mu_3','u_2','i','j','m'))
-rm(list = c('n','t_points','time','n1','delta'))
+rm(list = c('n','t_points','time','delta'))
 rm(list=c('values_1','values_2','values_3','vectors_1','vectors_2','vectors_3'))
+rm(list=c('values_4_1','values_4_2','vectors_4_1','vectors_4_2'))
 
 rm(list=c('cont_proc_1','cont_proc_2','cont_proc_3'))
 rm(list=c('main_proc_1','main_proc_2','main_proc_3'))
-rm(list=c('cov_M1','cov_M2','cov_M3','cov_M4'))
+rm(list=c('cov_M1','cov_M2','cov_M3','cov_M4_1','cov_M4_2'))
 rm(list=c('cluster_1','cluster_2'))
 
 rm(list=c('clusters_plot','clusters_union','fda_clustering_mahalanobis'))
