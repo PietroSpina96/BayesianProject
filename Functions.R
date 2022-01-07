@@ -43,6 +43,7 @@ scalar_prod<- function (f1,f2) {
 ## eigenft: eigenfunctions (of the covariance matrix)
 
 # OUTPUT: alpha-mahalanobis distance (squared norm) between functions f1,f2
+
 alpha_Mahalanobis <- function(alpha,f1,f2,lambda, eigenft) {
    t_points <- length(f1)
    dis<-coeff<-prod<-rep(0,t_points)
@@ -51,12 +52,28 @@ alpha_Mahalanobis <- function(alpha,f1,f2,lambda, eigenft) {
       
       coeff[j]<-lambda[j]/(lambda[j]+alpha)^2
       prod[j]<-(scalar_prod(f1-f2,eigenft[,j]))^2
-      dis[j]<-coeff[j]*prod[j]
+      dis[j]<-coeff[j]*prod[j] 
       
    }
-   res<-sum(dis)
+   res<-sum(dis) 
    return(res)
 }
+
+# con aggiunta di penalizzazione
+# alpha_Mahalanobis <- function(alpha,f1,f2,lambda, eigenft) {
+#    t_points <- length(f1)
+#    dis<-coeff<-prod<-rep(0,t_points)
+#    
+#    for (j in 1:t_points){
+#       
+#       coeff[j]<-lambda[j]/(lambda[j]+alpha)^2
+#       prod[j]<-(scalar_prod(f1-f2,eigenft[,j]))^2
+#       dis[j]<-coeff[j]*prod[j] 
+#       
+#    }
+#    res<-sum(dis) + sum(log(lambda))
+#    return(res)
+# }
 
 #alpha_approximation of the function f with f_alpha
 # same input as above
