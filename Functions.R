@@ -22,8 +22,7 @@ load('Functions_WP.RData')
 #scalar product
 scalar_prod<- function (f1,f2) {
    # f sono vettori colonna
-   res<- t(f1)%*%f2
-   return(res)
+   t(f1) %*% f2
 }
 
 # # equivalently. Not loaded in the workspace
@@ -44,36 +43,12 @@ scalar_prod<- function (f1,f2) {
 
 # OUTPUT: alpha-mahalanobis distance (squared norm) between functions f1,f2
 
-alpha_Mahalanobis <- function(alpha,f1,f2,lambda, eigenft) {
-   t_points <- length(f1)
-   dis<-coeff<-prod<-rep(0,t_points)
-   
-   for (j in 1:t_points){
-      
-      coeff[j]<-lambda[j]/(lambda[j]+alpha)^2
-      prod[j]<-(scalar_prod(f1-f2,eigenft[,j]))^2
-      dis[j]<-coeff[j]*prod[j] 
-      
-   }
-   res<-sum(dis) 
-   return(res)
+alpha_Mahalanobis <- function(alpha,f1,f2,lambda,eigenft) {
+   # es. f1 = data[i,]     or    f1 = data[j,]
+   #     f2 = data[j,]           f2 = centroids[k,]
+   # ( the correction '+sum(log(lambda))', if needed, is better added outside at the end )
+   sum( lambda/(lambda+alpha)^2 * scalar_prod(f1-f2,eigenft)^2 )
 }
-
-# con aggiunta di penalizzazione
-# alpha_Mahalanobis <- function(alpha,f1,f2,lambda, eigenft) {
-#    t_points <- length(f1)
-#    dis<-coeff<-prod<-rep(0,t_points)
-#    
-#    for (j in 1:t_points){
-#       
-#       coeff[j]<-lambda[j]/(lambda[j]+alpha)^2
-#       prod[j]<-(scalar_prod(f1-f2,eigenft[,j]))^2
-#       dis[j]<-coeff[j]*prod[j] 
-#       
-#    }
-#    res<-sum(dis) + sum(log(lambda))
-#    return(res)
-# }
 
 #alpha_approximation of the function f with f_alpha
 # same input as above
