@@ -36,7 +36,7 @@ for (i in 1:t_points){
 }
 
 x11()
-image.plot(time,time,K_1,main='Covariance matrix')
+image.plot(time,time,K_1,main='Cov matrix mod-1')
 
 # Create simulated data
 set.seed(1234)
@@ -98,10 +98,13 @@ for (i in 1:n){
 }
 
 x11()
-plot(time, data1[1,], type = 'l', lwd = 2)
+plot(time, data1[1,], type = 'l', lwd = 2,xlab='Time',ylab='Values',main='Comparison of alpha for mod-1: best alpha=0.1')
 lines(time, f_alpha_approx(data1[1,],1,values_1,vectors_1), type = 'l', lwd = 2, col = 'firebrick2')
 lines(time, f_alpha_approx(data1[1,],0.1,values_1,vectors_1), type = 'l', lwd = 2, col = 'blue')
 lines(time, f_alpha_approx(data1[1,],0.01,values_1,vectors_1), type = 'l', lwd = 2, col = 'forestgreen')
+legend("topright",ncol=1,box.lwd=1,legend=c('alpha = 1','alpha = 0.1','alpha = 0.01'),fill=c('firebrick2','blue','forestgreen'),x.intersp=0.3,
+       text.col=c('firebrick2','blue','forestgreen'))
+
 
 # alpha-Mahalanobis distance matrix 
 Mahalanobis_Distance_1 <- matrix(0, nrow = n, ncol = n)
@@ -376,8 +379,8 @@ for (i in 1:t_points){
 
 x11()
 par(mfrow=c(1,2))
-image.plot(time,time,K_4_1,main='Covariance matrix')
-image.plot(time,time,K_4_2,main='Covariance matrix')
+image.plot(time,time,K_4_1,main='Cov matrix mod-4 cluster-1')
+image.plot(time,time,K_4_2,main='Cov matrix mod-4 cluster-2')
 
 set.seed(123564)
 m <- rep(0,t_points)
@@ -411,7 +414,7 @@ for (i in (n1 + 1):n){
 
 # Simulated data plot
 x11()
-plot(time,data4[1,],type = 'l', ylim = c(-10,10), col = 'blue', lwd = 2)
+plot(time,data4[1,],type = 'l', ylim = c(-5,10), col = 'blue', lwd = 2,xlab='Time',ylab='Values')
 for(i in 2:n1){
   lines(time,data4[i,],type = 'l', col = 'blue',lwd = 2)
 }
