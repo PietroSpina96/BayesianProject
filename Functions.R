@@ -164,7 +164,7 @@ gibbs_loss <- function(n_clust, centroids, label , eig, data){
 ## vector_matrix: matrix that contains the eigenvectors of all clusters
 
 # OUTPUT: value of the gibbs loss
-gibbs_loss_k <- function(n_clust, centroids, label , values_matrix, vector_matrix, data){
+gibbs_loss_updated <- function(n_clust, centroids, label , values_matrix, vector_matrix, data){
    t_points <- dim(data)[2]
    n <- dim(data)[1]
    
@@ -396,7 +396,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
             centroids_mean[k,] <- colMeans(data[which(c_lab == k),])
       }
       
-      loss_value2 <- gibbs_loss_k(n_clust = n_clust, centroids = centroids_mean, 
+      loss_value2 <- gibbs_loss_updated(n_clust = n_clust, centroids = centroids_mean, 
                                   label = c_lab, values_matrix, vector_matrix, data = data)
       
    }
