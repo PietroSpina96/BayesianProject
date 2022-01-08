@@ -131,7 +131,7 @@ centroids_dists <- function(centroids_mean,normtype='i'){
 }
 
 ##### Model Functions ####
-##### Gibbs loss GENERAL ####
+###### Gibbs loss GENERAL ####
 gibbs_loss_general <- function (n_clust, centroids, label, eig, values_matrix, vector_matrix, eig_type = c('fixed','updated'), data){
    gibbs <- switch (eig_type,
                     'fixed' = gibbs_loss(n_clust, centroids, label , eig, data),
@@ -141,7 +141,7 @@ gibbs_loss_general <- function (n_clust, centroids, label, eig, values_matrix, v
    return (gibbs)
 }
 
-#### Gibbs loss ####
+###### Gibbs loss ####
 # INPUT:
 ## n_clust:   number of clusters fixed a priori
 ## centroids: matrix of the centroids (random or mean) with nrow=n_clust 
