@@ -188,6 +188,20 @@ gibbs_loss_updated <- function(n_clust, centroids, label , values_matrix, vector
    tot = sum(res)
    return(tot)
 } 
+
+###### Clustering Function GENERAL ####
+
+fda_clustering_mahalanobis_general <- function(n_clust, alpha, cov_matrix, cov_type = 
+                                         c('fixed','updated'), toll, data){
+  
+  clust <- switch (cov_type,
+    'fixed' = fda_clustering_mahalanobis(n_clust, alpha, cov_matrix, toll,data),
+    'updated' = fda_clustering_mahalanobis_updated(n_clust, alpha, cov_matrix, toll,data)
+  )
+  
+  return(clust)
+  
+}
  
 ###### Clustering Function (Original) ####
 # INPUT:
