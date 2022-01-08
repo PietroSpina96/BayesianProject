@@ -131,7 +131,17 @@ centroids_dists <- function(centroids_mean,normtype='i'){
 }
 
 ##### Model Functions ####
-###### Gibbs loss ####
+##### Gibbs loss GENERAL ####
+gibbs_loss_general <- function (n_clust, centroids, label, eig, values_matrix, vector_matrix, eig_type = c('fixed','updated'), data){
+   gibbs <- switch (eig_type,
+                    'fixed' = gibbs_loss(n_clust, centroids, label , eig, data),
+                    'updated' = gibbs_loss_updated(n_clust, centroids, label , values_matrix, vector_matrix, data)
+   )
+   
+   return (gibbs)
+}
+
+#### Gibbs loss ####
 # INPUT:
 ## n_clust:   number of clusters fixed a priori
 ## centroids: matrix of the centroids (random or mean) with nrow=n_clust 
@@ -254,7 +264,10 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
       centroids_random[k,] <- data[y0[k],]
    }
    
-   loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = centroids_random, label = c_lab, eig = eig, data = data)
+   #loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = centroids_random, label = c_lab, eig = eig, data = data)
+   loss_value1 <- gibbs_loss_general(n_clust = n_clust, centroids = centroids_random,
+                                     label = c_lab, eig = eig, values_matrix = 0, 
+                                     vector_matrix = 0, eig_type = 'fixed', data = data)
    
    # update each centroid as the mean of the clusters data
    centroids_mean<-matrix(0,nrow = n_clust, ncol = t_points)
@@ -262,7 +275,10 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
       centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
    }
    
-   loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, eig = eig, data = data)
+   #loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, eig = eig, data = data)
+   loss_value2 <- gibbs_loss_general(n_clust = n_clust, centroids = centroids_mean,
+                                     label = c_lab, eig = eig, values_matrix = 0, 
+                                     vector_matrix = 0, eig_type = 'fixed', data = data)
    
    while(abs(loss_value1 - loss_value2) >= toll){
       
@@ -284,7 +300,10 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
          centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
       }
       
-      loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, eig = eig, data = data)
+      #loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, eig = eig, data = data)
+      loss_value2 <- gibbs_loss_general(n_clust = n_clust, centroids = centroids_mean,
+                                        label = c_lab, eig = eig, values_matrix = 0, 
+                                        vector_matrix = 0, eig_type = 'fixed', data = data)
    }
    
    return(list("label" = c_lab, "centroids" = centroids_mean, "loss" = loss_value2))
@@ -302,6 +321,13 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
    
    # vector of labels
    c_lab <- rep(0,n)
+   
+   # Create the vector and the matrix that will contain eigenvalues/eigenvectors of a single cluster
+   values_k <- rep(0,t_points)
+   vector_k <- matrix (0, nrow = t_points, ncol = t_points)
+   
+   values_matrix <- matrix (0, nrow = t_points, ncol = n_clust)
+   vector_matrix <- matrix (0, nrow = (n_clust*t_points), ncol = t_points )
    
    # covariance matrix must have positive eigenvalues
    delta <- 1e-10
@@ -352,8 +378,11 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
       
    }
    
-   loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = centroids_random, 
-                             label = c_lab, eig = eig,data = data)
+   # loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = centroids_random,label = c_lab, eig = eig,data = data)
+   loss_value1 <- gibbs_loss_general(n_clust = n_clust, centroids = centroids_random,
+                                     label = c_lab, eig = eig, values_matrix = values_matrix, 
+                                     vector_matrix = vector_matrix, eig_type = 'fixed', data = data)
+   
    
    # update each centroid as the mean of the clusters data
    centroids_mean<-matrix(0,nrow = n_clust, ncol = t_points)
@@ -362,29 +391,25 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
       centroids_mean[k,] <- colMeans(data[which(c_lab == k),])
    
    
-   loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, 
-                             label = c_lab, eig = eig, data = data)
+   #loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean,label = c_lab, eig = eig, data = data)
+   loss_value2 <- gibbs_loss_general(n_clust = n_clust, centroids = centroids_mean,
+                                     label = c_lab, eig = eig, values_matrix = values_matrix, 
+                                     vector_matrix = vector_matrix, eig_type = 'fixed', data = data)
    
-   
-   # Create the vector and the matrix that will contain eigenvalues/eigenvectors of a single cluster
-   values_k <- rep(0,t_points)
-   vector_k <- matrix (0, nrow = t_points, ncol = t_points)
-    
-   values_matrix <- matrix (0, nrow = t_points, ncol = n_clust)
-   vector_matrix <- matrix (0, nrow = (n_clust*t_points), ncol = t_points )
-   
+   # Compute eigenvalues and eigenfunctions of each cluster data
    for (k in 1:n_clust){
-     data_k <- data[which(c_lab == k),]
-     cov_k <- cov(data_k)
-     
-     for (l in 1:t_points)
-       cov_k[l,l] <- cov_k[l,l] + delta
-     
-     eig_k <- eigen(cov_k)
-     values_matrix[,k] <- abs(eig_k$values)
-     vector_matrix[((k-1)*t_points + 1):(k*t_points),] <- eig_k$vectors
+      data_k <- data[which(c_lab == k),]
+      cov_k <- cov(data_k)
+      
+      for (l in 1:t_points)
+         cov_k[l,l] <- cov_k[l,l] + delta
+      
+      eig_k <- eigen(cov_k)
+      values_matrix[,k] <- abs(eig_k$values)
+      vector_matrix[((k-1)*t_points + 1):(k*t_points),] <- eig_k$vectors
    }
    
+   # Count how many iterations we will perform in the cycle
    iterations <- 0
    
    while(abs(loss_value1 - loss_value2) >= toll && iterations < 50){
@@ -397,7 +422,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
          for (k in 1:n_clust) {
             values_k <- values_matrix[,k]
             vector_k <- vector_matrix[((k-1)*t_points + 1):(k*t_points),]
-             Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,],values_k,vector_k)
+            Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,],values_k,vector_k)
          }
          index <- which.min(Maha_dis_k[i,])
          c_lab[i] <- index
@@ -412,24 +437,26 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
       }
       
       for (k in 1:n_clust){
-        data_k <- data[which(c_lab == k),]
-        cov_k <- cov(data_k)
-        
-        for (l in 1:t_points)
-          cov_k[l,l] <- cov_k[l,l] + delta
-        
-        eig_k <- eigen(cov_k)
-        values_matrix[,k] <- abs(eig_k$values)
-        vector_matrix[((k-1)*t_points + 1):(k*t_points),] <- eig_k$vectors
+         data_k <- data[which(c_lab == k),]
+         cov_k <- cov(data_k)
+         
+         for (l in 1:t_points)
+            cov_k[l,l] <- cov_k[l,l] + delta
+         
+         eig_k <- eigen(cov_k)
+         values_matrix[,k] <- abs(eig_k$values)
+         vector_matrix[((k-1)*t_points + 1):(k*t_points),] <- eig_k$vectors
       }
-       
-      loss_value2 <- gibbs_loss_updated(n_clust = n_clust, centroids = centroids_mean, 
-                                  label = c_lab, values_matrix, vector_matrix, data = data)
+      
+      #loss_value2 <- gibbs_loss_updated(n_clust = n_clust, centroids = centroids_mean,label = c_lab, values_matrix, vector_matrix, data = data)
+      loss_value2 <- gibbs_loss_general(n_clust = n_clust, centroids = centroids_random,
+                                        label = c_lab, eig = eig, values_matrix = values_matrix, 
+                                        vector_matrix = vector_matrix, eig_type = 'updated', data = data)
       
    }
    
    if (iterations == 50){
-     print('Warning: oscillating behaviour try again you will be lucky next time :)')
+      print('Warning: oscillating behaviour. Try again: you will be lucky next time :)')
    }
    else print('Jackpot!')
    
@@ -437,7 +464,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
                "K" = n_clust))
    
 }
- 
+
 
 
 ######  Merging clusters ####
