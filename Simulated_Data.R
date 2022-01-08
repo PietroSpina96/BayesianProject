@@ -11,7 +11,7 @@ setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject"
 #setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
 
 load("Simulated_WP.RData")
-# load('Functions_WP.RData') 
+load('Functions_WP.RData') 
 
 ###################### DATA SIMULATION - MODEL 1 ###############################
 
@@ -36,7 +36,7 @@ for (i in 1:t_points){
 }
 
 x11()
-image.plot(time,time,K_1,main='Cov matrix mod-1')
+image.plot(time,time,K_1,main='Cov matrix sim. data 1')
 
 # Create simulated data
 set.seed(1234)
@@ -82,7 +82,9 @@ for(i in 2:(n-c)){
 for (i in (n-c+1):n){
   lines(time,data1[i,],type = 'l', col = 'blue', lwd = 2)
 }
-title('Simulated data - model 1')
+title('Simulated data 1')
+legend("topright",ncol=1,box.lwd=1,legend=c('Main process','Contaminated process'),fill=c('firebrick2','blue'),x.intersp=0.3,
+       text.col=c('firebrick2','blue'))
 
 
 # Smoothed data
@@ -379,8 +381,8 @@ for (i in 1:t_points){
 
 x11()
 par(mfrow=c(1,2))
-image.plot(time,time,K_4_1,main='Cov matrix mod-4 cluster-1')
-image.plot(time,time,K_4_2,main='Cov matrix mod-4 cluster-2')
+image.plot(time,time,K_4_1,main='Cov matrix process 1')
+image.plot(time,time,K_4_2,main='Cov matrix process 2')
 
 set.seed(123564)
 m <- rep(0,t_points)
@@ -421,7 +423,9 @@ for(i in 2:n1){
 for (i in (n1 + 1):n){
   lines(time,data4[i,],type = 'l', col = 'firebrick2', lwd = 2)
 }
-title('Simulated data - model 4')
+title('Simulated data 2')
+legend("topright",ncol=1,box.lwd=1,legend=c('Process 1','Process 2'),fill=c('blue','firebrick2'),x.intersp=0.3,
+       text.col=c('blue','firebrick2'))
 
 # Covariance matrix of the data
 cov_4 <- cov(data4)
@@ -509,6 +513,9 @@ rm(list=c('cluster_1','cluster_2'))
 
 rm(list=c('clusters_plot','clusters_union','fda_clustering_mahalanobis'))
 rm(list=c('fda_clustering_mahalanobis_union','fda_clustering_mahalanobis_updated','gibbs_loss','gibbs_loss_k'))
+
+rm(list=c('f.data_alpha_sim_1','f.data_alpha_sim_2','f.data_alpha_sim_3','f.data_alpha_sim_4'))
+rm(list=c('Mahalanobis_Distance_1','Mahalanobis_Distance_2','Mahalanobis_Distance_3','Mahalanobis_Distance_4'))
 
 # Save Workspace
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
