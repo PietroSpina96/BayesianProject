@@ -7,8 +7,8 @@ library(roahd)
 # library(rstan)
 
 # Commentate i set delle directory non vostre
-#setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
-setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
+setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
+#setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
 
 load("Simulated_WP.RData")
 # load('Functions_WP.RData') 
@@ -511,7 +511,7 @@ rm(list=c('clusters_plot','clusters_union','fda_clustering_mahalanobis'))
 rm(list=c('fda_clustering_mahalanobis_union','fda_clustering_mahalanobis_updated','gibbs_loss','gibbs_loss_k'))
 
 # Save Workspace
-#setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
-#save.image("Simulated_WP.RData")
+setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
+save.image("Simulated_WP.RData")
 
-save.image("~/R/Project_BS/BayesianProject/Simulated_WP.RData") #GiuliaR
+#save.image("~/R/Project_BS/BayesianProject/Simulated_WP.RData") #GiuliaR

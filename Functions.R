@@ -355,34 +355,35 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
    # Create the vector and the matrix that will contain eigenvalues/eigenvectors of a single cluster
    values_k <- rep(0,t_points)
    vector_k <- matrix (0, nrow = t_points, ncol = t_points)
-   
+    
    values_matrix <- matrix (0, nrow = t_points, ncol = n_clust)
    vector_matrix <- matrix (0, nrow = (n_clust*t_points), ncol = t_points )
    
+   for (k in 1:n_clust){
+     data_k <- data[which(c_lab == k),]
+     cov_k <- cov(data_k)
+     
+     for (l in 1:t_points)
+       cov_k[l,l] <- cov_k[l,l] + delta
+     
+     eig_k <- eigen(cov_k)
+     values_matrix[,k] <- abs(eig_k$values)
+     vector_matrix[((k-1)*t_points + 1):(k*t_points),] <- eig_k$vectors
+   }
    
-   while(abs(loss_value1 - loss_value2) >= toll){
+   iterations <- 0
+   
+   while(abs(loss_value1 - loss_value2) >= toll && iterations < 50){
       
+      iterations <- iterations + 1
       loss_value1 <- loss_value2
-      
-      for (k in 1:n_clust){
-         data_k <- data[which(c_lab == k),]
-         cov_k <- cov(data_k)
-         
-         for (l in 1:t_points)
-            cov_k[l,l] <- cov_k[l,l] + delta
-         
-         eig_k <- eigen(cov_k)
-         values_matrix[,k] <- abs(eig_k$values)
-         vector_matrix[((k-1)*t_points + 1):(k*t_points),] <- eig_k$vectors
-      }
-      
       
       Maha_dis_k <- matrix(0,nrow=n, ncol=n_clust)
       for (i in 1:n){
          for (k in 1:n_clust) {
             values_k <- values_matrix[,k]
             vector_k <- vector_matrix[((k-1)*t_points + 1):(k*t_points),]
-            Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,],values_k,vector_k)
+             Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,],values_k,vector_k)
          }
          index <- which.min(Maha_dis_k[i,])
          c_lab[i] <- index
@@ -396,10 +397,27 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
             centroids_mean[k,] <- colMeans(data[which(c_lab == k),])
       }
       
+      for (k in 1:n_clust){
+        data_k <- data[which(c_lab == k),]
+        cov_k <- cov(data_k)
+        
+        for (l in 1:t_points)
+          cov_k[l,l] <- cov_k[l,l] + delta
+        
+        eig_k <- eigen(cov_k)
+        values_matrix[,k] <- abs(eig_k$values)
+        vector_matrix[((k-1)*t_points + 1):(k*t_points),] <- eig_k$vectors
+      }
+       
       loss_value2 <- gibbs_loss_updated(n_clust = n_clust, centroids = centroids_mean, 
                                   label = c_lab, values_matrix, vector_matrix, data = data)
       
    }
+   
+   if (iterations == 50){
+     print('Warning: oscillating behaviour try again you will be lucky next time :)')
+   }
+   else print('Jackpot!')
    
    return(list("label" = c_lab, "centroids" = centroids_mean, "loss" = loss_value2,
                "K" = n_clust))
@@ -662,7 +680,7 @@ clusters_plot <- function(time, clust, cols){
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
 save.image("Functions_WP.RData")
 
-save.image("~/R/Project_BS/BayesianProject/Functions_WP.RData") #GiuliaR
+#save.image("~/R/Project_BS/BayesianProject/Functions_WP.RData") #GiuliaR
  
  
  
