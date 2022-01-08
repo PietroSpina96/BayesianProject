@@ -17,8 +17,6 @@ rm(list=c('data1','data2','data3','data4'))
 rm(list=c('eig_1','eig_2','eig_3'))
 rm(list=c('time123','time4'))
 rm(list=c('K_2','K_3','K_4_1','K_4_2'))
-rm(list=c('Mahalanobis_Distance_2','Mahalanobis_Distance_3','Mahalanobis_Distance_4'))
-  
 
 # simulated data - model 2
 data <- data2
@@ -28,7 +26,6 @@ rm(list=c('data1','data2','data3','data4'))
 rm(list=c('eig_1','eig_2','eig_3'))
 rm(list=c('time123','time4'))
 rm(list=c('K_1','K_3','K_4_1','K_4_2'))
-rm(list=c('Mahalanobis_Distance_1','Mahalanobis_Distance_3','Mahalanobis_Distance_4'))
 
 
 # simulated data - model 3
@@ -39,7 +36,6 @@ rm(list=c('data1','data2','data3','data4'))
 rm(list=c('eig_1','eig_2','eig_3'))
 rm(list=c('time123','time4'))
 rm(list=c('K_2','K_1','K_4_1','K_4_2'))
-rm(list=c('Mahalanobis_Distance_1','Mahalanobis_Distance_2','Mahalanobis_Distance_4'))
 
 # simulated data - model 4. 
 # The covariance matrix of data4 is cov_4 and K_4_1 and K_4_2 are the covariance matrices of the two clusters
@@ -50,7 +46,6 @@ rm(list=c('data1','data2','data3','data4'))
 rm(list=c('eig_1','eig_2','eig_3'))
 rm(list=c('time123','time4'))
 rm(list=c('K_2','K_3','K_1'))
-rm(list=c('Mahalanobis_Distance_2','Mahalanobis_Distance_3','Mahalanobis_Distance_1'))
 
 #### APPLICATION ON THE SIMULATED DATA ####
 
@@ -62,7 +57,7 @@ k <- 2
 alpha <- 0.1
 
 clust <- fda_clustering_mahalanobis_general(n_clust = k, alpha = alpha,
-                                            cov_matrix = K_1, cov_type = 'fixed',
+                                            cov_matrix = cov(data), cov_type = 'updated',
                                             toll = 1e-2,  data = data)
 c_opt <- clust$label
 show(c_opt)  #label switching 
@@ -82,13 +77,15 @@ data3 <- data[which(c_opt=='3'),]
 # Plot 
 x11()
 par(mfrow = c(1,2))
-plot(time,data[1,],type = 'l', ylim = c(-3.5,9), lwd = 2, main = "Main and contaminated processes")
-for(i in 2:(n-c)){
-  lines(time,data[i,],type = 'l', col = 'firebrick2',lwd = 2)
+plot(time,data[1,],type = 'l', ylim = c(-3.5,9), lwd = 2, col='black',main = "Main and contaminated processes")
+for(i in 2:(n1)){
+  lines(time,data[i,],type = 'l', col = 'black',lwd = 2)
 }
-for (i in (n-c+1):n){
-  lines(time,data[i,],type = 'l', col = 'blue', lwd = 2)
+for (i in (n1+1):n){
+  lines(time,data[i,],type = 'l', col = 'black', lwd = 2)
 }
+# legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2'),fill=c('blue','firebrick2'),x.intersp=0.3,
+       #text.col=c('blue','firebrick2'))
 
 plot(time,data1[1,],type = 'l', ylim = c(-3.5,9), col = 'firebrick2', lwd = 2, main = "Clustered data")
 for (i in 2:dim(data1)[1]){
@@ -108,6 +105,10 @@ lines(time,c1,type = 'l', lwd = 3)
 lines(time,c2,type = 'l', lwd = 3)
 # lines(time,c3,type = 'l', lwd = 3)
 # lines(time,c4,type = 'l', lwd = 3)
+
+legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2','Centroids'),fill=c('blue','firebrick2','black'),x.intersp=0.3,
+       text.col=c('blue','firebrick2','black'))
+
 
 rm(data1)
 rm(data2)
