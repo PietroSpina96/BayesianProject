@@ -57,7 +57,7 @@ k <- 2
 alpha <- 0.1
 
 clust <- fda_clustering_mahalanobis_general(n_clust = k, alpha = alpha,
-                                            cov_matrix = cov(data), cov_type = 'updated',
+                                            cov_matrix = K_1, cov_type = 'fixed',
                                             toll = 1e-2,  data = data)
 c_opt <- clust$label
 show(c_opt)  #label switching 
@@ -106,8 +106,10 @@ lines(time,c2,type = 'l', lwd = 3)
 # lines(time,c3,type = 'l', lwd = 3)
 # lines(time,c4,type = 'l', lwd = 3)
 
-legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2','Centroids'),fill=c('blue','firebrick2','black'),x.intersp=0.3,
-       text.col=c('blue','firebrick2','black'))
+#legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2','Centroids'),fill=c('blue','firebrick2','black'),x.intersp=0.3,
+       #text.col=c('blue','firebrick2','black'))
+legend(x=0.6,y=9.5,ncol=1,box.lwd=1,legend=c('Main process','Contaminated process','Centroids'),fill=c('firebrick2','blue','black'),x.intersp=0.3,
+       text.col=c('firebrick2','blue','black'))
 
 
 rm(data1)
