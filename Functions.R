@@ -50,21 +50,23 @@ alpha_Mahalanobis <- function(alpha,f1,f2,lambda,eigenft) {
    sum( lambda/(lambda+alpha)^2 * scalar_prod(f1-f2,eigenft)^2 )
 }
 
+
+
 #alpha_approximation of the function f with f_alpha
-# same input as above
+#same input as above
 f_alpha_approx <-function(f,alpha,lambda,eigenft){
    t_points <- length(f)
-   
+
    coeff<-prod<-res<-rep(0,t_points)
    approx<-matrix(0,t_points,t_points)
-   
+
    for (j in 1:t_points) {
-      
+
       coeff[j]<-lambda[j]/(lambda[j]+alpha)
       prod[j]<-scalar_prod(f,eigenft[,j])
       approx[,j]<- as.numeric(coeff[j]*prod[j])*eigenft[,j]
       res<-res+approx[,j]
-      
+
    }
    return(res)
 }
@@ -201,31 +203,14 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
    n <- dim(data)[1]
    
    # index of each centroid randomly defined through sampling
-   y0 <- rep(0,n_clust)
-   vect_sample <- 1:n
-   
-   y0[1] <- sample(vect_sample,1)
-   
-   for (k in 2:n_clust) {
-      value <- y0[k-1]
-      
-      for (i in 1:length(vect_sample)){
-         if (vect_sample[i] == value)
-            t = i
-      }
-      
-      vect_sample <- vect_sample[-t]
-      y0[k] <- sample(vect_sample,1)
-   }
+   y0 <- sample(1:n,n_clust,replace = FALSE)
    
    # vector of labels
    c_lab <- rep(0,n)
    
    # covariance matrix must have positive eigenvalues
    delta <- 1e-10
-   for (l in 1:t_points){
-      cov_matrix[l,l] <- cov_matrix[l,l] + delta
-   }
+   diag(cov_matrix) <- diag(cov_matrix) + delta
    
    # eigenvalues and eigenfunctions for the alpha-mahalanobis function
    eig <- eigen(cov_matrix)
@@ -306,18 +291,12 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
    
    # covariance matrix must have positive eigenvalues
    delta <- 1e-10
-   for (l in 1:t_points){
-      cov_matrix[l,l] <- cov_matrix[l,l] + delta
-   }
+   diag(cov_matrix) <- diag(cov_matrix) + delta
    
    # eigenvalues and eigenfunctions for the alpha-mahalanobis function
    eig <- eigen(cov_matrix)
    values <- eig$values 
    vectors <- eig$vectors
-   
-   # index of each centroid randomly defined through sampling
-   y0 <- rep(0,n_clust)
-   vect_sample <- 1:n
    
    # while cycle checks that there are no single unit clusters in the initial step
    flag_1 <- 1
@@ -325,20 +304,8 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
       
       flag_1 <- 0
       
-      y0[1] <- sample(vect_sample,1)
-      
-      for (k in 2:n_clust) {
-         value <- y0[k-1] 
-         
-         for (i in 1:length(vect_sample)){
-            if (vect_sample[i] == value)
-               t = i
-         }
-         
-         vect_sample <- vect_sample[-t]
-         y0[k] <- sample(vect_sample,1)
-      }
-      
+      # centroids sampling 
+      y0 <- sample(1:n,n_clust,replace = FALSE)
       
       Mahalanobis_Distance <- matrix(0, nrow = n, ncol = n)
       for (i in 1:n){
