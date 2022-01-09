@@ -179,7 +179,6 @@ gibbs_loss_updated <- function(n_clust, centroids, label , values_matrix, vector
    n <- dim(data)[1]
    
    res = rep(0,n_clust)
-   sum_partial <- 0
    
    values_k <- rep(0,t_points)
    vector_k <- matrix(0, t_points, t_points)
@@ -187,16 +186,12 @@ gibbs_loss_updated <- function(n_clust, centroids, label , values_matrix, vector
    for (k in 1:n_clust){
       values_k <- values_matrix[,k]
       vector_k <- vector_matrix[((k-1)*t_points + 1):(k*t_points),]
-      for (i in 1:n){
-         if (label[i] == k){
-            sum_partial = alpha_Mahalanobis(alpha,data[i,],centroids[k,],values_k,vector_k)
-            res[k] = res[k] + sum_partial
-         }
-      }
+      for (i in 1:n)
+         if (label[i] == k)
+            res[k] = res[k] +  alpha_Mahalanobis(alpha,data[i,],centroids[k,],values_k,vector_k)
    }
-   
-   tot = sum(res)
-   return(tot)
+
+   return(sum(res))
 } 
 
 ###### Clustering Function GENERAL ####
@@ -348,34 +343,28 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
       y0 <- sample(1:n,n_clust,replace = FALSE)
       
       Mahalanobis_Distance <- matrix(0, nrow = n, ncol = n)
-      for (i in 1:n){
-         for (j in 1:n){
+      for (i in 1:n)
+         for (j in 1:n)
             Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,data[i,],data[j,]
                                                            ,values,vectors)
-         }
-      }
       
       # i-th unit belongs to cluster_k if the distance(centroid_k,i-th unit) is the smallest one
       Maha_dis <- matrix(0,nrow=n, ncol=n_clust)
       for (i in 1:n){
-         for (k in 1:n_clust) {
+         for (k in 1:n_clust)
             Maha_dis[i,k] <- Mahalanobis_Distance[i,y0[k]]
-         }
          index <- which.min(Maha_dis[i,])
          c_lab[i] <- index
       }
       
       # define the matrix of the centroids (random centroids)
       centroids_random <- matrix(0,nrow = n_clust,ncol = t_points)
-      for (k in 1:n_clust){
+      for (k in 1:n_clust)
          centroids_random[k,] <- data[y0[k],]
-      }
       
-      for (k in 1:n_clust){
+      for (k in 1:n_clust)
          if (sum(c_lab == k) == 1)
             flag_1 <- flag_1 + 1   # flag gets updated if there are single unit clusters
-      }
-      
    }
    
    # loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = centroids_random,label = c_lab, eig = eig,data = data)
@@ -399,10 +388,8 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
    # Compute eigenvalues and eigenfunctions of each cluster data
    for (k in 1:n_clust){
       data_k <- data[which(c_lab == k),]
-      cov_k <- cov(data_k)
       
-      for (l in 1:t_points)
-         cov_k[l,l] <- cov_k[l,l] + delta
+      cov_k <- cov(data_k) + diag(rep(delta,t_points)) #diagonal correction
       
       eig_k <- eigen(cov_k)
       values_matrix[,k] <- abs(eig_k$values)
@@ -428,22 +415,18 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
          c_lab[i] <- index
       }
       
-      for (k in 1:n_clust){
-         if (sum(c_lab == k) == 1) {
+      for (k in 1:n_clust)
+         if (sum(c_lab == k) == 1)
             centroids_mean[k,] <- data[which(c_lab == k),]
-         }
          else 
             centroids_mean[k,] <- colMeans(data[which(c_lab == k),])
-      }
       
       for (k in 1:n_clust){
          data_k <- data[which(c_lab == k),]
-         cov_k <- cov(data_k)
          
-         for (l in 1:t_points)
-            cov_k[l,l] <- cov_k[l,l] + delta
-         
+         cov_k <- cov(data_k) + diag(rep(delta,t_points)) #diagonal correction
          eig_k <- eigen(cov_k)
+         
          values_matrix[,k] <- abs(eig_k$values)
          vector_matrix[((k-1)*t_points + 1):(k*t_points),] <- eig_k$vectors
       }
@@ -452,31 +435,30 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
       loss_value2 <- gibbs_loss_general(n_clust = n_clust, centroids = centroids_random,
                                         label = c_lab, eig = eig, values_matrix = values_matrix, 
                                         vector_matrix = vector_matrix, eig_type = 'updated', data = data)
-      
+      writeLines(sprintf("#%d. Loss value: %.2f  /  diff: %.2f",iterations,loss_value2,abs(loss_value2-loss_value1)))
    }
    
-   if (iterations == 50){
-      print('Warning: oscillating behaviour. Try again: you will be lucky next time :)')
-   }
-   else print('Jackpot!')
+   if (iterations == 50)
+      writeLines('WARNING: oscillating behaviour. Try again: you will be luckier next time :)')
+   else
+      writeLines('Jackpot!')
    
-   return(list("label" = c_lab, "centroids" = centroids_mean, "loss" = loss_value2,
+   return(list("label" = c_lab,
+               "centroids" = centroids_mean,
+               "loss" = loss_value2,
                "K" = n_clust))
-   
 }
 
 
 
 ######  Merging clusters ####
-# looks at centroids_mean and detects if some clusters are too close and should be merged.
-# eps = tolerance for the union of clusters (eps = 0 -> no merging),
-#       automatically set based on mean centroids distances
-## INPUT: centroids_mean   = clusters
-##        eps              = merging tolerance (*optional)
-## OUTPUT: centroids_mean (reduced)
-#TODO: fix messed-up cluster tracking in some random cases
-
 clusters_union <- function(clust, eps=0){
+   # looks at centroids_mean and detects if some clusters are too close and should be merged.
+   # eps = tolerance for the union of clusters (eps = 0 -> no merging),
+   #       automatically set based on mean centroids distances
+   ## INPUT: centroids_mean   = clusters
+   ##        eps              = merging tolerance (*optional)
+   ## OUTPUT: centroids_mean (reduced)
    writeLines("  **  MERGING CLOSE CLUSTERS  **  ")
    centroids_mean <- clust$centroids
    c_lab <- clust$label
@@ -564,8 +546,8 @@ clusters_union <- function(clust, eps=0){
 
 
 ###### PLOT clusters ####
-# plots (x,y)=(time,centroids_mean) with colors
 clusters_plot <- function(time, clust, cols){
+   # plots (x,y)=(time,centroids_mean) with colors
    ## INPUT: time              = x (vector: n)
    ##        clust$centroids   = y (matrix: k by n)
    ##        cols              = cluster hex colors (vector: n)(*optional)
@@ -574,15 +556,15 @@ clusters_plot <- function(time, clust, cols){
    if(missing(cols)) cols <- rainbow(dim(clust$centroids)[1])
    
    df <- clust$centroids %>% t() %>% as.data.frame() %>% 
-      add_column(x=time) %>%
-      gather(group, y, -x)
+            add_column(x=time) %>%
+            gather(group, y, -x)
    
    theplot <- ggplot(df, aes(x, y, color = group)) + 
-      geom_line(size=1) +
-      scale_color_manual(values=cols) +
-      labs(x="time",y="centroids")
+               geom_line(size=1) +
+               scale_color_manual(values=cols) +
+               labs(x="time",y="centroids")
    
-   return(theplot)
+   theplot
 }
 
 # The following function is not loaded in the workspace
