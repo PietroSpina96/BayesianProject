@@ -381,8 +381,8 @@ for (i in 1:t_points){
 
 x11()
 par(mfrow=c(1,2))
-image.plot(time,time,K_4_1,main='Cov matrix process 1')
-image.plot(time,time,K_4_2,main='Cov matrix process 2')
+image.plot(time,time,K_4_1,main='Cov matrix first process')
+image.plot(time,time,K_4_2,main='Cov matrix second process')
 
 set.seed(123564)
 m <- rep(0,t_points)
@@ -495,6 +495,96 @@ for (i in (n1+1):n){
 title('Smoothed data')
 
 
+##### DATA SIMULATION - MODEL 5 ####
+# Beraha ha chiesto nuovi dati che abbiano media simile ma cov diverse così da testare la funzione_updated
+n <- 100
+n1 <- 40
+
+t_points <- 200
+time <- seq(0,1,(1)/(t_points - 1))
+
+cov_M5_1 <- function(s,t){
+  K <- 0.3 * exp(-abs(s - t)/0.3) 
+  return(K)
+}
+
+cov_M5_2 <- function(s,t){
+  K <- 1.5*exp(-abs(s - t)/3) 
+  return(K)
+}
+
+K_5_1 <- matrix(0, nrow = t_points, ncol = t_points)
+for (i in 1:t_points){
+  for (j in 1:t_points){
+    K_5_1[i,j] <- cov_M5_1(time[i],time[j])
+  }
+}
+
+K_5_2 <- matrix(0, nrow = t_points, ncol = t_points)
+for (i in 1:t_points){
+  for (j in 1:t_points){
+    K_5_2[i,j] <- cov_M5_2(time[i],time[j])
+  }
+}
+
+x11()
+par(mfrow=c(1,2))
+image.plot(time,time,K_5_1,main='Cov matrix first process')
+image.plot(time,time,K_5_2,main='Cov matrix second process')
+
+# Generation of the data
+set.seed(12356489)
+m <- rep(0,t_points)
+random_process_cluster_1 <- generate_gauss_fdata(n1, m, Cov = K_5_1)
+random_process_cluster_2 <- generate_gauss_fdata(n - n1, m, Cov = K_5_2)
+random_process_cluster <- rbind(random_process_cluster_1,random_process_cluster_2)
+
+cluster_1 <- function(t,points){
+  X <- rep(0,points)
+  X[t] <- sin(t)
+}
+
+cluster_2 <- function(t,points){
+  X <- rep(0,points)
+  X[t] <- cos(t) + 0.5
+}
+
+data5 <- matrix(0, nrow = n, ncol = t_points)
+for (i in 1:n1){
+  for (j in 1:t_points){
+    data5[i,j] <- cluster_1(time[j],t_points) + random_process_cluster[i,j]
+  }
+}
+
+for (i in (n1 + 1):n){
+  for (j in 1:t_points){
+    data5[i,j] <- cluster_2(time[j],t_points) + random_process_cluster[i,j]
+  }
+}
+
+mean_c1 <- colMeans(data5[1:n1,])
+mean_c2 <- colMeans(data5[(n1+1):n,])
+
+# Simulated data plot
+x11()
+plot(time,data5[1,],type = 'l', ylim = c(-5,10), col = 'blue', lwd = 2,xlab='Time',ylab='Values')
+for(i in 2:n1){
+  lines(time,data5[i,],type = 'l', col = 'blue',lwd = 2)
+}
+for (i in (n1 + 1):n){
+  lines(time,data5[i,],type = 'l', col = 'firebrick2', lwd = 2)
+}
+lines(time,mean_c1,col='black',lwd = 2)
+lines(time,mean_c2,col='black',lwd = 2)
+title('Simulated data 3')
+legend("topright",ncol=1,box.lwd=1,legend=c('Process 1','Process 2'),fill=c('blue','firebrick2'),x.intersp=0.3,
+       text.col=c('blue','firebrick2'))
+
+# Covariance matrix of the data
+cov_5 <- cov(data5)
+
+x11()
+image.plot(time,time,cov_5,main='Covariance matrix')
 
 
 ##### FINAL WORKSPACE #### 
