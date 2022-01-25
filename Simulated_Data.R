@@ -130,6 +130,19 @@ for (i in (n-c+1):n){
 
 time123 <- time
 
+# Smoothed data using cov(data)
+eig_11 <- eigen(cov(data1))
+values_11 <- eig_11$values
+vectors_11 <- eig_11$vectors
+
+alpha <- 0.1
+x11()
+plot(time, data1[1,], type = 'l', lwd = 2)
+lines(time, f_alpha_approx(data1[1,],1,values_11,vectors_11), type = 'l', lwd = 2, col = 'firebrick2')
+lines(time, f_alpha_approx(data1[1,],0.1,values_11,vectors_11), type = 'l', lwd = 2, col = 'blue')
+lines(time, f_alpha_approx(data1[1,],0.01,values_11,vectors_11), type = 'l', lwd = 2, col = 'forestgreen')
+title('Best value for alpha is 0.1')
+
 #################### DATA SIMULATION - MODEL 2 #################################
 
 n <- 100
@@ -458,6 +471,18 @@ lines(time, f_alpha_approx(data4[1,],0.1,values_4_1,vectors_4_1), type = 'l', lw
 lines(time, f_alpha_approx(data4[1,],0.01,values_4_1,vectors_4_1), type = 'l', lwd = 2, col = 'forestgreen')
 title('Best value for alpha is 0.1 for the first cluster')
 
+# Smoothed data using cov(data)
+eig_4 <- eigen(cov_4)
+values_4 <- eig_4$values
+vectors_4 <- eig_4$vectors
+
+alpha <- 0.1
+x11()
+plot(time, data4[1,], type = 'l', lwd = 2)
+lines(time, f_alpha_approx(data4[1,],1,values_4,vectors_4), type = 'l', lwd = 2, col = 'firebrick2')
+lines(time, f_alpha_approx(data4[1,],0.1,values_4,vectors_4), type = 'l', lwd = 2, col = 'blue')
+lines(time, f_alpha_approx(data4[1,],0.01,values_4,vectors_4), type = 'l', lwd = 2, col = 'forestgreen')
+title('Best value for alpha is 0.1')
 
 # alpha-Mahalanobis distance matrix 
 Mahalanobis_Distance_4 <- matrix(0, nrow = n, ncol = n)
