@@ -549,6 +549,8 @@ cluster5_2 <- function(t,points){
   X <- rep(0,points)
   X[t] <- cos(t) + 0.5
 }
+#X[t] <- cos(t) + 0.5
+#X[t] <- sin(t) + 5
 
 data5 <- matrix(0, nrow = n, ncol = t_points)
 for (i in 1:n1){
@@ -577,9 +579,9 @@ for (i in (n1 + 1):n){
 }
 lines(time,mean_c1,col='black',lwd = 2)
 lines(time,mean_c2,col='black',lwd = 2)
-title('Simulated data 3')
-legend("topright",ncol=1,box.lwd=1,legend=c('Process 1','Process 2'),fill=c('blue','firebrick2'),x.intersp=0.3,
-       text.col=c('blue','firebrick2'))
+title('Simulated data 5')
+legend("topright",ncol=1,box.lwd=1,legend=c('Process 1','Process 2','Means'),fill=c('blue','firebrick2','black'),x.intersp=0.3,
+       text.col=c('blue','firebrick2','black'))
 
 # Covariance matrix of the data
 cov_5 <- cov(data5)
@@ -590,6 +592,7 @@ image.plot(time,time,cov_5,main='Covariance matrix sim. data 5')
 time45<-time
 
 n_cluster1 <- n1
+c <- 20
 n_cluster2 <- c
 
 
