@@ -61,7 +61,7 @@ k <- 2
 alpha <- 0.1
 
 clust <- fda_clustering_mahalanobis_general(n_clust = k, alpha = alpha,
-                                            cov_matrix = cov(data), cov_type = 'updated',
+                                            cov_matrix = K_1, cov_type = 'fixed',
                                             toll = 1e-2,  data = data)
 c_opt <- clust$label
 show(c_opt)  #label switching 
@@ -130,7 +130,7 @@ t_points <- dim(data)[2]
 k <- 4
 alpha <- 0.1
 
-clust1 <- fda_clustering_mahalanobis(n_clust=k, alpha=alpha, cov_matrix=cov(data),
+clust1 <- fda_clustering_mahalanobis(n_clust=k, alpha=alpha, cov_matrix=K_1,
                                      toll=1e-10, data=data)
 # do merge
 clust2 <- clusters_union(clust1)
