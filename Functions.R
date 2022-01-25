@@ -47,7 +47,7 @@ alpha_Mahalanobis <- function(alpha,f1,f2,lambda,eigenft) {
    # es. f1 = data[i,]     or    f1 = data[j,]
    #     f2 = data[j,]           f2 = centroids[k,]
    # ( the correction '+sum(log(lambda))', if needed, is better added outside at the end )
-   sum( lambda/(lambda+alpha)^2 * scalar_prod(f1-f2,eigenft)^2 )
+   sqrt(sum( lambda/(lambda+alpha)^2 * scalar_prod(f1-f2,eigenft)^2 ))
 }
 
 
