@@ -51,19 +51,13 @@ n1 <- n_cluster1    #number of items in the first cluster for model 4,5
 rm(list=c('n_cluster1','n_cluster2'))
 
 
-#### Posterior calculation on Model 1 with optimal c_lab and fixed structure ####
+#### Posterior on Data 1 with fixed covariance #################################################
 # For now this is just a test to see if the new function works
 
 n <- dim(data)[1]
-c_lab <- c(rep(1,n-c), rep(2,c))
 n_clust <- k <- 2
 alpha <- 0.1
-lambda <- 0.25
-
-# Initialize cetroid matrix
-centroids_mean <- matrix(0, nrow = 2, ncol = 200)
-centroids_mean[1,] <- colMeans(data[1:(n-c),])
-centroids_mean[2,] <- colMeans(data[(n-c+1):n,])
+lambda <- 0.75
 
 # Itialize eigen object
 eig <- eigen(K_1)
@@ -72,24 +66,40 @@ eig <- eigen(K_1)
 sigma <- 0.25
 theta <- 3.66
 
-posterior_pitman_yor(sigma = sigma, theta = theta, label = c_lab, data = data)
+# Initialize cetroid matrix (bad clusters)
+c <- 10
+c_lab_bad <- c(rep(1,n-c), rep(2,c))
+centroids_mean <- matrix(0, nrow = 2, ncol = 200)
+centroids_mean[1,] <- colMeans(data[1:(n-c),])
+centroids_mean[2,] <- colMeans(data[(n-c+1):n,])
 
-##### Checking function stuff #####
-label <- c_lab
-clust_obs <- rep(0,n_clust)
-for (k in 1:n_clust){
-  nk <- dim(data[which(label == k),])[1]
-  clust_obs[k] <- nk
-}
+post_bad <- posterior_pitman_yor(sigma = sigma, theta = theta, label = c_lab_bad, data = data)
 
-post_vec <- rep(0,n_clust)
-for (k in 1:n_clust){
-  post_vec[k] <- prod(theta + k*sigma, gamma(clust_obs[k] - sigma)) 
-  # Con lambda = 1 questo l'ultimo valore è piccolissimo
-}
-post_vec
+# Initialize cetroid matrix (good clusters)
+c <- 20
+c_lab_good <- c(rep(1,n-c), rep(2,c))
+centroids_mean <- matrix(0, nrow = 2, ncol = 200)
+centroids_mean[1,] <- colMeans(data[1:(n-c),])
+centroids_mean[2,] <- colMeans(data[(n-c+1):n,])
 
-post <- prod(post_vec,1/(theta + n_clust*sigma), exp(-lambda*gibbs_loss(n_clust = n_clust , 
-                                                                        centroids = centroids_mean, 
-                                                                        label = label, eig = eig,data = data)))
-post
+post_good <- posterior_pitman_yor(sigma = sigma, theta = theta, label = c_lab_good, data = data)
+
+# Check 
+post_bad$posterior
+post_good$posterior
+post_good$posterior > post_bad$posterior # as expected the optimal partition has higher posterior
+
+# Label switching check
+c <- 20
+c_lab_good_2 <- c(rep(2,n-c), rep(1,c))
+centroids_mean <- matrix(0, nrow = 2, ncol = 200)
+centroids_mean[2,] <- colMeans(data[1:(n-c),])
+centroids_mean[1,] <- colMeans(data[(n-c+1):n,])
+
+post_good_2 <- posterior_pitman_yor(sigma = sigma, theta = theta, label = c_lab_good_2, data = data)
+
+post_good$posterior
+post_good_2$posterior
+post_good$posterior == post_good_2$posterior
+
+

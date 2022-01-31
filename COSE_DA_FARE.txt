@@ -1,17 +1,21 @@
 Note:
 
-1) Introdurre Pitman-Yor prior (function)
+1) Introdurre Pitman-Yor prior (function) - In realtà non è necessaria (credo)
 
-2) Introdurre Pitman-Yor posterior (function)
+2) Introdurre Pitman-Yor posterior (function) - Fatto
 
 3) New MAP Algorithm
 
-4) Migliorare funzione di unione clusters in modo da tenere conto anche della varianza (si potrebbe utilizzare la Mahalanobis distance tra i centroidi magari)
+4) Label switching check
 
-5) tuning di alpha per dati reali e applicazione dei due modelli ai dati reali
+5) Migliorare funzione di unione clusters in modo da tenere conto anche della varianza (si potrebbe utilizzare la Mahalanobis distance tra i centroidi magari)
 
-6) Controllare una possibile correlazione con i dati numerici
+6) tuning di alpha per dati reali e applicazione dei due modelli ai dati reali
+
+7) Controllare una possibile correlazione con i dati numerici
+
+
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-5) Gibbs sampler for uncertainty quantification (?)
+8) Gibbs sampler for uncertainty quantification (?)

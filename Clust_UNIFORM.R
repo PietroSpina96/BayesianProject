@@ -53,7 +53,7 @@ rm(list=c('n_cluster1','n_cluster2'))
 
 #### APPLICATION ON THE SIMULATED DATA ####
 
-#### Original clustering functions: fda_clustering_mahalanobis ####
+##### Original clustering functions: fda_clustering_mahalanobis ####
 n <- dim(data)[1]
 t_points <- dim(data)[2]
 
@@ -122,7 +122,7 @@ rm(data2)
 # rm(data4)
 
 
-#### Clustering function with merging of clusters (a posteriori) ####
+##### Clustering function with merging of clusters (a posteriori) ####
 # fda_clustering_mahalanobis + clusters_union + clusters_plot
 n <- dim(data)[1]
 t_points <- dim(data)[2]
@@ -145,7 +145,7 @@ plot2 <- clusters_plot(time, clust2, colors2) + labs(title="Merged clusters")
 grid.arrange(plot1,plot2,nrow=1)
 #
  
-#### Clustering function updating covariance within clusters: fda_clustering_mahalanobis_updated ####
+##### Clustering function updating covariance within clusters: fda_clustering_mahalanobis_updated ####
 n <- dim(data)[1]
 t_points <- dim(data)[2]
 
