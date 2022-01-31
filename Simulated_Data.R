@@ -8,7 +8,7 @@ library(roahd)
 
 # Commentate i set delle directory non vostre
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
-#setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
+setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
 
 load("Simulated_WP.RData")
 load('Functions_WP.RData') 
@@ -129,6 +129,19 @@ for (i in (n-c+1):n){
 }
 
 time123 <- time
+
+# Smoothed data using cov(data)
+eig_11 <- eigen(cov(data1))
+values_11 <- eig_11$values
+vectors_11 <- eig_11$vectors
+
+alpha <- 0.1
+x11()
+plot(time, data1[1,], type = 'l', lwd = 2)
+lines(time, f_alpha_approx(data1[1,],1,values_11,vectors_11), type = 'l', lwd = 2, col = 'firebrick2')
+lines(time, f_alpha_approx(data1[1,],0.1,values_11,vectors_11), type = 'l', lwd = 2, col = 'blue')
+lines(time, f_alpha_approx(data1[1,],0.01,values_11,vectors_11), type = 'l', lwd = 2, col = 'forestgreen')
+title('Best value for alpha is 0.1')
 
 #################### DATA SIMULATION - MODEL 2 #################################
 
@@ -381,8 +394,8 @@ for (i in 1:t_points){
 
 x11()
 par(mfrow=c(1,2))
-image.plot(time,time,K_4_1,main='Cov matrix process 1')
-image.plot(time,time,K_4_2,main='Cov matrix process 2')
+image.plot(time,time,K_4_1,main='Cov matrix first process')
+image.plot(time,time,K_4_2,main='Cov matrix second process')
 
 set.seed(123564)
 m <- rep(0,t_points)
@@ -423,7 +436,7 @@ for(i in 2:n1){
 for (i in (n1 + 1):n){
   lines(time,data4[i,],type = 'l', col = 'firebrick2', lwd = 2)
 }
-title('Simulated data 2')
+title('Simulated data 4')
 legend("topright",ncol=1,box.lwd=1,legend=c('Process 1','Process 2'),fill=c('blue','firebrick2'),x.intersp=0.3,
        text.col=c('blue','firebrick2'))
 
@@ -458,6 +471,18 @@ lines(time, f_alpha_approx(data4[1,],0.1,values_4_1,vectors_4_1), type = 'l', lw
 lines(time, f_alpha_approx(data4[1,],0.01,values_4_1,vectors_4_1), type = 'l', lwd = 2, col = 'forestgreen')
 title('Best value for alpha is 0.1 for the first cluster')
 
+# Smoothed data using cov(data)
+eig_4 <- eigen(cov_4)
+values_4 <- eig_4$values
+vectors_4 <- eig_4$vectors
+
+alpha <- 0.1
+x11()
+plot(time, data4[1,], type = 'l', lwd = 2)
+lines(time, f_alpha_approx(data4[1,],1,values_4,vectors_4), type = 'l', lwd = 2, col = 'firebrick2')
+lines(time, f_alpha_approx(data4[1,],0.1,values_4,vectors_4), type = 'l', lwd = 2, col = 'blue')
+lines(time, f_alpha_approx(data4[1,],0.01,values_4,vectors_4), type = 'l', lwd = 2, col = 'forestgreen')
+title('Best value for alpha is 0.1')
 
 # alpha-Mahalanobis distance matrix 
 Mahalanobis_Distance_4 <- matrix(0, nrow = n, ncol = n)
@@ -475,7 +500,6 @@ for (i in (n1+1):n){
 x11()
 image.plot(1:n,1:n,Mahalanobis_Distance_4)
 
-time4 <- time
 
 f.data_alpha_sim_4 <- matrix(0, nrow = n, ncol = t_points)
 for (i in 1:n1){
@@ -494,31 +518,139 @@ for (i in (n1+1):n){
 }
 title('Smoothed data')
 
+time45 <- time
 
+
+##### DATA SIMULATION - MODEL 5 ####
+# Beraha ha chiesto nuovi dati che abbiano media simile ma cov diverse così da testare la funzione_updated
+n <- 100
+n1 <- 40
+
+t_points <- 200
+time <- seq(0,1,(1)/(t_points - 1))
+
+cov_M5_1 <- function(s,t){
+  K <- 0.3 * exp(-abs(s - t)/0.3) 
+  return(K)
+}
+
+cov_M5_2 <- function(s,t){
+  K <- 1.5*exp(-abs(s - t)/3) 
+  return(K)
+}
+
+K_5_1 <- matrix(0, nrow = t_points, ncol = t_points)
+for (i in 1:t_points){
+  for (j in 1:t_points){
+    K_5_1[i,j] <- cov_M5_1(time[i],time[j])
+  }
+}
+
+K_5_2 <- matrix(0, nrow = t_points, ncol = t_points)
+for (i in 1:t_points){
+  for (j in 1:t_points){
+    K_5_2[i,j] <- cov_M5_2(time[i],time[j])
+  }
+}
+
+x11()
+par(mfrow=c(1,2))
+image.plot(time,time,K_5_1,main='Cov matrix first process')
+image.plot(time,time,K_5_2,main='Cov matrix second process')
+
+# Generation of the data
+set.seed(123564895)
+m <- rep(0,t_points)
+random5_process_cluster_1 <- generate_gauss_fdata(n1, m, Cov = K_5_1)
+random5_process_cluster_2 <- generate_gauss_fdata(n - n1, m, Cov = K_5_2)
+random5_process_cluster <- rbind(random5_process_cluster_1,random5_process_cluster_2)
+
+cluster5_1 <- function(t,points){
+  X <- rep(0,points)
+  X[t] <- sin(t)
+}
+
+cluster5_2 <- function(t,points){
+  X <- rep(0,points)
+  X[t] <- cos(t) + 0.5
+}
+#X[t] <- cos(t) + 0.5
+#X[t] <- sin(t) + 5
+
+data5 <- matrix(0, nrow = n, ncol = t_points)
+for (i in 1:n1){
+  for (j in 1:t_points){
+    data5[i,j] <- cluster5_1(time[j],t_points) + random5_process_cluster[i,j]
+  }
+}
+
+for (i in (n1 + 1):n){
+  for (j in 1:t_points){
+    data5[i,j] <- cluster5_2(time[j],t_points) + random5_process_cluster[i,j]
+  }
+}
+
+mean_c1 <- colMeans(data5[1:n1,])
+mean_c2 <- colMeans(data5[(n1+1):n,])
+
+# Simulated data plot
+x11()
+plot(time,data5[1,],type = 'l', ylim = c(-5,10), col = 'blue', lwd = 2,xlab='Time',ylab='Values')
+for(i in 2:n1){
+  lines(time,data5[i,],type = 'l', col = 'blue',lwd = 2)
+}
+for (i in (n1 + 1):n){
+  lines(time,data5[i,],type = 'l', col = 'firebrick2', lwd = 2)
+}
+lines(time,mean_c1,col='black',lwd = 2)
+lines(time,mean_c2,col='black',lwd = 2)
+title('Simulated data 5')
+legend("topright",ncol=1,box.lwd=1,legend=c('Process 1','Process 2','Means'),fill=c('blue','firebrick2','black'),x.intersp=0.3,
+       text.col=c('blue','firebrick2','black'))
+
+# Covariance matrix of the data
+cov_5 <- cov(data5)
+
+x11()
+image.plot(time,time,cov_5,main='Covariance matrix sim. data 5')
+
+time45<-time
+
+n_cluster1 <- n1
+c <- 20
+n_cluster2 <- c
 
 
 ##### FINAL WORKSPACE #### 
 # Remove useless variables and functions
 rm(list=c('data','random_process_1','random_process_2','random_process_3'))
 rm(list=c('random_process_cluster_1','random_process_cluster_2','random_process_cluster'))
+rm(list=c('random5_process_cluster_1','random5_process_cluster_2','random5_process_cluster'))
+rm(list=c('cluster5_1','cluster5_2'))
+
 rm(list=c('mu_2','mu_3','u_2','i','j','m'))
-rm(list = c('n','t_points','time','delta'))
+rm(list = c('n','t_points','time','delta','c','n1'))
+
 rm(list=c('values_1','values_2','values_3','vectors_1','vectors_2','vectors_3'))
 rm(list=c('values_4_1','values_4_2','vectors_4_1','vectors_4_2'))
+rm(list=c('eig_1','eig_2','eig_3','eig_4_1','eig_4_2'))
 
 rm(list=c('cont_proc_1','cont_proc_2','cont_proc_3'))
 rm(list=c('main_proc_1','main_proc_2','main_proc_3'))
-rm(list=c('cov_M1','cov_M2','cov_M3','cov_M4_1','cov_M4_2'))
 rm(list=c('cluster_1','cluster_2'))
+rm(list=c('cov_M1','cov_M2','cov_M3','cov_M4_1','cov_M4_2','cov_M5_1','cov_M5_2'))
+rm(list=c('K_4_1','K_4_2','K_5_1','K_5_2','cov_4','cov_5'))
+rm(list=c('mean_c1','mean_c2'))
 
-rm(list=c('clusters_plot','clusters_union','fda_clustering_mahalanobis'))
-rm(list=c('fda_clustering_mahalanobis_union','fda_clustering_mahalanobis_updated','gibbs_loss','gibbs_loss_k'))
+rm(list=c('clusters_plot','clusters_union','fda_clustering_mahalanobis_general','centroids_dists'))
+rm(list=c('fda_clustering_mahalanobis_union','fda_clustering_mahalanobis_updated','gibbs_loss_general','gibbs_loss_updated'))
 
 rm(list=c('f.data_alpha_sim_1','f.data_alpha_sim_2','f.data_alpha_sim_3','f.data_alpha_sim_4'))
 rm(list=c('Mahalanobis_Distance_1','Mahalanobis_Distance_2','Mahalanobis_Distance_3','Mahalanobis_Distance_4'))
+
 
 # Save Workspace
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
 save.image("Simulated_WP.RData")
 
-#save.image("~/R/Project_BS/BayesianProject/Simulated_WP.RData") #GiuliaR
+save.image("~/R/Project_BS/BayesianProject/Simulated_WP.RData") #GiuliaR

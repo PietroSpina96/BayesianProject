@@ -2,7 +2,7 @@
 
 #### SETUP ####
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject") #Pietro
- #setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
+setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
 
 load('Simulated_WP.RData')
 load('Functions_WP.RData')
@@ -11,41 +11,45 @@ load('Functions_WP.RData')
 # Choose the model for the simulation:
 # simulated data - model 1
 data <- data1
-eig <- eig_1
 time <- time123
-rm(list=c('data1','data2','data3','data4'))
-rm(list=c('eig_1','eig_2','eig_3'))
-rm(list=c('time123','time4'))
-rm(list=c('K_2','K_3','K_4_1','K_4_2'))
+rm(list=c('data1','data2','data3','data4','data5'))
+rm(list=c('time123','time45'))
+rm(list=c('K_2','K_3'))
 
 # simulated data - model 2
 data <- data2
-eig <- eig_2
 time <- time123
-rm(list=c('data1','data2','data3','data4'))
-rm(list=c('eig_1','eig_2','eig_3'))
-rm(list=c('time123','time4'))
-rm(list=c('K_1','K_3','K_4_1','K_4_2'))
-
+rm(list=c('data1','data2','data3','data4','data5'))
+rm(list=c('time123','time45'))
+rm(list=c('K_1','K_3'))
 
 # simulated data - model 3
 data <- data3
-eig <- eig_3
 time <- time123
-rm(list=c('data1','data2','data3','data4'))
-rm(list=c('eig_1','eig_2','eig_3'))
-rm(list=c('time123','time4'))
-rm(list=c('K_2','K_1','K_4_1','K_4_2'))
+rm(list=c('data1','data2','data3','data4','data5'))
+rm(list=c('time123','time45'))
+rm(list=c('K_2','K_1'))
 
-# simulated data - model 4. 
+# simulated data - model 4
 # The covariance matrix of data4 is cov_4 and K_4_1 and K_4_2 are the covariance matrices of the two clusters
-# No eig has been computed 
 data <- data4
-time <- time4
-rm(list=c('data1','data2','data3','data4'))
-rm(list=c('eig_1','eig_2','eig_3'))
-rm(list=c('time123','time4'))
+time <- time45
+rm(list=c('data1','data2','data3','data4','data5'))
+rm(list=c('time123','time45'))
 rm(list=c('K_2','K_3','K_1'))
+
+# simulated data - model 5
+# The covariance matrix of data5 is cov_5 and K_5_1 and K_5_2 are the covariance matrices of the two clusters
+data <- data5
+time <- time45
+rm(list=c('data1','data2','data3','data4','data5'))
+rm(list=c('time123','time45'))
+rm(list=c('K_2','K_3','K_1'))
+
+c <- n_cluster2     #number of items in the second cluster for model 1,2,3
+n1 <- n_cluster1    #number of items in the first cluster for model 4,5
+rm(list=c('n_cluster1','n_cluster2'))
+
 
 #### APPLICATION ON THE SIMULATED DATA ####
 
@@ -126,7 +130,7 @@ t_points <- dim(data)[2]
 k <- 4
 alpha <- 0.1
 
-clust1 <- fda_clustering_mahalanobis(n_clust=k, alpha=alpha, cov_matrix=cov(data),
+clust1 <- fda_clustering_mahalanobis(n_clust=k, alpha=alpha, cov_matrix=K_1,
                                      toll=1e-10, data=data)
 # do merge
 clust2 <- clusters_union(clust1)
