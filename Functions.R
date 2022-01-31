@@ -17,7 +17,7 @@ setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject"
 load('Functions_WP.RData')
 
 
-##### Basic Functions ####
+#### BASIC FUNCTIONS ####
 
 #scalar product
 scalar_prod<- function (f1,f2) {
@@ -114,23 +114,8 @@ kernel_estimator <- function(process,med,n,s,t,points){
   return(estimator)
 }
  
-# compute distances between centroids (used in cluster merging)
-centroids_dists <- function(centroids_mean,normtype='i'){
-   writeLines("Calculating clusters' centroids distances...")
-   max_clust <- dim(centroids_mean)[1]
-   dists=matrix(0,max_clust,max_clust) #distances (with original k=max_clust)
-   for (k in 1:(max_clust-1)){
-      for (j in (k+1):max_clust){
-         diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
-         dis_centroids <- norm(as.matrix(diff_centroids),type = normtype)
-         writeLines(sprintf(" - Clusters %d and %d - centroid distance = %.2f",k,j,dis_centroids))
-         dists[j,k]<-dists[k,j]<-dis_centroids
-      }
-   }
-   return(dists)
-}
 
-##### Model Functions ####
+#### LOSS FUNCTIONS ####
 ###### Gibbs loss GENERAL ####
 gibbs_loss_general <- function (n_clust, centroids, label, eig, values_matrix, vector_matrix, eig_type = c('fixed','updated'), data){
    gibbs <- switch (eig_type,
@@ -193,6 +178,8 @@ gibbs_loss_updated <- function(n_clust, centroids, label , values_matrix, vector
 
    return(sum(res))
 } 
+
+#### UNIFORM MODEL FUNCTIONS ####
 
 ###### Clustering Function GENERAL ####
 
@@ -439,9 +426,9 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
    }
    
    if (iterations == 50)
-      writeLines('WARNING: oscillating behaviour. Try again: you will be luckier next time :)')
+      writeLines('WARNING: oscillating behaviour. Try again: you will be luckier next time')
    else
-      writeLines('Jackpot!')
+      writeLines('Jackpot: Optimal partition found!')
    
    return(list("label" = c_lab,
                "centroids" = centroids_mean,
@@ -449,7 +436,23 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
                "K" = n_clust))
 }
 
+#### CLUSTER ANALYSIS FUNCTIONS ####
 
+# compute distances between centroids (used in cluster merging)
+centroids_dists <- function(centroids_mean,normtype='i'){
+  writeLines("Calculating clusters' centroids distances...")
+  max_clust <- dim(centroids_mean)[1]
+  dists=matrix(0,max_clust,max_clust) #distances (with original k=max_clust)
+  for (k in 1:(max_clust-1)){
+    for (j in (k+1):max_clust){
+      diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
+      dis_centroids <- norm(as.matrix(diff_centroids),type = normtype)
+      writeLines(sprintf(" - Clusters %d and %d - centroid distance = %.2f",k,j,dis_centroids))
+      dists[j,k]<-dists[k,j]<-dis_centroids
+    }
+  }
+  return(dists)
+}
 
 ######  Merging clusters ####
 clusters_union <- function(clust, eps=0){
@@ -568,7 +571,7 @@ clusters_plot <- function(time, clust, cols){
 }
 
 # The following function is not loaded in the workspace
-#####  Clustering function merging using loss minimization ####
+#  Clustering function merging using loss minimization #
 # The parameter eig corresponds to the output of the eigen function (list of eigenvalues and eigenvectors)
 # The function works with n_clust=k
 # alpha is the smoothing parameter
@@ -698,7 +701,50 @@ clusters_plot <- function(time, clust, cols){
 # } 
 
 
-##### Save WP ####
+#### PITMAN-YOR MODEL FUNCTIONS ####
+
+##### Pitman-Yor Posterior #####
+
+# Input: sigma -> discount parameter of PY, [0,1), 
+#        theta -> stength parameter of PY, (d,+inf),
+#        c_lab
+#        data
+
+# Output: posterior -> posterior value
+#         cluster_size -> vector containing the size of clusters
+
+# Needed values not in the function: 1) n_clust
+#                                    2) alpha
+#                                    3) centroids_mean
+#                                    4) eig (i.e. list of eigenvalues and 
+#                                            eigenvectors of covariance operator)
+
+posterior_pitman_yor <- function(sigma, theta, label, data){
+  
+  # Create vector counting the number of observations in each cluster
+  clust_obs <- rep(0,n_clust)
+  for (k in 1:n_clust){
+    nk <- dim(data[which(label == k),])[1]
+    clust_obs[k] <- nk
+  }
+  
+  post_vec <- rep(0,n_clust)
+  for (k in 1:n_clust){
+    post_vec[k] <- prod(theta + k*sigma, gamma(clust_obs[k] - sigma), 
+                        exp(-lambda*gibbs_loss(n_clust = n_clust , 
+                                               centroids = centroids_mean, 
+                                               label = label, eig = eig,data = data)))
+                 
+  }
+  
+  post <- prod(post_vec,1/(theta + n_clust*sigma))
+  
+  return( return(list("posterior" = post,
+                      "cluster_size" = clust_obs)))
+  
+}
+
+#### SAVE WP ####
  
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
 save.image("Functions_WP.RData")

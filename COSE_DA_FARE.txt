@@ -10,6 +10,8 @@ Note:
 
 5) tuning di alpha per dati reali e applicazione dei due modelli ai dati reali
 
+6) Controllare una possibile correlazione con i dati numerici
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 5) Gibbs sampler for uncertainty quantification (?)

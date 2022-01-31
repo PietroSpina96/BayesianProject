@@ -2,7 +2,7 @@
 
 #### SETUP ####
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject") #Pietro
-setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
+# setwd("C:/Users/admin/Documents/R/Project_BS/BayesianProject") #GiuliaR
 
 load('Simulated_WP.RData')
 load('Functions_WP.RData')
