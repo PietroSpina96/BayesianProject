@@ -730,14 +730,12 @@ posterior_pitman_yor <- function(sigma, theta, label, data){
   
   post_vec <- rep(0,n_clust)
   for (k in 1:n_clust){
-    post_vec[k] <- prod(theta + k*sigma, gamma(clust_obs[k] - sigma), 
-                        exp(-lambda*gibbs_loss(n_clust = n_clust , 
-                                               centroids = centroids_mean, 
-                                               label = label, eig = eig,data = data)))
-                 
+    post_vec[k] <- prod(theta + k*sigma, gamma(clust_obs[k] - sigma))
   }
   
-  post <- prod(post_vec,1/(theta + n_clust*sigma))
+  post <- prod(post_vec,1/(theta + n_clust*sigma),exp(-lambda*gibbs_loss(n_clust = n_clust , 
+                                                                        centroids = centroids_mean, 
+                                                                        label = label, eig = eig,data = data)))
   
   return( return(list("posterior" = post,
                       "cluster_size" = clust_obs)))
@@ -749,7 +747,7 @@ posterior_pitman_yor <- function(sigma, theta, label, data){
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
 save.image("Functions_WP.RData")
 
-#save.image("~/R/Project_BS/BayesianProject/Functions_WP.RData") #GiuliaR
+save.image("~/R/Project_BS/BayesianProject/Functions_WP.RData") #GiuliaR
  
  
  

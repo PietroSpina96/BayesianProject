@@ -84,13 +84,12 @@ for (k in 1:n_clust){
 
 post_vec <- rep(0,n_clust)
 for (k in 1:n_clust){
-  post_vec[k] <- prod(theta + k*sigma, gamma(clust_obs[k] - sigma), 
-                      exp(-lambda*gibbs_loss(n_clust = n_clust , 
-                                             centroids = centroids_mean, 
-                                             label = label, eig = eig,data = data))) 
+  post_vec[k] <- prod(theta + k*sigma, gamma(clust_obs[k] - sigma)) 
   # Con lambda = 1 questo l'ultimo valore è piccolissimo
 }
 post_vec
 
-post <- prod(post_vec,1/(theta + n_clust*sigma))
-
+post <- prod(post_vec,1/(theta + n_clust*sigma), exp(-lambda*gibbs_loss(n_clust = n_clust , 
+                                                                        centroids = centroids_mean, 
+                                                                        label = label, eig = eig,data = data)))
+post
