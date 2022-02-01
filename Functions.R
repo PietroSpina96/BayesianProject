@@ -17,7 +17,7 @@ setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject"
 load('Functions_WP.RData')
 
 
-#### BASIC FUNCTIONS ####
+#### FUNCTIONAL MAHA DIST FUNCTIONS - - - - - - - - - - - - - - - - - - -####
 
 #scalar product
 scalar_prod<- function (f1,f2) {
@@ -115,7 +115,7 @@ kernel_estimator <- function(process,med,n,s,t,points){
 }
  
 
-#### LOSS FUNCTIONS ####
+#### LOSS FUNCTIONS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ####
 ###### Gibbs loss GENERAL ####
 gibbs_loss_general <- function (n_clust, centroids, label, eig, values_matrix, vector_matrix, eig_type = c('fixed','updated'), data){
    gibbs <- switch (eig_type,
@@ -179,7 +179,7 @@ gibbs_loss_updated <- function(n_clust, centroids, label , values_matrix, vector
    return(sum(res))
 } 
 
-#### UNIFORM MODEL FUNCTIONS ####
+#### UNIFORM MODEL FUNCTIONS - - - - - - - - - - - - - - - - - - - - - - - -####
 
 ###### Clustering Function GENERAL ####
 
@@ -195,7 +195,7 @@ fda_clustering_mahalanobis_general <- function(n_clust, alpha, cov_matrix, cov_t
   
 }
  
-###### Clustering Function (Original) ####
+###### Clustering Function (fixed covariance) ####
 # INPUT:
 ## n_clust:    number of clusters
 ## alpha:      smoothing parameter of the data
@@ -293,7 +293,7 @@ fda_clustering_mahalanobis <- function(n_clust, alpha, cov_matrix, toll,data){
 } 
 
 
-###### Clustering Function + Updating Covs ####
+###### Clustering Function (updating covs)####
 # INPUT: same input of fda_clustering_mahalanobis
 
 fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,data){
@@ -436,7 +436,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
                "K" = n_clust))
 }
 
-#### CLUSTER ANALYSIS FUNCTIONS ####
+#### CLUSTER ANALYSIS FUNCTIONS - - - - - - - - - - - - - - - - - - - - -  ####
 
 # compute distances between centroids (used in cluster merging)
 centroids_dists <- function(centroids_mean,normtype='i'){
@@ -548,7 +548,7 @@ clusters_union <- function(clust, eps=0){
 }
 
 
-###### PLOT clusters ####
+##### Plot clusters ####
 clusters_plot <- function(time, clust, cols){
    # plots (x,y)=(time,centroids_mean) with colors
    ## INPUT: time              = x (vector: n)
@@ -701,25 +701,24 @@ clusters_plot <- function(time, clust, cols){
 # } 
 
 
-#### PITMAN-YOR MODEL FUNCTIONS ####
+#### PITMAN-YOR MODEL FUNCTIONS - - - - - - - - - - - - - - - - - - - - - ####
 
 ##### Pitman-Yor Posterior #####
 
-# Input: sigma -> discount parameter of PY, [0,1), 
+# Input: n_clust -> number of clusters
+#        sigma -> discount parameter of PY, [0,1), 
 #        theta -> stength parameter of PY, (d,+inf),
-#        c_lab
+#        lambda -> paramenter of the gibbs likelihood
+#        label -> vector of clustering labels
+#        loss -> value of the loss function
 #        data
 
 # Output: posterior -> posterior value
 #         cluster_size -> vector containing the size of clusters
 
-# Needed values not in the function: 1) n_clust
-#                                    2) alpha
-#                                    3) centroids_mean
-#                                    4) eig (i.e. list of eigenvalues and 
-#                                            eigenvectors of covariance operator)
+# Needed values not in the function: 1) 
 
-posterior_pitman_yor <- function(sigma, theta, label, data){
+posterior_pitmanyor <- function(n_clust, sigma, theta , lambda, label, loss, data){
   
   # Create vector counting the number of observations in each cluster
   clust_obs <- rep(0,n_clust)
@@ -733,15 +732,132 @@ posterior_pitman_yor <- function(sigma, theta, label, data){
     post_vec[k] <- prod(theta + k*sigma, gamma(clust_obs[k] - sigma))
   }
   
-  post <- prod(post_vec,1/(theta + n_clust*sigma),exp(-lambda*gibbs_loss(n_clust = n_clust , 
-                                                                        centroids = centroids_mean, 
-                                                                        label = label, eig = eig,data = data)))
+  post <- prod(post_vec,1/(theta + n_clust*sigma),exp(-lambda*loss))
   
-  return( return(list("posterior" = post,
-                      "cluster_size" = clust_obs)))
+  return(list("posterior" = post, "cluster_size" = clust_obs))
   
 }
 
+##### Clustering function (fixed covariance) ####
+
+# Input: n_clust -> number of clusters
+#        alpha -> smoothing parameter of Mahalanobis distance
+#        sigma -> discount parameter of PY, [0,1), 
+#        theta -> stength parameter of PY, (d,+inf),
+#        lambda -> paramenter of the gibbs likelihood
+#        cov_matrix -> FIXED covariance matrix
+#        data 
+
+# Output: label -> optimal partition label vector
+#         centroids -> cluster centroids
+#         loss -> gibbs-loss value of optimal partition
+#         post -> Pitman-Yor posterior value of optimal partition
+
+fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_matrix ,data){
+  
+  t_points <- dim(data)[2]
+  n <- dim(data)[1]
+  
+  # index of each centroid randomly defined through sampling
+  y0 <- sample(1:n,n_clust,replace = FALSE)
+  
+  # vector of labels
+  c_lab <- rep(0,n)
+  
+  # covariance matrix must have positive eigenvalues
+  delta <- 1e-10
+  diag(cov_matrix) <- diag(cov_matrix) + delta
+  
+  # eigenvalues and eigenfunctions for the alpha-mahalanobis function
+  eig <- eigen(cov_matrix)
+  values <- eig$values 
+  vectors <- eig$vectors
+  
+  Mahalanobis_Distance <- matrix(0, nrow = n, ncol = n)
+  for (i in 1:n){
+    for (j in 1:n){
+      Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,data[i,],data[j,],values,vectors)
+    }
+  }
+  
+  # i-th unit belongs to cluster_k if the distance(centroid_k,i-th unit) is the smallest one
+  Maha_dis <- matrix(0,nrow=n, ncol=n_clust)
+  for (i in 1:n){
+    for (k in 1:n_clust) {
+      Maha_dis[i,k] <- Mahalanobis_Distance[i,y0[k]]
+    }
+    index <- which.min(Maha_dis[i,])
+    c_lab[i] <- index
+  }
+  
+  # define the matrix of the centroids (random centroids)
+  centroids_random <- matrix(0,nrow = n_clust,ncol = t_points)
+  for (k in 1:n_clust){
+    centroids_random[k,] <- data[y0[k],]
+  }
+  
+  #loss_value1 <- gibbs_loss(n_clust = n_clust, centroids = centroids_random, label = c_lab, eig = eig, data = data)
+  loss_value1 <- gibbs_loss_general(n_clust = n_clust, centroids = centroids_random,
+                                    label = c_lab, eig = eig, values_matrix = 0, 
+                                    vector_matrix = 0, eig_type = 'fixed', data = data)
+  
+  # Calculation of Pitman-Yor posterior value with random centroids
+  post_value1 <- posterior_pitmanyor(n_clust = n_clust, sigma = sigma, theta = theta, 
+                                     lambda = lambda, label = c_lab, loss = loss_value1, 
+                                     data = data)$posterior
+  
+  # update each centroid as the mean of the clusters data
+  centroids_mean<-matrix(0,nrow = n_clust, ncol = t_points)
+  for (k in 1:n_clust){
+    centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
+  }
+  
+  #loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, eig = eig, data = data)
+  loss_value2 <- gibbs_loss_general(n_clust = n_clust, centroids = centroids_mean,
+                                    label = c_lab, eig = eig, values_matrix = 0, 
+                                    vector_matrix = 0, eig_type = 'fixed', data = data)
+  
+  # Calculation of Pitman-Yor posterior value with updated centroids
+  post_value2 <- posterior_pitmanyor(n_clust = n_clust, sigma = sigma, theta = theta, 
+                                     lambda = lambda, label = c_lab, loss = loss_value2, 
+                                     data = data)$posterior
+  
+  
+  while(post_value2 > post_value1){
+    
+    c_lab <- rep(0,n)
+    
+    post_value1 <- post_value2
+    
+    Maha_dis_k <- matrix(0,nrow=n, ncol=n_clust)
+    for (i in 1:n){
+      for (k in 1:n_clust) {
+        Maha_dis_k[i,k] <- alpha_Mahalanobis(alpha,centroids_mean[k,],data[i,],eig$values,eig$vectors)
+      }
+      index <- which.min(Maha_dis_k[i,])
+      c_lab[i] <- index
+    }
+    
+    
+    for (k in 1:n_clust){
+      centroids_mean[k,] <- colMeans(data[which(c_lab==k),])
+    }
+    
+    #loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, eig = eig, data = data)
+    loss_value2 <- gibbs_loss_general(n_clust = n_clust, centroids = centroids_mean,
+                                      label = c_lab, eig = eig, values_matrix = 0, 
+                                      vector_matrix = 0, eig_type = 'fixed', data = data)
+    
+    # Calculation of Pitman-Yor posterior value with updated centroids
+    post_value2 <- posterior_pitmanyor(n_clust = n_clust, sigma = sigma, theta = theta, 
+                                       lambda = lambda, label = c_lab, loss = loss_value2, 
+                                       data = data)$posterior
+  }
+  
+  return(list("label" = c_lab, "centroids" = centroids_mean, 
+              "loss" = loss_value2, "posterior" = post_value2))
+  
+} 
 #### SAVE WP ####
  
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
