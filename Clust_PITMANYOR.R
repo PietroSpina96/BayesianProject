@@ -214,6 +214,7 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
   
 } 
 
+##### Application on data 1 ####
 # k = 1
 clust_py_1 <- fda_clustering_pitmanyor(n_clust = 1, alpha = 0.1, sigma = 0.25, theta = 3.66,
                                        lambda = 0.75, cov_matrix = K_1, data = data)
