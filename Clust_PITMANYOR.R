@@ -237,7 +237,7 @@ clust_py_1 <- fda_clustering_pitmanyor(n_clust = 1, alpha, sigma, theta,
 clust_py_2 <- fda_clustering_pitmanyor(n_clust = 2, alpha, sigma, theta,
                                      lambda, cov_matrix = K_1, data = data)
 # k = 3
-<<<<<<< HEAD
+
 clust_py_3.1 <- fda_clustering_pitmanyor(n_clust = 3, alpha = 0.1, sigma = 0.25, theta = 3.66,
                                        lambda = 0.75, cov_matrix = K_1, data = data)
 clust_py_3.2 <- fda_clustering_pitmanyor(n_clust = 3, alpha = 0.1, sigma = 0.25, theta = 3.66,
@@ -256,7 +256,7 @@ clust_py_3.1$label
 clust_py_3.2$posterior
 clust_py_3.2$vector
 clust_py_3.2$label
-=======
+
 clust_py_3 <- fda_clustering_pitmanyor(n_clust = 3, alpha, sigma, theta,
                                        lambda, cov_matrix = K_1, data = data)
 
@@ -324,9 +324,5 @@ rm(data2)
 
 
 
->>>>>>> 38b58e6e1e955375934b30d19a7c98bea9879b3a
 
-grid <- 1:50
-x11()
-plot(grid,clust_py_3.1$vector, type = 'l', ylim = c(-0.02,0.02),lwd = 2, col = 'forestgreen')
-points(grid,clust_py_3.2$vector, type = 'l',lwd = 2, col = 'firebrick2')
+
