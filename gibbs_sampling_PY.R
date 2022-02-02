@@ -162,18 +162,3 @@ gibbs_sampler_PY <- function(N, N_burnin, x0, data, lambda, alpha, eig, sig, ver
 
 Ci <- gibbs_sampler_PY(11000, 1000, c_opt, data, .1, alpha, eigen(K_1), 0.25, verbose = T)
 
-# likhood_i_k(79, 1, c_opt, data, .1, alpha, eig, F)
-
-
-avg_ci <- colMeans(Ci)
-colore = avg_ci + rep(2, dim(data)[1])
-
-plot(c_opt - avg_ci)
-
-
-x11()
-#par(bg = 'gold')
-plot(time,data[1,],type = 'l', ylim = c(-3.5,9), lwd = 2, main = "Main and contaminated processes")
-for(i in 2:n){
-  lines(time,data[i,],type = 'l', col = colore[i],lwd = 2)
-}
