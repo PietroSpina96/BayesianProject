@@ -108,7 +108,7 @@ post_good$posterior == post_good_2$posterior
 ##### Function ####
 # This section will be moved in the Functions.R script later on
 
-fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_matrix ,data){
+fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_matrix , toll = 1e-5,data){
   
   t_points <- dim(data)[2]
   n <- dim(data)[1]
@@ -177,8 +177,13 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
                                      lambda = lambda, label = c_lab, loss = loss_value2, 
                                      data = data)$posterior
   
-  
-  while(post_value2 > post_value1){
+  it <- 0
+  N_it <- 50
+  post_trend <- numeric(N_it)
+  while( it < N_it ){
+    
+    it <- it + 1
+    print(it)
     
     c_lab <- rep(0,n)
     
@@ -207,10 +212,15 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
     post_value2 <- posterior_pitmanyor(n_clust = n_clust, sigma = sigma, theta = theta, 
                                        lambda = lambda, label = c_lab, loss = loss_value2, 
                                        data = data)$posterior
+    
+    # Save posterior trend
+    post_trend[it] <- post_value2
+    
   }
   
   return(list("label" = c_lab, "centroids" = centroids_mean, 
-              "loss" = loss_value2, "posterior" = post_value2))
+              "loss" = loss_value2, "posterior" = post_value2,
+              "vector" = post_trend))
   
 } 
 
@@ -223,19 +233,26 @@ clust_py_1 <- fda_clustering_pitmanyor(n_clust = 1, alpha = 0.1, sigma = 0.25, t
 clust_py_2 <- fda_clustering_pitmanyor(n_clust = 2, alpha = 0.1, sigma = 0.25, theta = 3.66,
                                      lambda = 0.75, cov_matrix = K_1, data = data)
 # k = 3
-clust_py_3 <- fda_clustering_pitmanyor(n_clust = 3, alpha = 0.1, sigma = 0.25, theta = 3.66,
+clust_py_3.1 <- fda_clustering_pitmanyor(n_clust = 3, alpha = 0.1, sigma = 0.25, theta = 3.66,
                                        lambda = 0.75, cov_matrix = K_1, data = data)
+clust_py_3.2 <- fda_clustering_pitmanyor(n_clust = 3, alpha = 0.1, sigma = 0.25, theta = 3.66,
+                                         lambda = 0.75, cov_matrix = K_1, data = data)
 
 # checking posterior values vs loss values
-clust_py_1$loss
-clust_py_2$loss
-clust_py_3$loss
+# clust_py_1$loss
+# clust_py_2$loss
+# clust_py_3$loss
+# 
+# clust_py_1$posterior
+# clust_py_2$posterior
+clust_py_3.1$posterior
+clust_py_3.1$vector
+clust_py_3.1$label
+clust_py_3.2$posterior
+clust_py_3.2$vector
+clust_py_3.2$label
 
-clust_py_1$posterior
-clust_py_2$posterior
-clust_py_3$posterior
-
-
-
-
-
+grid <- 1:50
+x11()
+plot(grid,clust_py_3.1$vector, type = 'l', ylim = c(-0.02,0.02),lwd = 2, col = 'forestgreen')
+points(grid,clust_py_3.2$vector, type = 'l',lwd = 2, col = 'firebrick2')
