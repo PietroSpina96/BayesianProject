@@ -3,51 +3,15 @@ discrepancy_within <- function(x, centroid, alpha, eig){
   #compute square discrepancy
   res <- 0
   n <- dim(x)[1]
-  for (i in 1:n){
-    sum_partial = alpha_Mahalanobis(alpha,x[i,],centroid,eig$values,eig$vectors)
-    res = res + sum_partial
+  if(!is.null(n)){
+    for (i in 1:n){
+      sum_partial = alpha_Mahalanobis(alpha,x[i,],centroid,eig$values,eig$vectors)
+      res = res + sum_partial
+    }
+  }else{
+    res = alpha_Mahalanobis(alpha,x,centroid,eig$values,eig$vectors)
   }
   return(res)
-}
-
-
-prob_i_k <- function(obs_index, clust_index, Ci, data, lambda, alpha, eig, verbose=FALSE){
-  ## compute fullconditional term for uniform prior
-  
-  idx_k = which(Ci == clust_index) #indexes of elements of cluster k
-  if(!(obs_index %in% idx_k)){#check if our 'i' is already in idx_k, if not, add it
-    idx_k = c(obs_index,idx_k)
-    obs_idx = 1
-  } else {
-    obs_idx = match(obs_index, idx_k)#if it is in clust k, get position of the first(and only) match 
-  }
-  
-  x_k = data[idx_k,]
-  centroid = colMeans(x_k)
-  
-  
-  start_time <- Sys.time()
-  disc_in = discrepancy_within(x_k, centroid, alpha, eig)
-  end_time <- Sys.time()
-  
-  if(verbose){
-    print(paste("Computing full discrepancy in ",end_time - start_time,"s"))
-  }
-  
-  
-  x_k_no_i = x_k[-obs_idx,]
-  centroid_no_i = colMeans(x_k_no_i)
-  
-  start_time <- Sys.time()
-  disc_no_i <- discrepancy_within(x_k_no_i, centroid_no_i, alpha, eig)
-  end_time <- Sys.time()
-  
-  if(verbose){
-    print(paste("Computing discrepancy without obs ",obs_index," in ",end_time - start_time,"s"))
-  }
-  
-  
-  return(exp(-lambda*(disc_in - disc_no_i)))
 }
 
 
@@ -64,7 +28,10 @@ prob_i_k_PY <- function(obs_index, clust_index, Ci, data, sig, lambda, alpha, ei
   }
   
   x_k = data[idx_k,]
-  centroid = colMeans(x_k)
+  if(length(idx_k)>1)
+    centroid = colMeans(x_k)
+  else
+    centroid = x_k
   
   
   start_time <- Sys.time()
@@ -74,21 +41,36 @@ prob_i_k_PY <- function(obs_index, clust_index, Ci, data, sig, lambda, alpha, ei
   if(verbose){
     print(paste("Computing full discrepancy in ",end_time - start_time,"s"))
   }
-  
-  
-  x_k_no_i = x_k[-obs_idx,]
-  centroid_no_i = colMeans(x_k_no_i)
-  
-  start_time <- Sys.time()
-  disc_no_i <- discrepancy_within(x_k_no_i, centroid_no_i, alpha, eig)
-  end_time <- Sys.time()
-  
-  if(verbose){
-    print(paste("Computing discrepancy without obs ",obs_index," in ",end_time - start_time,"s"))
+  # print(paste("numerosità x_k = ",length(idx_k)))
+  # print(paste("osservazione rimossa = ",obs_idx))
+  # print(paste(" numerosità X_k_no_i = ", dim(x_k_no_i)[1]))
+  if(length(idx_k)>1){
+    x_k_no_i = x_k[-obs_idx,]
+    if(length(idx_k) > 2){
+      #i.e. if x_k_no_i has 1 row
+      centroid_no_i = colMeans(x_k_no_i)
+    }else{
+      centroid_no_i = x_k_no_i
+    }
+    start_time <- Sys.time()
+    disc_no_i <- discrepancy_within(x_k_no_i, centroid_no_i, alpha, eig)
+    end_time <- Sys.time()
+    
+    if(verbose){
+      print(paste("Computing discrepancy without obs ",obs_index," in ",end_time - start_time,"s"))
+    }
+    return((length(idx_k)-1-sig)*exp(-lambda*(disc_in - disc_no_i)))
+  }else{
+    disc_no_i <- 0
+    
+    if(verbose){
+      print("Cluster had only 1 observation, disc_no_i set to zero")
+    }
+    
+    return((1-sig)*exp(-lambda*(disc_in - disc_no_i))) # approx to be checked with mario
   }
   
   
-  return((length(idx_k)-1-sig)*exp(-lambda*(disc_in - disc_no_i)))
 }
 
 
@@ -159,6 +141,15 @@ gibbs_sampler_PY <- function(N, N_burnin, x0, data, lambda, alpha, eig, sig, ver
   return(samplee)
 }
 
+### TEST 
+c_opt_test = rep(2,100)
+for(ii in c(95,96,97,98,99,100))
+  c_opt_test[ii]=1
+c_opt_test
 
+Ci <- gibbs_sampler_PY(50, 10, c_opt_test, data, .1, alpha, eigen(K_1), 0.25, verbose = T)
+
+
+#actual run
 Ci <- gibbs_sampler_PY(11000, 1000, c_opt, data, .1, alpha, eigen(K_1), 0.25, verbose = T)
 
