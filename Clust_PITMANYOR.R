@@ -108,7 +108,7 @@ post_good$posterior == post_good_2$posterior
 ##### Function ####
 # This section will be moved in the Functions.R script later on
 
-fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_matrix ,data){
+fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_matrix , toll = 1e-5,data){
   
   t_points <- dim(data)[2]
   n <- dim(data)[1]
@@ -177,8 +177,13 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
                                      lambda = lambda, label = c_lab, loss = loss_value2, 
                                      data = data)$posterior
   
-  
-  while(post_value2 > post_value1){
+  it <- 0
+  N_it <- 50
+  post_trend <- numeric(N_it)
+  while( it < N_it ){
+    
+    it <- it + 1
+    print(it)
     
     c_lab <- rep(0,n)
     
@@ -207,10 +212,15 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
     post_value2 <- posterior_pitmanyor(n_clust = n_clust, sigma = sigma, theta = theta, 
                                        lambda = lambda, label = c_lab, loss = loss_value2, 
                                        data = data)$posterior
+    
+    # Save posterior trend
+    post_trend[it] <- post_value2
+    
   }
   
   return(list("label" = c_lab, "centroids" = centroids_mean, 
-              "loss" = loss_value2, "posterior" = post_value2))
+              "loss" = loss_value2, "posterior" = post_value2,
+              "vector" = post_trend))
   
 } 
 
@@ -225,10 +235,27 @@ clust_py_1 <- fda_clustering_pitmanyor(n_clust = 1, alpha, sigma, theta,
                                        lambda, cov_matrix = K_1, data = data)
 # k = 2
 clust_py_2 <- fda_clustering_pitmanyor(n_clust = 2, alpha, sigma, theta,
-                                     lambda, cov_matrix = K_1, data = data)
+                                       lambda, cov_matrix = K_1, data = data)
 # k = 3
+
+clust_py_3.1 <- fda_clustering_pitmanyor(n_clust = 3, alpha = 0.1, sigma = 0.25, theta = 3.66,
+                                         lambda = 0.75, cov_matrix = K_1, data = data)
+clust_py_3.2 <- fda_clustering_pitmanyor(n_clust = 3, alpha = 0.1, sigma = 0.25, theta = 3.66,
+                                         lambda = 0.75, cov_matrix = K_1, data = data)
+
+# k=3
 clust_py_3 <- fda_clustering_pitmanyor(n_clust = 3, alpha, sigma, theta,
                                        lambda, cov_matrix = K_1, data = data)
+
+# checking posterior values vs loss values
+clust_py_3.1$posterior
+clust_py_3.2$posterior
+
+clust_py_3.1$vector
+clust_py_3.2$vector
+
+clust_py_3.1$label
+clust_py_3.2$label
 
 # checking posterior values vs loss values
 clust_py_1$loss
@@ -240,57 +267,74 @@ clust_py_2$posterior
 clust_py_3$posterior
 
 # Check the labels
-c_opt <- clust_py_2$label
+c_opt <- clust_py_3$label
 show(c_opt)  #label switching 
 
-c1 <- clust_py_2$centroids[1,]
-c2 <- clust_py_2$centroids[2,]
-# c3 <- clust_py_2$centroids[3,]
 
+# Plot the tred of the posterior
+library(pracma)
+post_trend <- clust_py_3.2$vector
+iterations <- 1:length(post_trend)
+#length(post_trend)
 
-# Theoretical optimal plot vs clustering plot
-data1 <- data[which(c_opt=='1'),]
-data2 <- data[which(c_opt=='2'),]
-# data3 <- data[which(c_opt=='3'),]
-
-
-# Plot 
 x11()
-par(mfrow = c(1,2))
-plot(time,data[1,],type = 'l', ylim = c(-3.5,9), lwd = 2, col='black',main = "Main and contaminated processes")
-for(i in 2:(n1)){
-  lines(time,data[i,],type = 'l', col = 'black',lwd = 2)
-}
-for (i in (n1+1):n){
-  lines(time,data[i,],type = 'l', col = 'black', lwd = 2)
-}
-# legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2'),fill=c('blue','firebrick2'),x.intersp=0.3,
-#text.col=c('blue','firebrick2'))
+par(mfrow=c(1,2))
+plot(iterations,post_trend,type='l',col='blue')
+semilogy(iterations,post_trend,type = 'l',col='blue')
+#plot(iterations,log10(post_trend),type='l',col='blue')
 
-plot(time,data1[1,],type = 'l', ylim = c(-3.5,9), col = 'firebrick2', lwd = 2, main = "Clustered data")
-for (i in 2:dim(data1)[1]){
-  lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
-}
-for (i in 1:dim(data2)[1]){
-  lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
-}
-# for (i in 1:dim(data3)[1]){
-#  lines(time,data3[i,],type = 'l', col = 'forestgreen',lwd = 2)
+
+
+
+--------------------------------------------------------------------------------------------------------------------------
+# # Theoretical optimal plot vs clustering plot
+# c1 <- clust_py_2$centroids[1,]
+# c2 <- clust_py_2$centroids[2,]
+# # c3 <- clust_py_2$centroids[3,]
+# 
+# data1 <- data[which(c_opt=='1'),]
+# data2 <- data[which(c_opt=='2'),]
+# # data3 <- data[which(c_opt=='3'),]
+# 
+# 
+# # Plot 
+# x11()
+# par(mfrow = c(1,2))
+# plot(time,data[1,],type = 'l', ylim = c(-3.5,9), lwd = 2, col='black',main = "Main and contaminated processes")
+# for(i in 2:(n1)){
+#   lines(time,data[i,],type = 'l', col = 'black',lwd = 2)
 # }
+# for (i in (n1+1):n){
+#   lines(time,data[i,],type = 'l', col = 'black', lwd = 2)
+# }
+# # legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2'),fill=c('blue','firebrick2'),x.intersp=0.3,
+# #text.col=c('blue','firebrick2'))
+# 
+# plot(time,data1[1,],type = 'l', ylim = c(-3.5,9), col = 'firebrick2', lwd = 2, main = "Clustered data")
+# for (i in 2:dim(data1)[1]){
+#   lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
+# }
+# for (i in 1:dim(data2)[1]){
+#   lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
+# }
+# # for (i in 1:dim(data3)[1]){
+# #  lines(time,data3[i,],type = 'l', col = 'forestgreen',lwd = 2)
+# # }
+# 
+# lines(time,c1,type = 'l', lwd = 3)
+# lines(time,c2,type = 'l', lwd = 3)
+# # lines(time,c3,type = 'l', lwd = 3)
+# 
+# #legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2','Centroids'),fill=c('blue','firebrick2','black'),x.intersp=0.3,
+# #text.col=c('blue','firebrick2','black'))
+# legend(x=0.6,y=9.5,ncol=1,box.lwd=1,legend=c('Main process','Contaminated process','Centroids'),fill=c('firebrick2','blue','black'),x.intersp=0.3,
+#        text.col=c('firebrick2','blue','black'))
+# 
+# 
+# rm(data1)
+# rm(data2)
+# # rm(data3)
 
-lines(time,c1,type = 'l', lwd = 3)
-lines(time,c2,type = 'l', lwd = 3)
-# lines(time,c3,type = 'l', lwd = 3)
-
-#legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2','Centroids'),fill=c('blue','firebrick2','black'),x.intersp=0.3,
-#text.col=c('blue','firebrick2','black'))
-legend(x=0.6,y=9.5,ncol=1,box.lwd=1,legend=c('Main process','Contaminated process','Centroids'),fill=c('firebrick2','blue','black'),x.intersp=0.3,
-       text.col=c('firebrick2','blue','black'))
-
-
-rm(data1)
-rm(data2)
-# rm(data3)
 
 
 
