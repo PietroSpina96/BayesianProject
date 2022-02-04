@@ -439,28 +439,44 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
 #### CLUSTER ANALYSIS FUNCTIONS - - - - - - - - - - - - - - - - - - - - -  ####
 
 # compute distances between centroids (used in cluster merging)
-centroids_dists <- function(centroids_mean,normtype='i'){
-  writeLines("Calculating clusters' centroids distances...")
+# -> alpha parameter is required ONLY with normtype='m'
+centroids_dists <- function(centroids_mean,normtype='i',alpha){
+  writeLines(sprintf("Calculating clusters' centroids distances... [ using '%s' norm ]",normtype))
   max_clust <- dim(centroids_mean)[1]
   dists=matrix(0,max_clust,max_clust) #distances (with original k=max_clust)
-  for (k in 1:(max_clust-1)){
-    for (j in (k+1):max_clust){
-      diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
-      dis_centroids <- norm(as.matrix(diff_centroids),type = normtype)
-      writeLines(sprintf(" - Clusters %d and %d - centroid distance = %.2f",k,j,dis_centroids))
-      dists[j,k]<-dists[k,j]<-dis_centroids
-    }
+  if(normtype='m'){
+     ## Mahalanobis distance
+     if(missing(alpha)) writeLines("ERROR: missing alpha input for Mahal. distance. Exiting.");return(dists)
+     # compute eig
+     eigc <- cov(centroids_mean) %>% eigen
+     # compute distance
+     for (k in 1:(max_clust-1))
+        for (j in (k+1):max_clust){
+           dis_centroids <- alpha_Mahalanobis(alpha,centroids_mean[k,],centroids_mean[j,], eigc$values,eigc$vectors)
+           writeLines(sprintf(" - Clusters %d and %d - centroids distance = %.2f",k,j,dis_centroids))
+           dists[j,k]<-dists[k,j]<-dis_centroids
+        }     
+  } else {
+     ## euclidean norm / inf norm
+     for (k in 1:(max_clust-1))
+       for (j in (k+1):max_clust){
+         diff_centroids <- centroids_mean[k,] - centroids_mean[j,]
+         dis_centroids <- norm(as.matrix(diff_centroids),type = normtype)
+         writeLines(sprintf(" - Clusters %d and %d - centroids distance = %.2f",k,j,dis_centroids))
+         dists[j,k]<-dists[k,j]<-dis_centroids
+       }
   }
   return(dists)
 }
 
 ######  Merging clusters ####
-clusters_union <- function(clust, eps=0){
+clusters_union <- function(clust, eps=0, data){
    # looks at centroids_mean and detects if some clusters are too close and should be merged.
-   # eps = tolerance for the union of clusters (eps = 0 -> no merging),
-   #       automatically set based on mean centroids distances
+   # eps = tolerance for the union of clusters (eps = 0 -> no merging).
+   #       If not provided, it's automatically set based on mean centroids distances
    ## INPUT: centroids_mean   = clusters
    ##        eps              = merging tolerance (*optional)
+   ##        data             = to check variability within-cluster
    ## OUTPUT: centroids_mean (reduced)
    writeLines("  **  MERGING CLOSE CLUSTERS  **  ")
    centroids_mean <- clust$centroids
@@ -472,7 +488,7 @@ clusters_union <- function(clust, eps=0){
       return(clust)
    }
    ## compute 'dists' distances matrix (to set smart tolerance + check small distances)
-   dists <- centroids_dists(centroids_mean,'2')
+   dists <- centroids_dists(centroids_mean,'m')
    
    # DO: union of close clusters
    clusts <- 1:max_clust # keep track of the mergings, eg. (1,2,3,4,5) -> (1,2,1,1,5)
@@ -500,11 +516,24 @@ clusters_union <- function(clust, eps=0){
          # d<-dists[j,k]<-dists[k,j]<-norm(as.matrix(diff_centroids),type = 'i')
          # d<-norm(as.matrix(diff_centroids),type = 'i')
          d <- dists[j,k]
-         if (d < eps){ # then merge cluster j into k
+         if (d < eps){
+            ## possible merging (similar centroid)... but first check if also similar covariances 
+            # - compute within-cluster cov
+            cov.j <- cov(data[which(c_lab==j),])
+            cov.k <- cov(data[which(c_lab==k),]) # ONLY PRINT FOR NOW, to understand behaviour
+            
+            #TODO ........... check covariances ............ I have to think a threshold
+            
+            ## ok, similar mean+cov -> MERGE: cluster j into k
             did.a.merge <- TRUE
             c_lab[ which(c_lab==j) ] <- clusts[k]
             clusts[j] <- clusts[k]
             writeLines(sprintf(" -> MERGED: cluster %d into %d. (centroid distance = %.2f)",j,k,d))
+            writeLines(sprintf("    cov compare:    c%d         c%d\n            norm    %.3f    %.3f\n             min    %.3f      %.3f\n             max    %.3f      %.3f",
+                               k,j,
+                               norm(cov.k),norm(cov.j),
+                               min(cov.k),min(cov.j),
+                               max(cov.k),max(cov.j)))
          }
       }
       if(did.a.merge){
@@ -541,7 +570,6 @@ clusters_union <- function(clust, eps=0){
    
    return(list("label" = c_lab,
                "centroids" = centroids_mean,
-               #"loss" = loss_value2, # maybe again meglio una funzione a parte? o la ricalcolo qua?
                "K" = n_clust,
                "v" = clusts) # only used to manage colors in plot before/after merging
           )
@@ -554,20 +582,38 @@ clusters_plot <- function(time, clust, cols){
    ## INPUT: time              = x (vector: n)
    ##        clust$centroids   = y (matrix: k by n)
    ##        cols              = cluster hex colors (vector: n)(*optional)
-   ## OUTPUT: the plot object
+   ##                   -- or --
+   ##        clust           = y (data)(matrix: 100? by n)
+   ##        cols            = vector of labels (c_opt)
+   ## OUTPUT: the plot object (centroids only --or-- full data clusters)
    
-   if(missing(cols)) cols <- rainbow(dim(clust$centroids)[1])
-   
-   df <- clust$centroids %>% t() %>% as.data.frame() %>% 
-            add_column(x=time) %>%
-            gather(group, y, -x)
-   
-   theplot <- ggplot(df, aes(x, y, color = group)) + 
-               geom_line(size=1) +
-               scale_color_manual(values=cols) +
-               labs(x="time",y="centroids")
-   
-   theplot
+   if(!is.atomic(clust)){# & !is.null(clust$centroids)){
+      # then we're given cluster structure: plot centroid
+      if(missing(cols)) cols <- rainbow(dim(clust$centroids)[1])
+      
+      df <- clust$centroids %>% t() %>% as.data.frame() %>% 
+               add_column(x=time) %>%
+               gather(group, y, -x)
+      
+      theplot <- ggplot(df, aes(x, y, color = group)) + 
+                  geom_line(size=1) +
+                  scale_color_manual(values=cols) +
+                  labs(x="time",y="centroids")
+      
+      theplot
+   } else {
+      # we're given data+labels: plot centroid (note: in this case clust===data)
+      df <- clust %>% t() %>% as.data.frame() %>% 
+         add_column(x=time) %>% gather(group, y, -x)
+      
+      colsrep <- rep(cols,each=dim(data)[2]) %>% as.factor
+      theplot <- ggplot(df, aes(x, y, color=colsrep, group=group)) + 
+                  geom_line(size=1) +
+                  scale_colour_manual(values=rainbow(cols%>%unique%>%length)) +
+                  labs(x="time",y="clustered data")
+      
+      theplot
+   }
 }
 
 # The following function is not loaded in the workspace
