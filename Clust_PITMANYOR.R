@@ -108,7 +108,7 @@ post_good$posterior == post_good_2$posterior
 ##### Function ####
 # This section will be moved in the Functions.R script later on
 
-fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_matrix , toll = 1e-5,data){
+fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_matrix , toll, data){
   
   t_points <- dim(data)[2]
   n <- dim(data)[1]
@@ -177,13 +177,13 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
                                      lambda = lambda, label = c_lab, loss = loss_value2, 
                                      data = data)$posterior
   
-  it <- 0
-  N_it <- 50
-  post_trend <- numeric(N_it)
-  while( it < N_it ){
+  # it <- 0
+  # N_it <- 50
+  # post_trend <- numeric(N_it)
+  while( abs(log(post_value2) - log(post_value1)) >= toll ){
     
-    it <- it + 1
-    print(it)
+    # it <- it + 1
+    # print(it)
     
     c_lab <- rep(0,n)
     
@@ -213,48 +213,84 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
                                        lambda = lambda, label = c_lab, loss = loss_value2, 
                                        data = data)$posterior
     
+    # To prevent: Error 2)
+    if(post_value2 == 0){
+      post_value2 <- post_value1
+      print('ERROR: NULL POSTERIOR!')
+      break
+    }
+    
     # Save posterior trend
-    post_trend[it] <- post_value2
+    # post_trend[it] <- post_value2
     
   }
   
   return(list("label" = c_lab, "centroids" = centroids_mean, 
-              "loss" = loss_value2, "posterior" = post_value2,
-              "vector" = post_trend))
+              "loss" = loss_value2, "posterior" = post_value2))
   
 } 
 
+###### Errors ####
+
+# 1) Cluster di una dimensione - errore è nella funzione di clustering
+# Error in colMeans(data[which(c_lab == k), ]) : 
+#   'x' dev'essere un array con almeno due dimensioni
+
+# 2) posterior diventa 0
+# log(post_value2) : NaNs produced
+
+# 3) cluster vuoto (anche se non sono sicuro) - errore è nella funzione della posterior
+# Error in clust_obs[k] <- nk : replacement has length zero
+
+
+
+
+# Alternative return
+
+# return(list("label" = c_lab, "centroids" = centroids_mean, 
+#             "loss" = loss_value2, "posterior" = post_value2,
+#             "vector" = post_trend))
+
+
+
+
+
+
+
+
+
+
+
 ##### Application on data 1 ####
 alpha <- 0.1
-sigma <- 0.50
+sigma <- 0.25
 theta <- 3.66
 lambda <- 0.75
 
 # k = 1
 clust_py_1 <- fda_clustering_pitmanyor(n_clust = 1, alpha, sigma, theta,
-                                       lambda, cov_matrix = K_1, data = data)
+                                       lambda, cov_matrix = K_1, toll = 1e-10, data = data)
 # k = 2
 clust_py_2 <- fda_clustering_pitmanyor(n_clust = 2, alpha, sigma, theta,
-                                     lambda, cov_matrix = K_1, data = data)
+                                       lambda, cov_matrix = K_1, toll = 1e-10, data = data)
 # k = 3
 
-clust_py_3.1 <- fda_clustering_pitmanyor(n_clust = 3, alpha = 0.1, sigma = 0.25, theta = 3.66,
-                                       lambda = 0.75, cov_matrix = K_1, data = data)
-clust_py_3.2 <- fda_clustering_pitmanyor(n_clust = 3, alpha = 0.1, sigma = 0.25, theta = 3.66,
-                                         lambda = 0.75, cov_matrix = K_1, data = data)
+clust_py_3.1 <- fda_clustering_pitmanyor(n_clust = 3, alpha, sigma, theta,
+                                         lambda, cov_matrix = K_1, toll = 1e-10, data = data)
+clust_py_3.2 <- fda_clustering_pitmanyor(n_clust = 3, alpha, sigma, theta,
+                                         lambda, cov_matrix = K_1, toll = 1e-10, data = data)
 
 # checking posterior values vs loss values
-# clust_py_1$loss
-# clust_py_2$loss
-# clust_py_3$loss
-# 
-# clust_py_1$posterior
-# clust_py_2$posterior
+clust_py_1$loss
+clust_py_2$loss
+clust_py_3.1$loss
+clust_py_3.2$loss
+
+clust_py_1$posterior
+clust_py_2$posterior
 clust_py_3.1$posterior
-clust_py_3.1$vector
 clust_py_3.1$label
 clust_py_3.2$posterior
-clust_py_3.2$vector
 clust_py_3.2$label
 
 clust_py_3 <- fda_clustering_pitmanyor(n_clust = 3, alpha, sigma, theta,
@@ -321,6 +357,29 @@ legend(x=0.6,y=9.5,ncol=1,box.lwd=1,legend=c('Main process','Contaminated proces
 rm(data1)
 rm(data2)
 # rm(data3)
+
+
+###### Iterations trial #####
+
+it <- 10000
+post_vec <- numeric(it)
+label_mat <- matrix(0, nrow = it, ncol = 100)
+
+for (i in 1:it){
+  clust <- fda_clustering_pitmanyor(n_clust = 3, alpha, sigma, theta,
+                                    lambda, cov_matrix = K_1,
+                                    toll = 1e-10, data = data)
+  post_it[i] <- clust$posterior
+  label_mat[i,] <- clust$label
+  print(i)
+}
+
+max(post_it)
+
+x11()
+plot(1:it,post_it,type = 'l')
+points(1:it,post_it,col = 'firebrick3',pch = 16)
+
 
 
 
