@@ -153,3 +153,7 @@ Ci <- gibbs_sampler_PY(50, 10, c_opt_test, data, .1, alpha, eigen(K_1), 0.25, ve
 #actual run
 Ci <- gibbs_sampler_PY(11000, 1000, c_opt, data, .1, alpha, eigen(K_1), 0.25, verbose = T)
 
+
+save(Ci, file="indexes_Ci.RData")
+
+save.image("chain_Ci_data1.RData")
