@@ -64,6 +64,28 @@ rm(list=c('n_cluster1','n_cluster2'))
 # lambda <- 0.75
 # toll <- 1e-4
 
+posterior_pitmanyor <- function(n_clust, sigma, theta , lambda, label, loss, data){
+  
+  # Create vector counting the number of observations in each cluster
+  clust_obs <- as.numeric(table(label))
+  
+  # clust_obs <- rep(0,n_clust)
+  # for (k in 1:n_clust){
+  #   nk <- dim(data[which(label == k),])[1]
+  #   clust_obs[k] <- nk
+  # }
+  
+  post_vec <- rep(0,n_clust)
+  for (k in 1:n_clust){
+    post_vec[k] <- prod(theta + k*sigma, gamma(clust_obs[k] - sigma))
+  }
+  
+  post <- prod(post_vec,1/(theta + n_clust*sigma),exp(-lambda*loss))
+  
+  return(list("posterior" = post, "cluster_size" = clust_obs))
+  
+}
+
 fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_matrix , toll, data){
   
   t_points <- dim(data)[2]
@@ -101,13 +123,18 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
     c_lab[i] <- index
   }
   
-  for (k in 1:n_clust){
-    if (dim(data[which(c_lab == k),])[1] == 0){
+  # Checking for empty clusters
+  c_size0 <- as.numeric(table(c_lab))
+  
+  while (length(c_size0) < n_clust){
+    for (k in 1:n_clust){
       print("Null dimension")
       n_hat <- sample(1:n,1)
       c_lab[n_hat] <- k
     }
+    c_size0 <-  as.numeric(table(c_lab))
   }
+  
   
   # define the matrix of the centroids (random centroids)
   centroids_random <- matrix(0,nrow = n_clust,ncol = t_points)
@@ -121,17 +148,16 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
                                     vector_matrix = 0, eig_type = 'fixed', data = data)
   
   # Calculation of Pitman-Yor posterior value with random centroids
-  post_value1 <- posterior_pitmanyor(n_clust = n_clust, sigma = sigma, theta = theta, 
-                                     lambda = lambda, label = c_lab, loss = loss_value1, 
-                                     data = data)$posterior
-  clust1 <- posterior_pitmanyor(n_clust = n_clust, sigma = sigma, theta = theta, 
-                                     lambda = lambda, label = c_lab, loss = loss_value1, 
-                                     data = data)$cluster_size
+  C_1 <-  posterior_pitmanyor(n_clust = n_clust, sigma = sigma, theta = theta, 
+                              lambda = lambda, label = c_lab, loss = loss_value1, 
+                              data = data)
+  post_value1 <- C_1$posterior
+  c_size1 <- C_1$cluster_size
   
   # update each centroid as the mean of the clusters data
   centroids_mean<-matrix(0,nrow = n_clust, ncol = t_points)
   for (k in 1:n_clust){
-    if (dim(data[which(c_lab == k),])[1] > 1)
+    if (c_size1[k] > 1)
       centroids_mean[k,] <- colMeans(data[which(c_lab == k),])
     else
       centroids_mean[k,] <- data[which(c_lab == k),]
@@ -143,18 +169,18 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
                                     vector_matrix = 0, eig_type = 'fixed', data = data)
   
   # Calculation of Pitman-Yor posterior value with updated centroids
-  post_value2 <- posterior_pitmanyor(n_clust = n_clust, sigma = sigma, theta = theta, 
-                                     lambda = lambda, label = c_lab, loss = loss_value2, 
-                                     data = data)$posterior
-  clust2 <- posterior_pitmanyor(n_clust = n_clust, sigma = sigma, theta = theta, 
-                                     lambda = lambda, label = c_lab, loss = loss_value2, 
-                                     data = data)$cluster_size
+  C_2 <-  posterior_pitmanyor(n_clust = n_clust, sigma = sigma, theta = theta, 
+                              lambda = lambda, label = c_lab, loss = loss_value2, 
+                              data = data)
+  post_value2 <- C_2$posterior
+  c_size2 <- C_2$cluster_size
   
   # it <- 0
   # N_it <- 50
   # post_trend <- numeric(N_it)
   #while( abs(log(post_value2) - log(post_value1)) >= toll ){
-  while( post_value2 > post_value1 ){
+  while( post_value2 > post_value1 & is.na(post_value2) == FALSE
+         & is.na(post_value1) == FALSE ){
     
     # it <- it + 1
     # print(it)
@@ -163,6 +189,7 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
     
     post_value1 <- post_value2
     loss_value1 <- loss_value2
+    c_size1 <- c_size2
     
     Maha_dis_k <- matrix(0,nrow=n, ncol=n_clust)
     for (i in 1:n){
@@ -173,16 +200,17 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
       c_lab[i] <- index
     }
     
-    for (k in 1:n_clust){
-      if (dim(data[which(c_lab == k),])[1] == 0){
+    while (length(c_size1) < n_clust){
+      for (k in 1:n_clust){
         print("Null dimension")
         n_hat <- sample(1:n,1)
         c_lab[n_hat] <- k
       }
+      c_size1 <-  as.numeric(table(c_lab))
     }
     
     for (k in 1:n_clust){
-      if (dim(data[which(c_lab == k),])[1] > 1)
+      if (c_size1[k] > 1)
         centroids_mean[k,] <- colMeans(data[which(c_lab == k),])
       else
         centroids_mean[k,] <- data[which(c_lab == k),]
@@ -194,17 +222,16 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
                                       vector_matrix = 0, eig_type = 'fixed', data = data)
     
     # Calculation of Pitman-Yor posterior value with updated centroids
-    post_value2 <- posterior_pitmanyor(n_clust = n_clust, sigma = sigma, theta = theta, 
-                                       lambda = lambda, label = c_lab, loss = loss_value2, 
-                                       data = data)$posterior
-    clust2 <- posterior_pitmanyor(n_clust = n_clust, sigma = sigma, theta = theta, 
-                                       lambda = lambda, label = c_lab, loss = loss_value2, 
-                                       data = data)$cluster_size
+    C_2 <- posterior_pitmanyor(n_clust = n_clust, sigma = sigma, theta = theta, 
+                               lambda = lambda, label = c_lab, loss = loss_value2, 
+                               data = data)
+    post_value2 <- C_2$posterior
+    c_size2 <- C_2$cluster_size
     
   }
   
   return(list("label" = c_lab, "centroids" = centroids_mean, 
-              "loss" = loss_value1, "posterior" = post_value1, "clusters_dim" = clust1))
+              "loss" = loss_value1, "posterior" = post_value1, "clusters_dim" = c_size1))
   
 } 
 
@@ -310,16 +337,20 @@ for (i in 1:it){
   clust <- fda_clustering_pitmanyor(n_clust = 3, alpha, sigma, theta,
                                     lambda, cov_matrix = K_1,
                                     toll = 1e-10, data = data)
-  post_it[i] <- clust$posterior
+  post_vec[i] <- clust$posterior
   label_mat[i,] <- clust$label
   print(i)
 }
 
-max(post_it)
+post_best_3 <- max(post_vec)
+pos <- match(post_best_3,post_vec)
+label_best_3 <- label_mat[pos,] 
+show(post_best_3)
+show(label_best_3)
 
 x11()
-plot(1:it,post_it,type = 'l')
-points(1:it,post_it,col = 'firebrick3',pch = 16)
+plot(1:it,post_vec,type = 'l')
+points(1:it,post_vec,col = 'firebrick3',pch = 16)
 
 #### GENERAL STUFF ####
 ################################################################################
