@@ -102,7 +102,7 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
   }
   
   for (k in 1:n_clust){
-    if (is.null(dim(data[which(c_lab == k),])[1]) == TRUE){
+    if (dim(data[which(c_lab == k),])[1] == 0){
       print("Null dimension")
       n_hat <- sample(1:n,1)
       c_lab[n_hat] <- k
@@ -174,7 +174,7 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
     }
     
     for (k in 1:n_clust){
-      if (is.null(dim(data[which(c_lab == k),])[1]) == TRUE){
+      if (dim(data[which(c_lab == k),])[1] == 0){
         print("Null dimension")
         n_hat <- sample(1:n,1)
         c_lab[n_hat] <- k
@@ -220,7 +220,7 @@ n_clust <- 3
 cov_matrix <- K_1
 
 # Fix the number of simulations
-nsimul <- 15
+nsimul <- 50
 c_post<-matrix(0, nrow=nsimul, ncol=dim(data)[1])
 post_value <- rep(0,nsimul)
 post_dim <- matrix(0, nrow=nsimul, ncol = n_clust)
