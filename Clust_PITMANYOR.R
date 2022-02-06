@@ -189,7 +189,6 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
     
     post_value1 <- post_value2
     loss_value1 <- loss_value2
-    c_size1 <- c_size2
     
     Maha_dis_k <- matrix(0,nrow=n, ncol=n_clust)
     for (i in 1:n){
@@ -199,6 +198,8 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
       index <- which.min(Maha_dis_k[i,])
       c_lab[i] <- index
     }
+    
+    c_size1 <- as.numeric(table(c_lab))
     
     while (length(c_size1) < n_clust){
       for (k in 1:n_clust){
@@ -349,8 +350,18 @@ show(post_best_3)
 show(label_best_3)
 
 x11()
-plot(1:it,post_vec,type = 'l')
-points(1:it,post_vec,col = 'firebrick3',pch = 16)
+plot(1:it,post_vec,col = 'firebrick3',pch = 16)
+
+post_opt <- post_vec[which(post_vec > 1000000)]
+label_opt <- label_mat[match(post_opt,post_vec),]
+
+show(post_opt[1])
+show(label_opt[1,])
+show(post_opt[9])
+show(label_opt[9,])
+
+
+
 
 #### GENERAL STUFF ####
 ################################################################################
