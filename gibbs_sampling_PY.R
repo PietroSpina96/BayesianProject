@@ -214,3 +214,25 @@ Ci <- gibbs_sampler_PY(11000, 1000, c_opt, data, .1, alpha, eigen(K_1), 0.25, ve
 save(Ci, file="indexes_Ci.RData")
 
 save.image("chain_Ci_data1.RData")
+
+
+
+library(NPflow)
+library(mcclust)
+
+S2=similarityMat(data.frame(t(Ci)))
+
+x11()
+heatmap(S2, keep.dendro=FALSE)
+
+
+BL1=minbinder(S2, cls=Ci, method = "avg",
+              max.k = NULL, include.lg = FALSE, start.cl = NULL, tol = 0.001)
+BL1$cl
+
+binder(Ci,S2)
+
+
+BL2=cluster_est_binder(data.frame(t(Ci)),log(S2))
+
+BL2$c_est
