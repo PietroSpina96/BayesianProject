@@ -126,23 +126,31 @@ rm(data2)
 # fda_clustering_mahalanobis + clusters_union + clusters_plot
 n <- dim(data)[1]
 t_points <- dim(data)[2]
-
-k <- 4
+k <- 3
 alpha <- 0.1
-
-clust1 <- fda_clustering_mahalanobis(n_clust=k, alpha=alpha, cov_matrix=K_1,
-                                     toll=1e-10, data=data)
-# do merge
-clust2 <- clusters_union(clust1)
+clust1 <- fda_clustering_mahalanobis_general(n_clust = k, alpha = alpha,
+                                             cov_matrix = cov(data), cov_type = 'fixed',
+                                             toll = 1e-2,  data = data)
+c_opt <- clust1$label # labels
+c1 <- clust1$centroids[1,]
+c2 <- clust1$centroids[2,]
+# PLOT data + centroids
+plot1<-clusters_plot(time, data, c_opt) + labs(title="Clustered data") + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+plot2<-clusters_plot(time, clust1) + labs(title="Clusters centroids") + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+# grid.arrange(plot1,plot2,nrow=1)
+#
+# DO merge
+clust2 <- clusters_union(clust1,data=data)
 # create colors for plot1 knowing the successive merging
 colors1 <- rainbow(k)
 for(i in 1:k)
   colors1[i] <- colors1[clust2$v[i]]
 colors2 <- colors1 %>% unique
 # show both plots
-plot1 <- clusters_plot(time, clust1, colors1) + labs(title="Clusters")
-plot2 <- clusters_plot(time, clust2, colors2) + labs(title="Merged clusters")
-grid.arrange(plot1,plot2,nrow=1)
+x11(width=10,height=6)
+plot1.m <- clusters_plot(time, clust1, colors1) + labs(title="Before merging") + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+plot2.m <- clusters_plot(time, clust2, colors2) + labs(title="After merging") + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+grid.arrange(plot1,plot2, plot1.m,plot2.m, nrow=2)
 #
  
 ##### Clustering function updating covariance within clusters: fda_clustering_mahalanobis_updated ####

@@ -495,7 +495,7 @@ clusters_union <- function(clust, eps=0, data){
       return(clust)
    }
    ## compute 'dists' distances matrix (to set smart tolerance + check small distances)
-   dists <- centroids_dists(centroids_mean,'m')
+   dists <- centroids_dists(centroids_mean,'2')
    
    # DO: union of close clusters
    clusts <- 1:max_clust # keep track of the mergings, eg. (1,2,3,4,5) -> (1,2,1,1,5)
@@ -524,23 +524,30 @@ clusters_union <- function(clust, eps=0, data){
          # d<-norm(as.matrix(diff_centroids),type = 'i')
          d <- dists[j,k]
          if (d < eps){
-            ## possible merging (similar centroid)... but first check if also similar covariances 
+            ## possible merging (similar centroid)... but first check if also similar covariances
+            writeLines(sprintf("Found close clusters %d and %d (centroid distance = %.2f). Checking covariances...",j,k,d))
             # - compute within-cluster cov
             cov.j <- cov(data[which(c_lab==j),])
-            cov.k <- cov(data[which(c_lab==k),]) # ONLY PRINT FOR NOW, to understand behaviour
-            
-            #TODO ........... check covariances ............ I have to think a threshold
-            
-            ## ok, similar mean+cov -> MERGE: cluster j into k
-            did.a.merge <- TRUE
-            c_lab[ which(c_lab==j) ] <- clusts[k]
-            clusts[j] <- clusts[k]
-            writeLines(sprintf(" -> MERGED: cluster %d into %d. (centroid distance = %.2f)",j,k,d))
-            writeLines(sprintf("    cov compare:    c%d         c%d\n            norm    %.3f    %.3f\n             min    %.3f      %.3f\n             max    %.3f      %.3f",
-                               k,j,
-                               norm(cov.k),norm(cov.j),
-                               min(cov.k),min(cov.j),
-                               max(cov.k),max(cov.j)))
+            cov.k <- cov(data[which(c_lab==k),])
+            # - compute their distance: https://www.researchgate.net/publication/4194743_Correlation_Matrix_Distance_a_Meaningful_Measure_for_Evaluation_of_Non-Stationary_MIMO_Channels
+            cov.hdist <- 1 - tr(cov.j %*% cov.k) / (norm(cov.j,type='f')*norm(cov.k,type='f'))
+            cov.L2dist <- norm(cov.j-cov.k, '2')
+            # writeLines(sprintf("COVS compare:       c%d         c%d\n            mean    %.3f    %.3f\n            median  %.3f    %.3f\n             min    %.3f      %.3f\n             max    %.3f      %.3f",
+            #                    k,j,
+            #                    mean(cov.k),mean(cov.j),
+            #                    median(cov.k),median(cov.j),
+            #                    min(cov.k),min(cov.j),
+            #                    max(cov.k),max(cov.j)))
+            if(cov.hdist < .04){ #TODO threshold .04 tested on simdata5, needs more testing on other datasets
+               ## ok, similar mean+cov -> MERGE: cluster j into k
+               writeLines(sprintf(" -> Covariances are similar!\n   (COVS DISTANCES: L2 = %.2f  /  HERDIN = %.2f)",cov.L2dist,cov.hdist))
+               did.a.merge <- TRUE
+               c_lab[ which(c_lab==j) ] <- clusts[k]
+               clusts[j] <- clusts[k]
+               writeLines(sprintf(" -> MERGED: cluster %d into %d.",j,k))
+            } else {
+               writeLines(sprintf(" -> Covariances are too different, nothing changed.\n   (COVS DISTANCES: L2 = %.2f  /  HERDIN = %.2f)",cov.L2dist,cov.hdist))
+            }
          }
       }
       if(did.a.merge){
