@@ -136,7 +136,7 @@ update_k_i <- function(obs_idx, Ci, n_clust, data, sig, lambda, alpha, eig){
   for(ii in 1:n_clust)
     probs[ii] = prob_i_k(obs_idx, ii, Ci, data, sig, lambda, alpha, eig,verbose=F) #FOR UNIFORM
     # probs[ii] = prob_i_k_PY(obs_idx, ii, Ci, data, sig, lambda, alpha, eig,verbose=F) #FOR PY
-    
+  #print(paste("Probabilità di allocazione elem #",obs_idx,": C1:",probs[1]," C2:",probs[2]))
   k = sample(n_clust, 1, replace = TRUE, prob = probs)
   return(k)
 }
@@ -146,7 +146,7 @@ update_k_i <- function(obs_idx, Ci, n_clust, data, sig, lambda, alpha, eig){
 
 #### MH for our distro
 
-gibbs_sampler_PY <- function(N, N_burnin, x0, data, lambda, alpha, eig, sig, verbose = F){
+gibbs_sampler <- function(N, N_burnin, x0, data, lambda, alpha, eig, sig, verbose = F){
   #compute MH samples of the posterior for cluter indexes Ci
   #INPUTS
   # N = number of samples
@@ -204,17 +204,39 @@ for(ii in c(95,96,97,98,99,100))
   c_opt_test[ii]=1
 c_opt_test
 
-Ci <- gibbs_sampler_PY(5, 1, c_opt_test, data, .1, alpha, eigen(K_1), 0.25, verbose = T)
+Ci <- gibbs_sampler(5, 1, c_opt_test, data, 1, alpha, eigen(K_1), 0.25, verbose = T)
+
 
 
 #actual run
-Ci <- gibbs_sampler_PY(11000, 1000, c_opt, data, .1, alpha, eigen(K_1), 0.25, verbose = T)
+Ci <- gibbs_sampler(10000, 1000, c_opt, data, 1, alpha, eigen(K_1), 0.25, verbose = T)
 
 
-save(Ci, file="indexes_Ci.RData")
+save(Ci, file="indexes_Ci_uniform_lambda1.RData")
 
-save.image("chain_Ci_data1.RData")
+save.image("chain_Ci_data1_uniform.RData")
 
+df <- list()
+for(ii in 1:dim(Ci)[1]){
+  df[[ii]] <- Ci[ii,]
+}
+
+
+S=similarityMat(df)
+
+x11()
+heatmap(S)
+
+BL1=minbinder(S, cls=Ci, method = "avg",
+              max.k = NULL, include.lg = FALSE, start.cl = NULL, tol = 0.001)
+BL1$cl
+
+binder(Ci,S)
+
+
+BL2=cluster_est_binder(data.frame(t(Ci)),log(S))
+
+BL2$c_est
 
 
 library(NPflow)
