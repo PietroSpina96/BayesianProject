@@ -330,35 +330,65 @@ semilogy(iterations,post_trend,type = 'l',col='blue')
 
 ###### Iterations trial #####
 
+# K = 3
 it <- 10000
-post_vec <- numeric(it)
-label_mat <- matrix(0, nrow = it, ncol = 100)
+post_vec3 <- numeric(it)
+label_mat3 <- matrix(0, nrow = it, ncol = 100)
 
 for (i in 1:it){
   clust <- fda_clustering_pitmanyor(n_clust = 3, alpha, sigma, theta,
                                     lambda, cov_matrix = K_1,
                                     toll = 1e-10, data = data)
-  post_vec[i] <- clust$posterior
-  label_mat[i,] <- clust$label
+  post_vec3[i] <- clust$posterior
+  label_mat3[i,] <- clust$label
   print(i)
 }
 
-post_best_3 <- max(post_vec)
-pos <- match(post_best_3,post_vec)
-label_best_3 <- label_mat[pos,] 
+post_best_3 <- max(post_vec3)
+pos <- match(post_best_3,post_vec3)
+label_best_3 <- label_mat3[pos,] 
 show(post_best_3)
 show(label_best_3)
 
 x11()
-plot(1:it,post_vec,col = 'firebrick3',pch = 16)
+plot(1:10000,post_vec3,col = 'firebrick3',pch = 16)
 
-post_opt <- post_vec[which(post_vec > 1000000)]
-label_opt <- label_mat[match(post_opt,post_vec),]
+post_opt3 <- post_vec3[which(post_vec3 > 1000000)]
+label_opt3 <- label_mat3[match(post_opt3,post_vec3),]
+show(post_opt3)
 
-show(post_opt[1])
-show(label_opt[1,])
-show(post_opt[9])
-show(label_opt[9,])
+# convergence rate
+length(post_vec3[which(post_vec3 > 1300000)]) / length(post_vec3)
+
+# K = 2
+it <- 1000
+post_vec2 <- numeric(it)
+label_mat2 <- matrix(0, nrow = it, ncol = 100)
+
+for (i in 1:it){
+  clust <- fda_clustering_pitmanyor(n_clust = 2, alpha, sigma, theta,
+                                    lambda, cov_matrix = K_1,
+                                    toll = 1e-10, data = data)
+  post_vec2[i] <- clust$posterior
+  label_mat2[i,] <- clust$label
+  print(i)
+}
+
+post_best_2 <- max(post_vec2)
+pos <- match(post_best_2,post_vec2)
+label_best_2 <- label_mat[pos,] 
+show(post_best_2)
+show(label_best_2)
+
+# convergence rate
+length(post_vec2[which(post_vec2 > 1e5)]) / length(post_vec2)
+
+x11()
+plot(1:1000,post_vec2,col = 'firebrick3',pch = 16)
+
+post_opt2 <- post_vec2[which(post_vec > 1000000)]
+label_opt2 <- label_mat2[match(post_opt2,post_vec2),]
+show(post_opt2)
 
 
 

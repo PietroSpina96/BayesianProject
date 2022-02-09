@@ -63,22 +63,23 @@ f_prova <- f.data$ausxSL$data[1,]
 x11()
 plot(t(importMatrix(res, type = c('SL', 'sx'), position = 'au'))[1,], type = "l", ylim = c(-250, 250), lwd=2)
 lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,0.1,lambda,eigenft), type = 'l', lwd=2, col = 'firebrick2')
-lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,0.01,lambda,eigenft), type = 'l', lwd=2, col = 'blue')
-lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,0.0001,lambda,eigenft), type = 'l', lwd=2, col = 'forestgreen')
+lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,1e+4,lambda,eigenft), type = 'l', lwd=2, col = 'blue')
+lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,1e+5,lambda,eigenft), type = 'l', lwd=2, col = 'forestgreen')
 
 
 #### alpha-Mahalanobis distance calculation ####
 # Smoothed data
-alpha <- 1e+4
+alpha <- 1e+5
 f.data_alpha <- matrix(0, nrow = 26, ncol = 1600)
 for (i in 1:26){
   f.data_alpha[i,] <- f_alpha_approx(f.data$ausxSL$data[i,],alpha,lambda,eigenft)
 }
 
+
 # alpha-Mahalanobis distance matrix 
 Mahalanobis_Distance <- matrix(0, nrow = 26, ncol = 26)
 for (i in 1:26){
-  #print(i)
+  print(i)
   for (j in 1:26){
     Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,f.data$ausxSL$data[i,],f.data$ausxSL$data[j,],lambda,eigenft)
   }
@@ -103,23 +104,99 @@ image.plot(1:26,1:26,Mahalanobis_Distance)
 # show(khat_example)
 
 
-#### ORIGINAL CLUSTEING FUNCTIONS ####
-f.data.clust <- fda_clustering_mahalanobis(n_clust = 2, alpha = 10000,
+#### Uniform prior with fixed covariance ####
+
+##### k = 2 ######
+
+f.data_clust_2 <- fda_clustering_mahalanobis(n_clust = 2, alpha = alpha,
                                            cov_matrix = cov(f.data$ausxSL$data),
                                            toll = 1e-2, data = f.data$ausxSL$data)
-c_opt <- f.data.clust$label
-show(c_opt)
-show(f.data.clust$loss)
+c_opt_2 <- f.data_clust_2$label
+show(c_opt_2)
+show(f.data_clust_2$loss)
 
-c1 <- f.data.clust$centroids[1,]
-c2 <- f.data.clust$centroids[2,]
-#c3 <- f.data.clust$centroids[3,]
-#c4 <- clust$centroids[4,]
+c1 <- f.data_clust_2$centroids[1,]
+c2 <- f.data_clust_2$centroids[2,]
+
+data1 <- f.data$ausxSL$data[which(c_opt_2=='1'),]
+data2 <- f.data$ausxSL$data[which(c_opt_2=='2'),]
+
+###### Plot #####
+x11()
+par(mfrow = c(1,2))
+plot(time,f.data$ausxSL$data[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', lwd = 2, main = "Data")
+for(i in 2:n){
+  lines(time,f.data$ausxSL$data[i,],type = 'l',lwd = 2)
+}
+
+plot(time,data1[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', col = 'gold', lwd = 2, main = "Uniform k = 2")
+for (i in 2:dim(data1)[1]){
+  lines(time,data1[i,],type = 'l', col = 'gold',lwd = 2)
+}
+for (i in 1:dim(data2)[1]){
+  lines(time,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
+}
+
+##### k = 3 ######
+f.data_clust_3 <- fda_clustering_mahalanobis(n_clust = 3, alpha = alpha,
+                                             cov_matrix = cov(f.data$ausxSL$data),
+                                             toll = 1e-2, data = f.data$ausxSL$data)
+c_opt_3 <- f.data_clust_3$label
+show(c_opt_3)
+show(f.data_clust_3$loss)
+
+c1 <- f.data_clust_3$centroids[1,]
+c2 <- f.data_clust_3$centroids[2,]
+c3 <- f.data_clust_3$centroids[3,]
+
+data1 <- f.data$ausxSL$data[which(c_opt_3=='1'),]
+data2 <- f.data$ausxSL$data[which(c_opt_3=='2'),]
+data3 <- f.data$ausxSL$data[which(c_opt_3=='3'),]
+
+###### Plot #####
+x11()
+par(mfrow = c(1,2))
+plot(time,f.data$ausxSL$data[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', lwd = 2, main = "Data")
+for(i in 2:n){
+  lines(time,f.data$ausxSL$data[i,],type = 'l',lwd = 2)
+}
+
+plot(time,data1[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', col = 'gold', lwd = 2, main = "Uniform k = 3")
+for (i in 2:dim(data1)[1]){
+  lines(time,data1[i,],type = 'l', col = 'gold',lwd = 2)
+}
+for (i in 1:dim(data2)[1]){
+  lines(time,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
+}
+for (i in 1:dim(data3)[1]){
+  lines(time,data3[i,],type = 'l', col = 'firebrick3',lwd = 2)
+}
 
 
-data1 <- f.data$ausxSL$data[which(c_opt=='1'),]
-data2 <- f.data$ausxSL$data[which(c_opt=='2'),]
-#data3 <- f.data$ausxSL$data[which(c_opt=='3'),]
+#### Pitman-Yor Prior with fixed covariance ####
+
+alpha <- alpha
+sigma <- 0.25
+theta <- 3.66
+lambda <- 0.75
+
+##### k = 2 ####
+f.data_clust_py_2 <- fda_clustering_pitmanyor(n_clust = 2, alpha, sigma, theta,
+                                       lambda, cov_matrix = cov(f.data$ausxSL$data), 
+                                       toll = 1e-10, data = f.data$ausxSL$data)
+
+c_opt_py_2 <- f.data_clust_py_2$label
+show(c_opt_py_2)
+show(f.data_clust_py_2$posterior)
+
+c1 <- f.data_clust_py_2$centroids[1,]
+c2 <- f.data_clust_py_2$centroids[2,]
+
+data1 <- f.data$ausxSL$data[which(c_opt_py_2=='1'),]
+data2 <- f.data$ausxSL$data[which(c_opt_py_2=='2'),]
+
+
+###### Plot #####
 
 x11()
 par(mfrow = c(1,2))
@@ -128,16 +205,82 @@ for(i in 2:n){
   lines(time,f.data$ausxSL$data[i,],type = 'l',lwd = 2)
 }
 
-plot(time,data1[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', col = 'gold', lwd = 2, main = "Clustered data")
+plot(time,data1[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', col = 'gold', lwd = 2, main = "Pitman-Yor k = 2")
 for (i in 2:dim(data1)[1]){
   lines(time,data1[i,],type = 'l', col = 'gold',lwd = 2)
 }
 for (i in 1:dim(data2)[1]){
   lines(time,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
 }
-for (i in 1:dim(data3)[1]){
-  lines(time,data3[i,],type = 'l', col = 'gold',lwd = 2)
+
+
+
+##### k = 3 #####
+
+f.data_clust_py_3 <- fda_clustering_pitmanyor(n_clust = 3, alpha, sigma, theta,
+                                              lambda, cov_matrix = cov(f.data$ausxSL$data), 
+                                              toll = 1e-10, data = f.data$ausxSL$data)
+c_opt_py_3 <- f.data_clust_py_3$label
+show(c_opt_py_3)
+show(f.data_clust_py_3$posterior)
+
+
+
+c1 <- f.data_clust_py_3$centroids[1,]
+c2 <- f.data_clust_py_3$centroids[2,]
+c3 <- f.data_clust_py_3$centroids[3,]
+
+data1 <- f.data$ausxSL$data[which(c_opt_py_3=='1'),]
+data2 <- f.data$ausxSL$data[which(c_opt_py_3=='2'),]
+data3 <- f.data$ausxSL$data[which(c_opt_py_3=='3'),]
+
+###### Plot #####
+x11()
+par(mfrow = c(1,2))
+plot(time,f.data$ausxSL$data[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', lwd = 2, main = "Data")
+for(i in 2:n){
+  lines(time,f.data$ausxSL$data[i,],type = 'l',lwd = 2)
 }
+
+plot(time,data1[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', col = 'gold', lwd = 2, main = "Pitman-Yor k = 3")
+for (i in 2:dim(data1)[1]){
+  lines(time,data1[i,],type = 'l', col = 'gold',lwd = 2)
+}
+# for (i in 1:dim(data2)[1]){
+#   lines(time,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
+# }
+lines(time,data2,type = 'l', col = 'forestgreen',lwd = 2)
+for (i in 1:dim(data3)[1]){
+  lines(time,data3[i,],type = 'l', col = 'firebrick3',lwd = 2)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #### CLUSTERING FUNCTION UPDATING COVARIANCE WITHIN CLUSTERS ####
 f.data.clust <- fda_clustering_mahalanobis_updated(n_clust = 2, alpha = 10000,
