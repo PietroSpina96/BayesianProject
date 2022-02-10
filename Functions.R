@@ -426,7 +426,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
       }
       
       #loss_value2 <- gibbs_loss_updated(n_clust = n_clust, centroids = centroids_mean,label = c_lab, values_matrix, vector_matrix, data = data)
-      loss_value2 <- gibbs_loss_general(n_clust = n_clust, centroids = centroids_random,
+      loss_value2 <- gibbs_loss_general(n_clust = n_clust, centroids = centroids_mean,
                                         label = c_lab, eig = eig, values_matrix = values_matrix, 
                                         vector_matrix = vector_matrix, eig_type = 'updated', data = data)
       writeLines(sprintf("#%d. Loss value: %.2f  /  diff: %.2f",iterations,loss_value2,abs(loss_value2-loss_value1)))
