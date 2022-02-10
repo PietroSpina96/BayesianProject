@@ -447,6 +447,7 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
 
 # compute distances between centroids (used in cluster merging)
 # -> alpha parameter is required ONLY with normtype='m'
+
 centroids_dists <- function(centroids_mean,normtype='i',alpha){
   writeLines(sprintf("Calculating clusters' centroids distances... [ using '%s' norm ]",normtype))
   max_clust <- dim(centroids_mean)[1]
@@ -859,7 +860,7 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
    
    for (k in 1:n_clust){
       if (c_size0[k] == 0){
-         print("Null dimension")
+         writeLines(sprintf("Null dimension"))
          n_hat <- sample(1:n,1)
          c_lab[n_hat] <- k
       }
@@ -931,12 +932,19 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
       }
       
       for (k in 1:n_clust){
+         if (c_size2[k] == 0){
+            writeLines(sprintf("Null dimension"))
+            n_hat <- sample(1:n,1)
+            c_lab[n_hat] <- k
+         }
+      }
+      c_size2 <- as.numeric(table(c_lab)) 
+      
+      for (k in 1:n_clust){
          if (c_size2[k] > 1)
             centroids_mean[k,] <- colMeans(data[which(c_lab == k),])
-         if (c_size2[k] == 1)
-            centroids_mean[k,] <- data[which(c_lab == k),]
          else
-            centroids_mean[k,] <- colMeans(data)
+            centroids_mean[k,] <- data[which(c_lab == k),]
       }
       
       #loss_value2 <- gibbs_loss(n_clust = n_clust, centroids = centroids_mean, label = c_lab, eig = eig, data = data)
@@ -956,7 +964,45 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
    return(list("label" = c_lab, "centroids" = centroids_mean, 
                "loss" = loss_value1, "posterior" = post_value1, "clusters_dim" = c_size1))
    
-} 
+}
+
+##### Clustering function (fixed covariance) overall  ####
+# This function just looks for the best partition over number_clusters given
+fda_clustering_pitmanyor_overall <- function (n_clust, nsimul, alpha, sigma, theta, lambda,cov_matrix, data){
+   
+   n_clust_vect <- 1:n_clust
+   
+   # Build matrix/vector to store the results of the simulations
+   c_post_simul <- matrix(0, nrow=nsimul, ncol=dim(data)[1])
+   post_value_simul <- rep(0, nsimul)
+   
+   # Build matrix/vector to store the overall results
+   post_value_kfixed <- rep(0,n_clust)
+   c_kfixed <- matrix(0,nrow=n_clust,ncol=dim(data)[1])
+   
+   for (k in 1:n_clust){
+      for (j in 1:nsimul){
+         writeLines(sprintf("%d iteration for cluster %d",j,k))
+         
+         posterior_simul <- fda_clustering_pitmanyor(n_clust_vect[k], alpha, sigma, theta, lambda, cov_matrix , toll, data)
+         c_post_simul[j,] <- posterior_simul$label
+         post_value_simul[j] <- posterior_simul$posterior
+      }
+      
+      index_kfixed <- which.max(post_value_simul)
+      post_value_kfixed[k] <- post_value_simul[index_kfixed]
+      c_kfixed[k,] <-c_post_simul[index_kfixed,]
+   }
+   
+   index_overall <- which.max(post_value_kfixed)
+   post_value_overall <- post_value_kfixed[index_overall]
+   c_overall <- c_kfixed[index_overall,]
+   
+   return(list("posterior_all_k" = post_value_kfixed ,"clusters_number" = index_overall,
+               "posterior" = post_value_overall,"labels" = c_overall))
+}
+
+
 #### SAVE WP ####
  
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
