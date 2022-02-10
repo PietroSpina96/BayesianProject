@@ -17,7 +17,7 @@ setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject"
 load('Functions_WP.RData')
 
 
-#### FUNCTIONAL MAHA DIST FUNCTIONS - - - - - - - - - - - - - - - - - - -####
+#### FUNCTIONAL MAHALANOBIS DISTANCE FUNCTIONS - - - - - - - - - - - - - - - - - - -####
 
 #scalar product
 scalar_prod<- function (f1,f2) {
@@ -985,6 +985,7 @@ fda_clustering_pitmanyor_overall <- function (n_clust, nsimul, alpha, sigma, the
          writeLines(sprintf("%d iteration for cluster %d",j,k))
          
          posterior_simul <- fda_clustering_pitmanyor(n_clust_vect[k], alpha, sigma, theta, lambda, cov_matrix , toll, data)
+         
          c_post_simul[j,] <- posterior_simul$label
          post_value_simul[j] <- posterior_simul$posterior
       }
@@ -994,12 +995,18 @@ fda_clustering_pitmanyor_overall <- function (n_clust, nsimul, alpha, sigma, the
       c_kfixed[k,] <-c_post_simul[index_kfixed,]
    }
    
-   index_overall <- which.max(post_value_kfixed)
+   index_overall <- which.max(post_value_kfixed) #final number of clusters
    post_value_overall <- post_value_kfixed[index_overall]
    c_overall <- c_kfixed[index_overall,]
    
+   centroids_overall <- matrix(0, nrow = index_overall, ncol = dim(data)[2])
+   for (h in index_overall){
+      data_h <- data[which(c_overall == h),]
+      centroids_overall[h,] <- colMeans(data_h)
+   }
+   
    return(list("posterior_all_k" = post_value_kfixed ,"clusters_number" = index_overall,
-               "posterior" = post_value_overall,"labels" = c_overall))
+               "posterior" = post_value_overall,"labels" = c_overall, "centroids" = centroids_overall))
 }
 
 
