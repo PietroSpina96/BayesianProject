@@ -844,9 +844,6 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
    t_points <- dim(data)[2]
    n <- dim(data)[1]
    
-   # index of each centroid randomly defined through sampling
-   y0 <- sample(1:n,n_clust,replace = FALSE)
-   
    # vector of labels
    c_lab <- rep(0,n)
    
@@ -862,34 +859,37 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
    values <- eig$values 
    vectors <- eig$vectors
    
-   Mahalanobis_Distance <- matrix(0, nrow = n, ncol = n)
-   for (i in 1:n){
-      for (j in 1:n){
-         Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,data[i,],data[j,],values,vectors)
+   # while cycle checks that there are no empty clusters in the initial step
+   flag_1 <- 1
+   while (flag_1 != 0) {
+      flag_1 <- 0
+      
+      # centroids sampling 
+      y0 <- sample(1:n,n_clust,replace = FALSE)
+      
+      Mahalanobis_Distance <- matrix(0, nrow = n, ncol = n)
+      for (i in 1:n)
+         for (j in 1:n)
+            Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,data[i,],data[j,]
+                                                           ,values,vectors)
+      
+      # i-th unit belongs to cluster_k if the distance(centroid_k,i-th unit) is the smallest one
+      Maha_dis <- matrix(0,nrow=n, ncol=n_clust)
+      for (i in 1:n){
+         for (k in 1:n_clust)
+            Maha_dis[i,k] <- Mahalanobis_Distance[i,y0[k]]
+         index <- which.min(Maha_dis[i,])
+         c_lab[i] <- index
       }
-   }
-   
-   # i-th unit belongs to cluster_k if the distance(centroid_k,i-th unit) is the smallest one
-   Maha_dis <- matrix(0,nrow=n, ncol=n_clust)
-   for (i in 1:n){
-      for (k in 1:n_clust) {
-         Maha_dis[i,k] <- Mahalanobis_Distance[i,y0[k]]
+      
+      # Checking for empty clusters
+      for (k in 1:n_clust){
+         c_size0[k] <- sum(c_lab == k)
+         
+         if (c_size0[k] == 0)
+            flag_1 <- flag_1 + 1 # flag gets updated if there are empty clusters
       }
-      index <- which.min(Maha_dis[i,])
-      c_lab[i] <- index
-   }
-   
-   # Checking for empty clusters
-   for (k in 1:n_clust){
-      c_size0[k] <- sum(c_lab == k)
-   }
-   
-   for (k in 1:n_clust){
-      if (c_size0[k] == 0){
-         writeLines(sprintf("Null dimension"))
-         n_hat <- sample(1:n,1)
-         c_lab[n_hat] <- k
-      }
+      
    }
    c_size0 <- as.numeric(table(c_lab)) 
    
@@ -991,6 +991,7 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
                "loss" = loss_value1, "posterior" = post_value1, "clusters_dim" = c_size1))
    
 }
+
 
 ##### Clustering function (fixed covariance) overall  ####
 # This function just looks for the best partition over number_clusters given
