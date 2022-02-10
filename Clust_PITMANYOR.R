@@ -64,25 +64,6 @@ rm(list=c('n_cluster1','n_cluster2'))
 # lambda <- 0.75
 # toll <- 1e-4
 
-posterior_pitmanyor <- function(n_clust, sigma, theta , lambda, label, loss, data){
-  
-  # Create vector counting the number of observations in each cluster
-  cluster_size <- rep(0,n_clust)
-  for (k in 1:n_clust){
-    cluster_size[k] <- sum(label == k)
-  }
-  
-  post_vec <- rep(0,n_clust)
-  for (k in 1:n_clust){
-    post_vec[k] <- prod(theta + k*sigma, gamma(cluster_size[k] - sigma))
-  }
-  
-  post <- prod(post_vec,1/(theta + n_clust*sigma),exp(-lambda*loss))
-  
-  return(list("posterior" = post, "cluster_size" = cluster_size))
-  
-}
-
 fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_matrix , toll, data){
   
   t_points <- dim(data)[2]
@@ -178,14 +159,7 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
   # c_size2 <- posterior_value2$cluster_size
   # c_size2 == c_size1 == c_size0
   
-  # it <- 0
-  # N_it <- 50
-  # post_trend <- numeric(N_it)
-  #while( abs(log(post_value2) - log(post_value1)) >= toll ){
   while( post_value2 > post_value1){
-    
-    # it <- it + 1
-    # print(it)
     
     post_value1 <- post_value2
     loss_value1 <- loss_value2
@@ -244,11 +218,11 @@ alpha <- 0.1
 sigma <- 0.25
 theta <- 3.66
 lambda <- 0.75
-n_clust <- 3
+n_clust <- 2
 cov_matrix <- K_1
 
 # Fix the number of simulations
-nsimul <- 50
+nsimul <- 40
 c_post<-matrix(0, nrow=nsimul, ncol=dim(data)[1])
 post_value <- rep(0,nsimul)
 post_dim <- matrix(0, nrow=nsimul, ncol = n_clust)
