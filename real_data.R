@@ -22,7 +22,7 @@ time<-seq(1,t_points)
 X_bar <- colMeans(f.data$ausxSL$data) # functional mean
 
 x11()
-plot(t(importMatrix(res, type = c('SL', 'sx'), position = 'au'))[1,], type = "l", ylim = c(-250, 250))
+plot(t(importMatrix(res, type = c('SL', 'sx'), position = 'au'))[1,], type = "l", ylim = range(f.data$ausxSL$data))
 for(i in 1:26){
   lines(t(importMatrix(res, type = c('SL', 'sx'), position = 'au'))[i,], lwd=1)
 }
@@ -50,7 +50,7 @@ image.plot(time,time,K_hat_R,main='R cov function')
 # Now the eigenvalues and eigenvectors of the K_hat_R matrix are called as the previous ones
 # so that we don't have to rewrite them in the code. The workspace is updated
 eigenvf<-eigen(K_hat_R)
-lambda1<-eigenvf$values
+values<-eigenvf$values
 eigenft<-eigenvf$vectors
 
 # OBS: from the theory we know that only (N-1) eigenvalues are not null where N=number of 
@@ -61,18 +61,31 @@ eigenft<-eigenvf$vectors
 f_prova <- f.data$ausxSL$data[1,]
 
 x11()
-plot(t(importMatrix(res, type = c('SL', 'sx'), position = 'au'))[1,], type = "l", ylim = c(-1000, 1000), lwd=2)
-lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,0.1,lambda,eigenft), type = 'l', lwd=2, col = 'firebrick2')
-lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,1e+4,lambda,eigenft), type = 'l', lwd=2, col = 'blue')
-lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,1e+5,lambda,eigenft), type = 'l', lwd=2, col = 'forestgreen')
+plot(t(importMatrix(res, type = c('SL', 'sx'), position = 'au'))[1,], type = "l", ylim = range(f.data$ausxSL$data[1,]), lwd=2)
+lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,0.1,values,eigenft), type = 'l', lwd=2, col = 'firebrick2')
+lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,1e+4,values,eigenft), type = 'l', lwd=2, col = 'blue')
+lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,1e+5,values,eigenft), type = 'l', lwd=2, col = 'forestgreen')
 
 
 #### alpha-Mahalanobis distance calculation ####
 # Smoothed data
-alpha <- 0.1
+alpha <- 1e+5
 f.data_alpha <- matrix(0, nrow = 26, ncol = 1600)
 for (i in 1:26){
-  f.data_alpha[i,] <- f_alpha_approx(f.data$ausxSL$data[i,],alpha,lambda,eigenft)
+  f.data_alpha[i,] <- f_alpha_approx(f.data$ausxSL$data[i,],alpha,values,eigenft)
+}
+
+x11()
+par(mfrow = c(1,2))
+plot(f.data$ausxSL$argvals,f.data$ausxSL$data[1,], ylim = range(f.data$ausxSL$data) ,
+     type = 'l', lwd = 2, main = "DATA", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 2:26){
+  lines(f.data$ausxSL$argvals, f.data$ausxSL$data[i,], lwd = 2)
+}
+plot(f.data$ausxSL$argvals, f.data_alpha[1,], ylim = range(f.data$ausxSL$data), 
+     type = 'l', lwd = 2, main = 'SMOOTHED DATA', , xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 2:26){
+  lines(f.data$ausxSL$argvals, f.data_alpha[i,], lwd = 2)
 }
 
 
@@ -81,7 +94,7 @@ Mahalanobis_Distance <- matrix(0, nrow = 26, ncol = 26)
 for (i in 1:26){
   print(i)
   for (j in 1:26){
-    Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,f.data$ausxSL$data[i,],f.data$ausxSL$data[j,],lambda,eigenft)
+    Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,f.data$ausxSL$data[i,],f.data$ausxSL$data[j,],values,eigenft)
   }
 }
 
@@ -109,6 +122,8 @@ image.plot(1:26,1:26,Mahalanobis_Distance)
 time_red <- seq(1,1600,3)
 f.data_red <- f.data$ausxSL$data[,time_red]
 f.Data <- list('data' = f.data_red, 'argvals' = time_red)
+rm(time_red)
+rm(f.data_red)
 
 x11()
 plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data), type = 'l', lwd = 2, 
@@ -120,7 +135,8 @@ for (i in 2:26){
 K_hat_t <- cov(f.Data$data)
 eigen_t <- eigen(K_hat)
 
-max(eigenvf$values) == max(eigen_t$values)
+max(eigenvf$values)
+max(eigen_t$values)
 
 
 #### Transformation of data ####
@@ -160,7 +176,9 @@ c1 <- f.data_clust_2$centroids[1,]
 c2 <- f.data_clust_2$centroids[2,]
 
 data1 <- f.Data$data[which(c_opt_2=='1'),]
+rownames(data1) <- c(1:dim(data1)[1])
 data2 <- f.Data$data[which(c_opt_2=='2'),]
+rownames(data2) <- c(1:dim(data2)[1])
 
 ###### Plot #####
 x11()
@@ -170,12 +188,12 @@ for(i in 2:n){
   lines(f.Data$argvals,f.Data$data[i,],type = 'l',lwd = 2)
 }
 
-plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'gold', lwd = 2, main = "Uniform (fixed cov) k = 2")
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2, main = "Uniform (fixed cov) k = 2")
 for (i in 2:dim(data1)[1]){
-  lines(f.Data$argvals,data1[i,],type = 'l', col = 'gold',lwd = 2)
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
 for (i in 1:dim(data2)[1]){
-  lines(f.Data$argvals,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'dodgerblue3',lwd = 2)
 }
 lines(f.Data$argvals, c1, lwd = 3)
 lines(f.Data$argvals, c2, lwd = 3)
@@ -206,16 +224,16 @@ for(i in 2:n){
   lines(f.Data$argvals,f.Data$data[i,],type = 'l',lwd = 2)
 }
 
-plot(f.Data$argvals,data1, ylim = range(f.Data$data) ,type = 'l', col = 'gold', lwd = 2, main = "Uniform (fixed cov) k = 3")
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'dodgerblue3', lwd = 2, main = "Uniform (fixed cov) k = 3")
 # plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'gold', lwd = 2, main = "Uniform (fixed cov) k = 3")
 for (i in 2:dim(data1)[1]){
-  lines(f.Data$argvals,data1[i,],type = 'l', col = 'gold',lwd = 2)
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'dodgerblue3',lwd = 2)
 }
 for (i in 1:dim(data2)[1]){
   lines(f.Data$argvals,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
 }
 for (i in 1:dim(data3)[1]){
-  lines(f.Data$argvals,data3[i,],type = 'l', col = 'firebrick3',lwd = 2)
+  lines(f.Data$argvals,data3[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
 lines(f.Data$argvals, c1, lwd = 3)
 lines(f.Data$argvals, c2, lwd = 3)
@@ -258,39 +276,39 @@ lines(f.Data$argvals, c1, lwd = 3)
 lines(f.Data$argvals, c2, lwd = 3)
 
 ##### k = 3 ######
-f.data_clust_3 <- fda_clustering_mahalanobis_general(n_clust = 2, alpha = alpha,
-                                                     cov_matrix = cov(f.data$ausxSL$data),
-                                                     cov_type = 'updated', toll = 1e-2, 
-                                                     data = f.data$ausxSL$data)
-c_opt_3 <- f.data_clust_3$label
+f.data_clust_3up <- fda_clustering_mahalanobis_general(n_clust = 2, alpha = alpha,
+                                                       cov_matrix = cov(f.Data$data),
+                                                       cov_type = 'updated', toll = 1e-2, 
+                                                       data = f.Data$data)
+c_opt_3 <- f.data_clust_3up$label
 show(c_opt_3)
-show(f.data_clust_3$loss)
+show(f.data_clust_3up$loss)
 
-c1 <- f.data_clust_3$centroids[1,]
-c2 <- f.data_clust_3$centroids[2,]
-c3 <- f.data_clust_3$centroids[3,]
+c1 <- f.data_clust_3up$centroids[1,]
+c2 <- f.data_clust_3up$centroids[2,]
+c3 <- f.data_clust_3up$centroids[3,]
 
-data1 <- f.data$ausxSL$data[which(c_opt_3=='1'),]
-data2 <- f.data$ausxSL$data[which(c_opt_3=='2'),]
-data3 <- f.data$ausxSL$data[which(c_opt_3=='3'),]
+data1 <- f.Data$data[which(c_opt_3=='1'),]
+data2 <- f.Data$data[which(c_opt_3=='2'),]
+data3 <- f.Data$data[which(c_opt_3=='3'),]
 
 ###### Plot #####
 x11()
 par(mfrow = c(1,2))
-plot(time,f.data$ausxSL$data[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', lwd = 2, main = "Data")
+plot(f.Data$argvals, f.Data$data[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', lwd = 2, main = "Data")
 for(i in 2:n){
-  lines(time,f.data$ausxSL$data[i,],type = 'l',lwd = 2)
+  lines(f.Data$argvals, f.Data$data[i,],type = 'l',lwd = 2)
 }
 
-plot(time,data1[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', col = 'gold', lwd = 2, main = "Uniform k = 3")
+plot(f.Data$argvals, data1[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', col = 'gold', lwd = 2, main = "Uniform k = 3")
 for (i in 2:dim(data1)[1]){
-  lines(time,data1[i,],type = 'l', col = 'gold',lwd = 2)
+  lines(f.Data$argvals, data1[i,],type = 'l', col = 'gold',lwd = 2)
 }
 for (i in 1:dim(data2)[1]){
-  lines(time,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
+  lines(f.Data$argvals, data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
 }
 for (i in 1:dim(data3)[1]){
-  lines(time,data3[i,],type = 'l', col = 'firebrick3',lwd = 2)
+  lines(f.Data$argvals, data3[i,],type = 'l', col = 'firebrick3',lwd = 2)
 }
 
 
