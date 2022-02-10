@@ -837,9 +837,10 @@ posterior_pitmanyor <- function(n_clust, sigma, theta , lambda, label, loss, dat
 # Output: label -> optimal partition label vector
 #         centroids -> cluster centroids
 #         loss -> gibbs-loss value of optimal partition
-#         post -> Pitman-Yor posterior value of optimal partition
+#         posterior -> Pitman-Yor posterior value of optimal partition
+#         clusters_dim -> dimension of the clusters
 
-fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_matrix , toll, data){
+fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_matrix, data){
    
    t_points <- dim(data)[2]
    n <- dim(data)[1]
@@ -993,47 +994,105 @@ fda_clustering_pitmanyor <- function(n_clust, alpha, sigma, theta, lambda, cov_m
 }
 
 
-##### Clustering function (fixed covariance) overall  ####
+##### Clustering function overall  ####
 # This function just looks for the best partition over number_clusters given
-fda_clustering_pitmanyor_overall <- function (n_clust, nsimul, alpha, sigma, theta, lambda,cov_matrix, data){
+fda_clustering_pitmanyor_overall <- function (n_clust, nsimul, alpha, sigma, theta, lambda, cov_matrix, data){
    
    n_clust_vect <- 1:n_clust
    
    # Build matrix/vector to store the results of the simulations
    c_post_simul <- matrix(0, nrow=nsimul, ncol=dim(data)[1])
    post_value_simul <- rep(0, nsimul)
+   loss_value_simul <- rep(0, nsimul)
    
-   # Build matrix/vector to store the overall results
+   # Build matrix/vector to store the best result for each k
    post_value_kfixed <- rep(0,n_clust)
-   c_kfixed <- matrix(0,nrow=n_clust,ncol=dim(data)[1])
+   loss_value_kfixed <- rep(0,n_clust)
+   c_kfixed <- matrix(0, nrow=n_clust, ncol=dim(data)[1])
    
    for (k in 1:n_clust){
       for (j in 1:nsimul){
          writeLines(sprintf("%d iteration for cluster %d",j,k))
          
-         posterior_simul <- fda_clustering_pitmanyor(n_clust_vect[k], alpha, sigma, theta, lambda, cov_matrix , toll, data)
+         posterior_simul <- fda_clustering_pitmanyor(n_clust_vect[k], alpha, sigma, theta, lambda, cov_matrix , data)
          
          c_post_simul[j,] <- posterior_simul$label
          post_value_simul[j] <- posterior_simul$posterior
+         loss_value_simul[j] <- posterior_simul$loss
       }
       
       index_kfixed <- which.max(post_value_simul)
       post_value_kfixed[k] <- post_value_simul[index_kfixed]
-      c_kfixed[k,] <-c_post_simul[index_kfixed,]
+      loss_value_kfixed[k] <- loss_value_simul[index_kfixed]
+      c_kfixed[k,] <- c_post_simul[index_kfixed,]
    }
    
+   # To get the best overall result
    index_overall <- which.max(post_value_kfixed) #final number of clusters
    post_value_overall <- post_value_kfixed[index_overall]
+   loss_value_overall <- loss_value_kfixed[index_overall]
    c_overall <- c_kfixed[index_overall,]
    
+   # To recover the centroids
+   cluster_size_overall <-rep(0,index_overall)
    centroids_overall <- matrix(0, nrow = index_overall, ncol = dim(data)[2])
    for (h in 1:index_overall){
-      data_h <- data[which(c_overall == h),]
-      centroids_overall[h,] <- colMeans(data_h)
+      cluster_size_overall[h] <- sum(c_overall == h)
+      
+      if (cluster_size_overall[h] == 1){
+         centroids_overall[h,] <- data[which(c_overall == h),]
+      }
+      else{
+         data_h <- data[which(c_overall == h),]
+         centroids_overall[h,] <- colMeans(data_h)
+      }
    }
    
-   return(list("posterior_all_k" = post_value_kfixed ,"clusters_number" = index_overall,
+   return(list("posterior_all_k" = post_value_kfixed ,"clusters_number" = index_overall, "loss" = loss_value_overall,
                "posterior" = post_value_overall,"labels" = c_overall, "centroids" = centroids_overall))
+}
+
+##### Clustering function for a given k  ####
+# This function just looks for the best partition for a single k given
+fda_clustering_pitmanyor_kfixed <- function (n_clust, nsimul, alpha, sigma, theta, lambda, cov_matrix, data){
+   
+   # Build matrix/vector to store the results of the simulations
+   c_post_simul <- matrix(0, nrow=nsimul, ncol=dim(data)[1])
+   post_value_simul <- rep(0, nsimul)
+   loss_value_simul <- rep(0, nsimul)
+   
+   for (j in 1:nsimul){
+      writeLines(sprintf("%d iteration for cluster %d",j,n_clust))
+      
+      posterior_simul <- fda_clustering_pitmanyor(n_clust, alpha, sigma, theta, lambda, cov_matrix , data)
+      
+      c_post_simul[j,] <- posterior_simul$label
+      post_value_simul[j] <- posterior_simul$posterior
+      loss_value_simul[j] <- posterior_simul$loss
+   }
+   
+   # To get the best result over the simulations
+   index_k <- which.max(post_value_simul)
+   c_k <-c_post_simul[index_k,]
+   post_value_k <- post_value_simul[index_k]
+   loss_value_k <- loss_value_simul[index_k]
+   
+   # To recover the centroids
+   cluster_size_k <-rep(0,n_clust)
+   centroids_k <- matrix(0, nrow = n_clust, ncol = dim(data)[2])
+   for (h in 1:n_clust){
+      cluster_size_k[h] <- sum(c_k == h)
+      
+      if (cluster_size_k[h] == 1){
+         centroids_k[h,] <- data[which(c_k == h),]
+      }
+      else{
+         data_h <- data[which(c_k == h),]
+         centroids_k[h,] <- colMeans(data_h)
+      }
+   }
+   
+   return(list("loss" = loss_value_k, "posterior" = post_value_k,"labels" = c_k, "centroids" = centroids_k))
 }
 
 
