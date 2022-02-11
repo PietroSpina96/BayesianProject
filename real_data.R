@@ -252,7 +252,24 @@ library(tibble) # add_column()
 library(gridExtra) # grid.arrange()
 require(gtools) # combinations()
 
-
+# PLOT data + centroids
+plot1<-clusters_plot(f.Data$argvals, f.Data$data, c_opt_3) + labs(title="Clustered data") + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+plot2<-clusters_plot(f.Data$argvals, f.data_clust_3) + labs(title="Clusters centroids") + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+# grid.arrange(plot1,plot2,nrow=1)
+#
+# DO merge
+f.data_clust_3merge <- clusters_union(f.data_clust_3, data=f.Data$argvals)
+# create colors for plot1 knowing the successive merging
+colors1 <- rainbow(k)
+for(i in 1:k)
+  colors1[i] <- colors1[f.data_clust_3merge$v[i]]
+colors2 <- colors1 %>% unique
+# show both plots
+x11(width=10,height=6)
+plot1.m <- clusters_plot(f.Data$argvals, f.data_clust_3, colors1) + labs(title="Before merging") + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+plot2.m <- clusters_plot(f.Data$argvals, f.data_clust_3merge, colors2) + labs(title="After merging") + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+grid.arrange(plot1,plot2, plot1.m,plot2.m, nrow=2)
+#
 
 
 
@@ -302,17 +319,17 @@ f.data_clust_3up <- fda_clustering_mahalanobis_general(n_clust = 3, alpha = alph
                                                        cov_matrix = cov(f.Data$data),
                                                        cov_type = 'updated', toll = 1e-1, 
                                                        data = f.Data$data)
-c_opt_3 <- f.data_clust_3up$label
-show(c_opt_3)
+c_opt_3up <- f.data_clust_3up$label
+show(c_opt_3up)
 show(f.data_clust_3up$loss)
 
 c1 <- f.data_clust_3up$centroids[1,]
 c2 <- f.data_clust_3up$centroids[2,]
 c3 <- f.data_clust_3up$centroids[3,]
 
-data1 <- f.Data$data[which(c_opt_3=='1'),]
-data2 <- f.Data$data[which(c_opt_3=='2'),]
-data3 <- f.Data$data[which(c_opt_3=='3'),]
+data1 <- f.Data$data[which(c_opt_3up=='1'),]
+data2 <- f.Data$data[which(c_opt_3up=='2'),]
+data3 <- f.Data$data[which(c_opt_3up=='3'),]
 
 ###### Plot #####
 x11()
@@ -323,7 +340,7 @@ for(i in 2:n){
   lines(f.Data$argvals,f.Data$data[i,],type = 'l',lwd = 2)
 }
 
-plot(f.Data$argvals,data1, ylim = range(f.Data$data) ,type = 'l', col = 'dodgerblue3', lwd = 3, 
+plot(f.Data$argvals,data1, ylim = range(f.Data$data) ,type = 'l', col = 'dodgerblue3', lwd = 2, 
      main = "Uniform (updated cov) k = 3", xlab = 'time', ylab = 'EVOKED POTENTIAL')
 # plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'dodgerblue3', lwd = 2, 
 #      main = "Uniform (updated cov) k = 3", xlab = 'time', ylab = 'EVOKED POTENTIAL')
@@ -336,11 +353,36 @@ for (i in 1:dim(data2)[1]){
 for (i in 1:dim(data3)[1]){
   lines(f.Data$argvals,data3[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
-# lines(f.Data$argvals, c1, lwd = 3)
+lines(f.Data$argvals, c1, lwd = 5, col = 'dodgerblue3')
 lines(f.Data$argvals, c2, lwd = 3)
 lines(f.Data$argvals, c3, lwd = 3)
 
+##### Cluster merging #####
+library(ggplot2)
+library(dplyr) # pipe (%>%)
+library(tidyr) # gather()
+library(tibble) # add_column()
+library(gridExtra) # grid.arrange()
+require(gtools) # combinations()
 
+# PLOT data + centroids
+plot1<-clusters_plot(f.Data$argvals, f.Data$data, c_opt_3up) + labs(title="Clustered data") + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+plot2<-clusters_plot(f.Data$argvals, f.data_clust_3up) + labs(title="Clusters centroids") + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+# grid.arrange(plot1,plot2,nrow=1)
+#
+# DO merge
+f.data_clust_3upmerge <- clusters_union(f.data_clust_3up, data=f.Data$argvals)
+# create colors for plot1 knowing the successive merging
+colors1 <- rainbow(k)
+for(i in 1:k)
+  colors1[i] <- colors1[f.data_clust_3upmerge$v[i]]
+colors2 <- colors1 %>% unique
+# show both plots
+x11(width=10,height=6)
+plot1.m <- clusters_plot(f.Data$argvals, f.data_clust_3up, colors1) + labs(title="Before merging") + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+plot2.m <- clusters_plot(f.Data$argvals, f.data_clust_3upmerge, colors2) + labs(title="After merging") + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+grid.arrange(plot1,plot2, plot1.m,plot2.m, nrow=2)
+#
 
 
 
@@ -354,79 +396,6 @@ sigma <- 0.25
 theta <- 3.66
 lambda <- 0.75
 
-##### k = 2 ####
-f.data_clust_py_2 <- fda_clustering_pitmanyor(n_clust = 2, alpha, sigma, theta,
-                                       lambda, cov_matrix = cov(f.data$ausxSL$data), 
-                                       toll = 1e-10, data = f.data$ausxSL$data)
-
-c_opt_py_2 <- f.data_clust_py_2$label
-show(c_opt_py_2)
-show(f.data_clust_py_2$posterior)
-
-c1 <- f.data_clust_py_2$centroids[1,]
-c2 <- f.data_clust_py_2$centroids[2,]
-
-data1 <- f.data$ausxSL$data[which(c_opt_py_2=='1'),]
-data2 <- f.data$ausxSL$data[which(c_opt_py_2=='2'),]
-
-
-###### Plot #####
-
-x11()
-par(mfrow = c(1,2))
-plot(time,f.data$ausxSL$data[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', lwd = 2, main = "Data")
-for(i in 2:n){
-  lines(time,f.data$ausxSL$data[i,],type = 'l',lwd = 2)
-}
-
-plot(time,data1[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', col = 'gold', lwd = 2, main = "Pitman-Yor k = 2")
-for (i in 2:dim(data1)[1]){
-  lines(time,data1[i,],type = 'l', col = 'gold',lwd = 2)
-}
-for (i in 1:dim(data2)[1]){
-  lines(time,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
-}
-
-
-
-##### k = 3 #####
-
-f.data_clust_py_3 <- fda_clustering_pitmanyor(n_clust = 3, alpha, sigma, theta,
-                                              lambda, cov_matrix = cov(f.data$ausxSL$data), 
-                                              toll = 1e-10, data = f.data$ausxSL$data)
-c_opt_py_3 <- f.data_clust_py_3$label
-show(c_opt_py_3)
-show(f.data_clust_py_3$posterior)
-
-
-
-c1 <- f.data_clust_py_3$centroids[1,]
-c2 <- f.data_clust_py_3$centroids[2,]
-c3 <- f.data_clust_py_3$centroids[3,]
-
-data1 <- f.data$ausxSL$data[which(c_opt_py_3=='1'),]
-data2 <- f.data$ausxSL$data[which(c_opt_py_3=='2'),]
-data3 <- f.data$ausxSL$data[which(c_opt_py_3=='3'),]
-
-###### Plot #####
-x11()
-par(mfrow = c(1,2))
-plot(time,f.data$ausxSL$data[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', lwd = 2, main = "Data")
-for(i in 2:n){
-  lines(time,f.data$ausxSL$data[i,],type = 'l',lwd = 2)
-}
-
-plot(time,data1[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', col = 'gold', lwd = 2, main = "Pitman-Yor k = 3")
-for (i in 2:dim(data1)[1]){
-  lines(time,data1[i,],type = 'l', col = 'gold',lwd = 2)
-}
-# for (i in 1:dim(data2)[1]){
-#   lines(time,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
-# }
-lines(time,data2,type = 'l', col = 'forestgreen',lwd = 2)
-for (i in 1:dim(data3)[1]){
-  lines(time,data3[i,],type = 'l', col = 'firebrick3',lwd = 2)
-}
 
 
 
@@ -450,48 +419,6 @@ for (i in 1:dim(data3)[1]){
 
 
 
-
-
-
-
-
-
-#### CLUSTERING FUNCTION UPDATING COVARIANCE WITHIN CLUSTERS ####
-f.data.clust <- fda_clustering_mahalanobis_updated(n_clust = 2, alpha = 10000,
-                                                   cov_matrix = cov(f.data$ausxSL$data),
-                                                   toll = 1e-2, data = f.data$ausxSL$data)
-
-c_opt <- f.data.clust$label
-show(c_opt)
-show(f.data.clust$loss)
-
-c1 <- f.data.clust$centroids[1,]
-c2 <- f.data.clust$centroids[2,]
-#c3 <- f.data.clust$centroids[3,]
-#c4 <- clust$centroids[4,]
-
-
-data1 <- f.data$ausxSL$data[which(c_opt=='1'),]
-data2 <- f.data$ausxSL$data[which(c_opt=='2'),]
-#data3 <- f.data$ausxSL$data[which(c_opt=='3'),]
-
-x11()
-par(mfrow = c(1,2))
-plot(time,f.data$ausxSL$data[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', lwd = 2, main = "Data")
-for(i in 2:n){
-  lines(time,f.data$ausxSL$data[i,],type = 'l',lwd = 2)
-}
-
-plot(time,data1[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', col = 'gold', lwd = 2, main = "Clustered data")
-for (i in 2:dim(data1)[1]){
-  lines(time,data1[i,],type = 'l', col = 'gold',lwd = 2)
-}
-for (i in 1:dim(data2)[1]){
-  lines(time,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
-}
-for (i in 1:dim(data3)[1]){
-  lines(time,data3[i,],type = 'l', col = 'gold',lwd = 2)
-}
 
 
 ##### Save Workspace ####
