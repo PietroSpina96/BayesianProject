@@ -428,6 +428,16 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
          c_size1[k] <- sum(c_lab == k)
       }
       
+      # non-empty clusters
+      for (k in 1:n_clust){
+         if (c_size1[k] == 0){
+            writeLines(sprintf("Null dimension"))
+            n_hat <- sample(1:n,1)
+            c_lab[n_hat] <- k
+         }
+      }
+      c_size1 <- as.numeric(table(c_lab)) 
+      
       for (k in 1:n_clust){
          if (c_size1[k] > 1)
             centroids_mean[k,] <- colMeans(data[which(c_lab == k),])
@@ -468,7 +478,6 @@ fda_clustering_mahalanobis_updated <- function(n_clust, alpha, cov_matrix, toll,
                "loss" = loss_value2,
                "K" = n_clust))
 }
-
 #### CLUSTER ANALYSIS FUNCTIONS - - - - - - - - - - - - - - - - - - - - -  ####
 
 # compute distances between centroids (used in cluster merging)
