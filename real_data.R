@@ -258,10 +258,11 @@ plot2<-clusters_plot(f.Data$argvals, f.data_clust_3) + labs(title="Clusters cent
 # grid.arrange(plot1,plot2,nrow=1)
 #
 # DO merge
-f.data_clust_3merge <- clusters_union(f.data_clust_3, data=f.Data$argvals)
+f.data_clust_3merge <- clusters_union(f.data_clust_3, data=f.Data$data)
 # create colors for plot1 knowing the successive merging
-colors1 <- rainbow(k)
-for(i in 1:k)
+kk <- f.data_clust_3merge$v %>% length
+colors1 <- rainbow(kk)
+for(i in 1:kk)
   colors1[i] <- colors1[f.data_clust_3merge$v[i]]
 colors2 <- colors1 %>% unique
 # show both plots

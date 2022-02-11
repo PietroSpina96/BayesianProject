@@ -7,6 +7,7 @@ library(dplyr) # pipe (%>%)
 library(tidyr) # gather()
 library(tibble) # add_column()
 library(gridExtra) # grid.arrange()
+library(psych) # matrix trace tr()
 require(gtools) # combinations()
 # library(viridis) # color palette
 
@@ -489,7 +490,7 @@ centroids_dists <- function(centroids_mean,normtype='i',alpha){
   dists=matrix(0,max_clust,max_clust) #distances (with original k=max_clust)
   if(normtype=='m'){
      ## Mahalanobis distance
-     if(missing(alpha)) writeLines("ERROR: missing alpha input for Mahal. distance. Exiting.");return(dists)
+     if(missing(alpha)){writeLines("ERROR: missing alpha input for Mahal. distance. Exiting.");return(dists)}
      # compute eig
      eigc <- cov(centroids_mean) %>% eigen
      # compute distance
@@ -649,19 +650,17 @@ clusters_plot <- function(time, clust, cols){
                   geom_line(size=1) +
                   scale_color_manual(values=cols) +
                   labs(x="time",y="centroids")
-      
       theplot
    } else {
       # we're given data+labels: plot centroid (note: in this case clust===data)
       df <- clust %>% t() %>% as.data.frame() %>% 
          add_column(x=time) %>% gather(group, y, -x)
       
-      colsrep <- rep(cols,each=dim(data)[2]) %>% as.factor
+      colsrep <- rep(cols,each=dim(clust)[2]) %>% as.factor
       theplot <- ggplot(df, aes(x, y, color=colsrep, group=group)) + 
                   geom_line(size=1) +
                   scale_colour_manual(values=rainbow(cols%>%unique%>%length)) +
                   labs(x="time",y="clustered data")
-      
       theplot
    }
 }
