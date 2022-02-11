@@ -183,12 +183,14 @@ rownames(data2) <- c(1:dim(data2)[1])
 ###### Plot #####
 x11()
 par(mfrow = c(1,2))
-plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "Data")
+plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "Data", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL')
 for(i in 2:n){
   lines(f.Data$argvals,f.Data$data[i,],type = 'l',lwd = 2)
 }
 
-plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2, main = "Uniform (fixed cov) k = 2")
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2, 
+     main = "Uniform (fixed cov) k = 2", xlab = 'time', ylab = 'EVOKED POTENTIAL')
 for (i in 2:dim(data1)[1]){
   lines(f.Data$argvals,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
@@ -219,12 +221,14 @@ data3 <- f.Data$data[which(c_opt_3=='3'),]
 ###### Plot #####
 x11()
 par(mfrow = c(1,2))
-plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "Data")
+plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "Data",
+     xlab = 'time', ylab = 'EVOKED POTENTIAL')
 for(i in 2:n){
   lines(f.Data$argvals,f.Data$data[i,],type = 'l',lwd = 2)
 }
 
-plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'dodgerblue3', lwd = 2, main = "Uniform (fixed cov) k = 3")
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'dodgerblue3', lwd = 2, 
+     main = "Uniform (fixed cov) k = 3", xlab = 'time', ylab = 'EVOKED POTENTIAL')
 # plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'gold', lwd = 2, main = "Uniform (fixed cov) k = 3")
 for (i in 2:dim(data1)[1]){
   lines(f.Data$argvals,data1[i,],type = 'l', col = 'dodgerblue3',lwd = 2)
@@ -239,46 +243,64 @@ lines(f.Data$argvals, c1, lwd = 3)
 lines(f.Data$argvals, c2, lwd = 3)
 lines(f.Data$argvals, c3, lwd = 3)
 
+
+##### Cluster merging #####
+library(ggplot2)
+library(dplyr) # pipe (%>%)
+library(tidyr) # gather()
+library(tibble) # add_column()
+library(gridExtra) # grid.arrange()
+require(gtools) # combinations()
+
+
+
+
+
+
+
+
 #### Uniform prior with covariance updating within clusters ####
 
 ##### k = 2 ######
 
 f.data_clust_2up <- fda_clustering_mahalanobis_general(n_clust = 2, alpha = alpha,
                                                      cov_matrix = cov(f.Data$data),
-                                                     cov_type = 'updated', toll = 1e-2, 
+                                                     cov_type = 'updated', toll = 1e-1, 
                                                      data = f.Data$data)
-c_opt_2 <- f.data_clust_2up$label
-show(c_opt_2)
+c_opt_2up <- f.data_clust_2up$label
+show(c_opt_2up)
 show(f.data_clust_2up$loss)
 
 c1 <- f.data_clust_2up$centroids[1,]
 c2 <- f.data_clust_2up$centroids[2,]
 
-data1 <- f.Data$data[which(c_opt_2=='1'),]
-data2 <- f.Data$data[which(c_opt_2=='2'),]
+data1 <- f.Data$data[which(c_opt_2up=='1'),]
+data2 <- f.Data$data[which(c_opt_2up=='2'),]
 
 ###### Plot #####
 x11()
 par(mfrow = c(1,2))
-plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "Data")
+plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "Data", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL')
 for(i in 2:n){
   lines(f.Data$argvals,f.Data$data[i,],type = 'l',lwd = 2)
 }
 
-plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'gold', lwd = 2, main = "Uniform (fixed cov) k = 2")
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2, 
+     main = "Uniform (updated cov) k = 2", xlab = 'time', ylab = 'EVOKED POTENTIAL')
 for (i in 2:dim(data1)[1]){
-  lines(f.Data$argvals,data1[i,],type = 'l', col = 'gold',lwd = 2)
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
 for (i in 1:dim(data2)[1]){
-  lines(f.Data$argvals,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'dodgerblue3',lwd = 2)
 }
 lines(f.Data$argvals, c1, lwd = 3)
 lines(f.Data$argvals, c2, lwd = 3)
 
 ##### k = 3 ######
-f.data_clust_3up <- fda_clustering_mahalanobis_general(n_clust = 2, alpha = alpha,
+f.data_clust_3up <- fda_clustering_mahalanobis_general(n_clust = 3, alpha = alpha,
                                                        cov_matrix = cov(f.Data$data),
-                                                       cov_type = 'updated', toll = 1e-2, 
+                                                       cov_type = 'updated', toll = 1e-1, 
                                                        data = f.Data$data)
 c_opt_3 <- f.data_clust_3up$label
 show(c_opt_3)
@@ -295,23 +317,28 @@ data3 <- f.Data$data[which(c_opt_3=='3'),]
 ###### Plot #####
 x11()
 par(mfrow = c(1,2))
-plot(f.Data$argvals, f.Data$data[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', lwd = 2, main = "Data")
+plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "Data",
+     xlab = 'time', ylab = 'EVOKED POTENTIAL')
 for(i in 2:n){
-  lines(f.Data$argvals, f.Data$data[i,],type = 'l',lwd = 2)
+  lines(f.Data$argvals,f.Data$data[i,],type = 'l',lwd = 2)
 }
 
-plot(f.Data$argvals, data1[1,], ylim = range(f.data$ausxSL$data) ,type = 'l', col = 'gold', lwd = 2, main = "Uniform k = 3")
-for (i in 2:dim(data1)[1]){
-  lines(f.Data$argvals, data1[i,],type = 'l', col = 'gold',lwd = 2)
-}
+plot(f.Data$argvals,data1, ylim = range(f.Data$data) ,type = 'l', col = 'dodgerblue3', lwd = 3, 
+     main = "Uniform (updated cov) k = 3", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+# plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'dodgerblue3', lwd = 2, 
+#      main = "Uniform (updated cov) k = 3", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+# for (i in 2:dim(data1)[1]){
+#   lines(f.Data$argvals,data1[i,],type = 'l', col = 'dodgerblue3',lwd = 2)
+# }
 for (i in 1:dim(data2)[1]){
-  lines(f.Data$argvals, data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
 }
 for (i in 1:dim(data3)[1]){
-  lines(f.Data$argvals, data3[i,],type = 'l', col = 'firebrick3',lwd = 2)
+  lines(f.Data$argvals,data3[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
-
-
+# lines(f.Data$argvals, c1, lwd = 3)
+lines(f.Data$argvals, c2, lwd = 3)
+lines(f.Data$argvals, c3, lwd = 3)
 
 
 
