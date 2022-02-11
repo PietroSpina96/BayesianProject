@@ -487,7 +487,7 @@ centroids_dists <- function(centroids_mean,normtype='i',alpha){
   writeLines(sprintf("Calculating clusters' centroids distances... [ using '%s' norm ]",normtype))
   max_clust <- dim(centroids_mean)[1]
   dists=matrix(0,max_clust,max_clust) #distances (with original k=max_clust)
-  if(normtype='m'){
+  if(normtype=='m'){
      ## Mahalanobis distance
      if(missing(alpha)) writeLines("ERROR: missing alpha input for Mahal. distance. Exiting.");return(dists)
      # compute eig
