@@ -30,7 +30,7 @@ prob_i_k <- function(obs_index, clust_index, Ci, data, lambda, alpha, verbose=FA
   x_k = data[idx_k,]
   
   #update covariance eigs
-  eig = eigen(cov(x_k))
+  eig = eigen(cov(x_k)) #not efficient here but the code is easier to write and more readable
   
   if(length(idx_k)>1) #i.e. at least 2 observations
     centroid = colMeans(x_k)
