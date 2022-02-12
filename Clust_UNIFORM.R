@@ -61,7 +61,7 @@ k <- 2
 alpha <- 0.1
 
 clust <- fda_clustering_mahalanobis_general(n_clust = k, alpha = alpha,
-                                            cov_matrix = K_1, cov_type = 'fixed',
+                                            cov_matrix = cov(data), cov_type = 'updated',
                                             toll = 1e-2,  data = data)
 c_opt <- clust$label
 show(c_opt)  #label switching 
@@ -81,17 +81,52 @@ data3 <- data[which(c_opt=='3'),]
 # Plot 
 x11()
 par(mfrow = c(1,2))
-plot(time,data[1,],type = 'l', ylim = c(-3.5,9), lwd = 2, col='black',main = "Main and contaminated processes")
-for(i in 2:(n1)){
+plot(time,data[1,],type = 'l', ylim = c(-3.5,9), lwd = 2, col='black',main = "Main and contaminated processes", ylab='Data',xlab='Time')
+for(i in 2:(n-c)){
+  lines(time,data[i,],type = 'l', col = 'black',lwd = 2)
+}
+for (i in (n-c+1):n){
+  lines(time,data[i,],type = 'l', col = 'black', lwd = 2)
+}
+#legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2'),fill=c('blue','firebrick2'),x.intersp=0.3,
+       #text.col=c('blue','firebrick2'))
+
+plot(time,data1[1,],type = 'l', ylim = c(-3.5,9), col = 'firebrick2', lwd = 2, main = "Clustered data",ylab='Data',xlab='Time')
+for (i in 2:dim(data1)[1]){
+  lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in 1:dim(data2)[1]){
+  lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
+}
+# for (i in 1:dim(data3)[1]){
+#  lines(time,data3[i,],type = 'l', col = 'forestgreen',lwd = 2)
+# }
+# for (i in 1:dim(data4)[1]){
+#  lines(time,data4[i,],type = 'l', col = 'lightcyan',lwd = 2)
+# }
+lines(time,c1,type = 'l', lwd = 3)
+lines(time,c2,type = 'l', lwd = 3)
+# lines(time,c3,type = 'l', lwd = 3)
+# lines(time,c4,type = 'l', lwd = 3)
+
+#legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2','Centroids'),fill=c('blue','firebrick2','black'),x.intersp=0.3,
+       #text.col=c('blue','firebrick2','black'))
+legend(x=0.6,y=9.5,ncol=1,box.lwd=1,legend=c('Main process','Contaminated process','Centroids'),fill=c('blue','firebrick2','black'),x.intersp=0.3,
+       text.col=c('blue','firebrick2','black'))
+
+x11()
+par(mfrow = c(1,2))
+plot(time,data[1,],type = 'l', ylim = c(-3.5,9), lwd = 2, col='black',main = "Main and contaminated processes", ylab='Data',xlab='Time')
+for(i in 2:n1){
   lines(time,data[i,],type = 'l', col = 'black',lwd = 2)
 }
 for (i in (n1+1):n){
   lines(time,data[i,],type = 'l', col = 'black', lwd = 2)
 }
-# legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2'),fill=c('blue','firebrick2'),x.intersp=0.3,
+#legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2'),fill=c('blue','firebrick2'),x.intersp=0.3,
        #text.col=c('blue','firebrick2'))
 
-plot(time,data1[1,],type = 'l', ylim = c(-3.5,9), col = 'firebrick2', lwd = 2, main = "Clustered data")
+plot(time,data1[1,],type = 'l', ylim = c(-3.5,9), col = 'firebrick2', lwd = 2, main = "Clustered data",ylab='Data',xlab='Time')
 for (i in 2:dim(data1)[1]){
   lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
@@ -110,10 +145,11 @@ lines(time,c2,type = 'l', lwd = 3)
 # lines(time,c3,type = 'l', lwd = 3)
 # lines(time,c4,type = 'l', lwd = 3)
 
-#legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2','Centroids'),fill=c('blue','firebrick2','black'),x.intersp=0.3,
-       #text.col=c('blue','firebrick2','black'))
-legend(x=0.6,y=9.5,ncol=1,box.lwd=1,legend=c('Main process','Contaminated process','Centroids'),fill=c('firebrick2','blue','black'),x.intersp=0.3,
+legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2','Centroids'),fill=c('firebrick2','blue','black'),x.intersp=0.3,
        text.col=c('firebrick2','blue','black'))
+#legend(x=0.65,y=9.5,ncol=1,box.lwd=1,legend=c('Main process','Contaminated process','Centroids'),fill=c('firebrick2','blue','black'),x.intersp=0.3,
+       #text.col=c('firebrick2','blue','black'))
+
 
 
 rm(data1)
@@ -179,56 +215,3 @@ data3 <- data[which(c_opt=='3'),]
 
 
 
-#### FUNCTIONS THAT COULD BE USED ####
-
-# flag <- 1
-# while (flag <= n_clust) {
-#   
-#   data_k <- data[which(c_lab==flag),]
-#   eig <- eigen(cov(data_k))
-#   eig_dynamic <- paste0("eig_", flag)
-#   assign(eig_dynamic, eig, .GlobalEnv)
-#   flag <- flag + 1
-#   
-# }
-
-
-# Plots
-# Simulated  data plot for model 1,2,3
-# x11()
-# plot(time,data[1,],type = 'l', ylim = c(-3.5,7.5), col = 'firebrick2', lwd = 2)
-# for(i in 2:(n-c)){
-#   lines(time,data[i,],type = 'l', col = 'firebrick2',lwd = 2)
-# }
-# for (i in (n-c+1):n){
-#   lines(time,data[i,],type = 'l', col = 'blue', lwd = 2)
-# }
-# title('Simulated data')
-
-# # Theoretical optimal plot vs clustering plot SMOOTHED 
-# data1 <- f.data_alpha_sim[which(c_opt=='1'),]
-# data2 <- f.data_alpha_sim[which(c_opt=='2'),]
-# 
-# x11()
-# par(mfrow = c(1,2))
-# 
-# plot(time,f.data_alpha_sim[1,],type = 'l', ylim = c(-3,7.5), col = 'firebrick2', lwd = 2, main = "Smooth processes")
-# for(i in 2:(n-c)){
-#   lines(time,f.data_alpha_sim[i,],type = 'l', col = 'firebrick2',lwd = 2)
-# }
-# for (i in (n-c+1):n){
-#   lines(time,f.data_alpha_sim[i,],type = 'l', col = 'blue', lwd = 2)
-# }
-# 
-# plot(time,data1[1,],type = 'l', ylim = c(-3,7.5), col = 'firebrick2', lwd = 2, main = "Clustered smoothed data")
-# for (i in 2:dim(data1)[1]){
-#   lines(time,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
-# }
-# for (i in 1:dim(data2)[1]){
-#   lines(time,data2[i,],type = 'l', col = 'blue',lwd = 2)
-# }
-# lines(time,f_alpha_approx(c1,alpha,eig$values,eig$vectors),type = 'l', lwd = 4)
-# lines(time,f_alpha_approx(c2,alpha,eig$values,eig$vectors),type = 'l', lwd = 4)
-# 
-# rm(data1)
-# rm(data2)
