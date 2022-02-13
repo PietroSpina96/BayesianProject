@@ -42,14 +42,14 @@ prob_i_k <- function(obs_index, clust_index, Ci, data, lambda, alpha, verbose=FA
   
   x_k = data[idx_k,]
   
-  #update covariance eigs
-  eig = eigen(cov(x_k))
   
   if(length(idx_k)>1) #i.e. at least 2 observations
     centroid = colMeans(x_k)
   else
     return(-1) # if it's the only observation it can't be reallocated
   
+  #update covariance eigs
+  eig = eigen(cov(x_k))
   
   start_time <- Sys.time()
   disc_in = discrepancy_within(x_k, centroid, alpha, eig)
