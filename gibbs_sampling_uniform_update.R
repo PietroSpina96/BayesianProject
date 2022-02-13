@@ -143,26 +143,28 @@ for(ii in c(95,96,97,98,99,100))
   c_opt_test[ii]=1
 c_opt_test
 
-Ci <- gibbs_sampler(5, 1, c_opt_test, data, 1, alpha, 2, verbose = T)
-
-
+#test run
+Ci <- gibbs_sampler(10, 1, c_opt, data, 1, alpha, 2, verbose = T)
 
 #actual run
-Ci <- gibbs_sampler(10000, 1000, c_opt, data, 1, alpha, eigen(K_1), 0.25, verbose = T)
+Ci <- gibbs_sampler(8000, 800, c_opt, data, 1, alpha, 2, verbose = T)
 
 
-save(Ci, file="indexes_Ci_uniform_lambda1.RData")
+save(Ci, file="indexes_Ci_uniform_lambda1_updated.RData")
 
 save.image("chain_Ci_data1_uniform.RData")
 
-#### ANLAYSIS OF THE CHAIN
+#### ANALYSIS OF THE CHAIN
+load("indexes_Ci_uniform_lambda1_alpha1e4_k2_realData.RData")
+load("indexes_Ci_uniform_lambda1_updated.RData")
 
+library(NPflow)
+library(mcclust)
 
 df <- list()
 for(ii in 1:dim(Ci)[1]){
   df[[ii]] <- Ci[ii,]
 }
-
 
 S=similarityMat(df)
 
@@ -178,11 +180,36 @@ binder(Ci,S)
 
 BL2=cluster_est_binder(data.frame(t(Ci)),log(S))
 
-BL2$c_est
+indicii = BL2$c_est
+
+gruppo1 <- which(indicii == 1)
+gruppo2 <- which(indicii == 2)
+
+x11()
+par(mfrow = c(1,2))
+plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "Data", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for(i in 2:n){
+  lines(f.Data$argvals,f.Data$data[i,],type = 'l',lwd = 2)
+}
+
+plot(f.Data$argvals,f.Data$data[gruppo1[1],], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick3', lwd = 2, 
+     main = "Uniform (fixed cov) k = 2", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 2:length(gruppo1)){
+  lines(f.Data$argvals,f.Data$data[gruppo1[i],],type = 'l', col = 'firebrick3',lwd = 2)
+}
+for (i in 1:length(gruppo2)){
+  lines(f.Data$argvals,f.Data$data[gruppo2[i],],type = 'l', col = 'dodgerblue3',lwd = 2)
+}
+
+c1 = colMeans(f.Data$data[gruppo1,])
+c1 = colMeans(f.Data$data[gruppo2,])
+
+lines(f.Data$argvals, c1, lwd = 3)
+lines(f.Data$argvals, c2, lwd = 3)
 
 
-library(NPflow)
-library(mcclust)
+
 
 S2=similarityMat(data.frame(t(Ci)))
 
