@@ -150,7 +150,7 @@ gibbs_sampler <- function(N, N_burnin, x0, data, lambda, alpha, k, verbose = F){
 }
 
 #RUN DI PROVA
-Ci <- gibbs_sampler(2, 1, c_opt_2, f.Data$data, 1, 1e4, 2, verbose = T)
+Ci <- gibbs_sampler(2, 1, c_opt_2, f.Data$data, 1, 1e4, 3, verbose = T)
 
 #VERA RUN
 
