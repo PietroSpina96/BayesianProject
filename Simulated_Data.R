@@ -522,7 +522,6 @@ time45 <- time
 
 
 ##### DATA SIMULATION - MODEL 5 ####
-# Beraha ha chiesto nuovi dati che abbiano media simile ma cov diverse così da testare la funzione_updated
 n <- 100
 n1 <- 40
 
@@ -567,12 +566,12 @@ random5_process_cluster <- rbind(random5_process_cluster_1,random5_process_clust
 
 cluster5_1 <- function(t,points){
   X <- rep(0,points)
-  X[t] <- sin(t)
+  X[t] <- sin(t) + 3
 }
 
 cluster5_2 <- function(t,points){
   X <- rep(0,points)
-  X[t] <- cos(t) + 0.5
+  X[t] <- cos(t) 
 }
 #X[t] <- cos(t) + 0.5
 #X[t] <- sin(t) + 5
@@ -595,7 +594,7 @@ mean_c2 <- colMeans(data5[(n1+1):n,])
 
 # Simulated data plot
 x11()
-plot(time,data5[1,],type = 'l', ylim = c(-5,10), col = 'blue', lwd = 2,xlab='Time',ylab='Values')
+plot(time,data5[1,],type = 'l', ylim = c(-5,10), col = 'blue', lwd = 2,xlab='Time',ylab='Data')
 for(i in 2:n1){
   lines(time,data5[i,],type = 'l', col = 'blue',lwd = 2)
 }
@@ -604,7 +603,7 @@ for (i in (n1 + 1):n){
 }
 lines(time,mean_c1,col='black',lwd = 2)
 lines(time,mean_c2,col='black',lwd = 2)
-title('Simulated data 5')
+title('Simulated data 3')
 legend("topright",ncol=1,box.lwd=1,legend=c('Process 1','Process 2','Means'),fill=c('blue','firebrick2','black'),x.intersp=0.3,
        text.col=c('blue','firebrick2','black'))
 
