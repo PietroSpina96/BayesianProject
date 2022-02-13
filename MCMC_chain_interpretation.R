@@ -126,6 +126,7 @@ f.Data <- list('data' = f.data_red, 'argvals' = time_red, 'clinical' = data)
 rm(time_red)
 rm(f.data_red)
 
+load("indexes_Ci_uniform_lambda1_alpha1e4_k2_realData.RData")
 
 BL2=cluster_est_binder(data.frame(t(Ci)))
 
