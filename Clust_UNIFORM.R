@@ -124,7 +124,7 @@ for (i in (n1+1):n){
   lines(time,data[i,],type = 'l', col = 'black', lwd = 2)
 }
 #legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2'),fill=c('blue','firebrick2'),x.intersp=0.3,
-       #text.col=c('blue','firebrick2'))
+#text.col=c('blue','firebrick2'))
 
 plot(time,data1[1,],type = 'l', ylim = c(-3.5,9), col = 'firebrick2', lwd = 2, main = "Clustered data",ylab='Data',xlab='Time')
 for (i in 2:dim(data1)[1]){
@@ -148,7 +148,7 @@ lines(time,c2,type = 'l', lwd = 3)
 legend(x=0.75,y=9.5,ncol=1,box.lwd=1,legend=c('Process 1','Process 2','Centroids'),fill=c('firebrick2','blue','black'),x.intersp=0.3,
        text.col=c('firebrick2','blue','black'))
 #legend(x=0.65,y=9.5,ncol=1,box.lwd=1,legend=c('Main process','Contaminated process','Centroids'),fill=c('firebrick2','blue','black'),x.intersp=0.3,
-       #text.col=c('firebrick2','blue','black'))
+#text.col=c('firebrick2','blue','black'))
 
 
 
