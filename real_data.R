@@ -57,50 +57,6 @@ eigenft<-eigenvf$vectors
 # statistical units. Here we have N=26 and 25 not null eigenvalues.
 #lambda[1:26]
 
-# prova dell'approssimazione con una funzione f presa dal dataset.
-f_prova <- f.data$ausxSL$data[1,]
-
-x11()
-plot(t(importMatrix(res, type = c('SL', 'sx'), position = 'au'))[1,], type = "l", ylim = range(f.data$ausxSL$data[1,]), lwd=2)
-lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,0.1,values,eigenft), type = 'l', lwd=2, col = 'firebrick2')
-lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,1e+4,values,eigenft), type = 'l', lwd=2, col = 'blue')
-lines(f.data$ausxSL$argvals, f_alpha_approx(f_prova,1e+5,values,eigenft), type = 'l', lwd=2, col = 'forestgreen')
-
-
-#### alpha-Mahalanobis distance calculation ####
-# Smoothed data
-alpha <- 1e+5
-f.data_alpha <- matrix(0, nrow = 26, ncol = 1600)
-for (i in 1:26){
-  f.data_alpha[i,] <- f_alpha_approx(f.data$ausxSL$data[i,],alpha,values,eigenft)
-}
-
-x11()
-par(mfrow = c(1,2))
-plot(f.data$ausxSL$argvals,f.data$ausxSL$data[1,], ylim = range(f.data$ausxSL$data) ,
-     type = 'l', lwd = 2, main = "DATA", xlab = 'time', ylab = 'EVOKED POTENTIAL')
-for (i in 2:26){
-  lines(f.data$ausxSL$argvals, f.data$ausxSL$data[i,], lwd = 2)
-}
-plot(f.data$ausxSL$argvals, f.data_alpha[1,], ylim = range(f.data$ausxSL$data), 
-     type = 'l', lwd = 2, main = 'SMOOTHED DATA', , xlab = 'time', ylab = 'EVOKED POTENTIAL')
-for (i in 2:26){
-  lines(f.data$ausxSL$argvals, f.data_alpha[i,], lwd = 2)
-}
-
-
-# alpha-Mahalanobis distance matrix 
-Mahalanobis_Distance <- matrix(0, nrow = 26, ncol = 26)
-for (i in 1:26){
-  print(i)
-  for (j in 1:26){
-    Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,f.data$ausxSL$data[i,],f.data$ausxSL$data[j,],values,eigenft)
-  }
-}
-
-x11()
-image.plot(1:26,1:26,Mahalanobis_Distance)
-
 # Useless
 # # prova
 # kernel_estimator(f.data$ausxSL$data,X_bar,n,1,9,t_points) 
@@ -121,7 +77,7 @@ image.plot(1:26,1:26,Mahalanobis_Distance)
 
 time_red <- seq(1,1600,3)
 f.data_red <- f.data$ausxSL$data[,time_red]
-f.Data <- list('data' = f.data_red, 'argvals' = time_red)
+f.Data <- list('data' = f.data_red, 'argvals' = time_red, 'clinical' = data)
 rm(time_red)
 rm(f.data_red)
 
@@ -133,32 +89,61 @@ for (i in 2:26){
 }
 
 K_hat_t <- cov(f.Data$data)
-eigen_t <- eigen(K_hat)
+eigen_t <- eigen(K_hat_t)
 
 max(eigenvf$values)
 max(eigen_t$values)
 
 
-#### Transformation of data ####
-
-f.data_t <- list('data' = f.data$ausxSL$data, 'argvals' = f.data$ausxSL$argvals)
-scale <- max(max(f.data_t$data),abs(min(f.data_t$data)))
-f.data_t$data <- f.data_t$data/scale
+##### alpha-Mahalanobis distance calculation ####
+# Setting alpha
+f_prova <- f.Data$data[10,]
 
 x11()
-plot(f.data_t$argvals,f.data_t$data[1,], ylim = c(-1.05,1.05), type = 'l', lwd = 2, 
-     xlab = 'time', ylab = 'EVOKED PONTENTIAL')
-for (i in 2:26){
-  lines(f.data_t$argvals,f.data_t$data[i,], lwd = 2)
+plot(f.Data$argvals, f_prova, type = "l", ylim = range(f_prova), lwd=2)
+lines(f.Data$argvals, f_alpha_approx(f_prova,1e+3,eigen_t$values,eigen_t$vectors), 
+      type = 'l', lwd=2, col = 'firebrick2')
+lines(f.Data$argvals, f_alpha_approx(f_prova,1e+4,eigen_t$values,eigen_t$vectors), 
+      type = 'l', lwd=2, col = 'blue')
+lines(f.Data$argvals, f_alpha_approx(f_prova,1e+5,eigen_t$values,eigen_t$vectors), 
+      type = 'l', lwd=2, col = 'forestgreen')
+
+
+
+# Smoothed data
+alpha <- 1e+4
+f.data_alpha <- matrix(0, nrow = 26, ncol = 534)
+for (i in 1:26){
+  f.data_alpha[i,] <- f_alpha_approx(f.Data$data[i,],alpha,eigen_t$values,eigen_t$vectors)
 }
 
-K_hat_t <- cov(f.data_t$data)
-eigen_t <- eigen(K_hat_R)
-lambda_t <- eigenvf$values
-max(lambda_t)
-eigenf_t <- eigenvf$vectors
+x11()
+par(mfrow = c(1,2))
+plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data) ,
+     type = 'l', lwd = 2, main = "DATA", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 2:26){
+  lines(f.Data$argvals, f.Data$data[i,], lwd = 2)
+}
+plot(f.Data$argvals, f.data_alpha[1,], ylim = range(f.Data$data), 
+     type = 'l', lwd = 2, main = 'SMOOTHED DATA', , xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 2:26){
+  lines(f.Data$argvals, f.data_alpha[i,], lwd = 2)
+}
 
-max(eigen_t$values) == max(eigenvf$values)
+
+# alpha-Mahalanobis distance matrix 
+Mahalanobis_Distance <- matrix(0, nrow = 26, ncol = 26)
+for (i in 1:26){
+  print(i)
+  for (j in 1:26){
+    Mahalanobis_Distance[i,j] <- alpha_Mahalanobis(alpha,f.Data$data[i,],
+                                                   f.Data$data[j,],eigen_t$values,
+                                                   eigen_t$vectors)
+  }
+}
+
+x11()
+image.plot(1:26,1:26,Mahalanobis_Distance)
 
 #### Uniform prior with fixed covariance ####
 
@@ -189,10 +174,10 @@ for(i in 2:n){
   lines(f.Data$argvals,f.Data$data[i,],type = 'l',lwd = 2)
 }
 
-plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2, 
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick3', lwd = 2, 
      main = "Uniform (fixed cov) k = 2", xlab = 'time', ylab = 'EVOKED POTENTIAL')
 for (i in 2:dim(data1)[1]){
-  lines(f.Data$argvals,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'firebrick3',lwd = 2)
 }
 for (i in 1:dim(data2)[1]){
   lines(f.Data$argvals,data2[i,],type = 'l', col = 'dodgerblue3',lwd = 2)
@@ -393,9 +378,20 @@ grid.arrange(plot1,plot2, plot1.m,plot2.m, nrow=2)
 #### Pitman-Yor EPPF Prior ####
 
 alpha <- alpha
-sigma <- 0.25
+sigma <- 0.75
 theta <- 3.66
-lambda <- 0.75
+lambda <- 1
+
+f.data_clust_py <- fda_clustering_pitmanyor_overall(n_clust = 5, nsimul = 10, alpha = alpha, 
+                                                    sigma = sigma, theta = theta, lambda = lambda,
+                                                    cov_matrix = cov(f.Data$data), data = f.Data$data)
+
+f.data_clust_py$posterior_all_k
+f.data_clust_py$posterior
+f.data_clust_py$clusters_number
+f.data_clust_py$loss
+c_opt_py <- f.data_clust_py$labels
+show(c_opt_py)
 
 
 
@@ -403,26 +399,429 @@ lambda <- 0.75
 
 
 
+#### Clinical relevancy #####
+
+##### GOSE ####
+
+gose1 <- f.Data$data[which(f.Data$clinical$GOSE == '1'),]
+gose2 <- f.Data$data[which(f.Data$clinical$GOSE == '2'),]
+index_gose1 <- which(f.Data$clinical$GOSE == 1)
+
+###### k = 2 Uniform prior with fixed covariance structure ####
+
+data1 <- f.Data$data[which(c_opt_2=='1'),]
+data2 <- f.Data$data[which(c_opt_2=='2'),]
+
+show(c_opt_2)
+show(f.Data$clinical$GOSE)
+show(c_opt_2[index_gose1]) # brutto
+show(c_opt_2[-index_gose1])
+
+x11()
+par(mfrow = c(1,2))
+plot(f.Data$argvals, gose2[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "GOSE", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL', col = 'grey')
+for(i in 2:dim(gose2)[1]){
+  lines(f.Data$argvals, gose2[i,], type = 'l', lwd = 2, col = 'grey')
+}
+for(i in 1:dim(gose1)[1]){
+  lines(f.Data$argvals, gose1[i,], type = 'l', lwd = 2, col = 'firebrick2')
+}
+
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2, 
+     main = "Uniform (fixed cov) k = 2", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 2:dim(data1)[1]){
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in 1:dim(data2)[1]){
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'grey',lwd = 2)
+}
+
+
+###### k = 3 Uniform prior with fixed covariance structure #####
+
+data1 <- f.Data$data[which(c_opt_3=='1'),]
+data2 <- f.Data$data[which(c_opt_3=='2'),]
+data3 <- f.Data$data[which(c_opt_3=='3'),]
+
+show(c_opt_3)
+show(f.Data$clinical$GOSE)
+show(c_opt_3[index_gose1]) # bruttissimo 
+show(c_opt_3[-index_gose1])
+
+x11()
+par(mfrow = c(1,2))
+plot(f.Data$argvals, gose2[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "GOSE", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL', col = 'grey')
+for(i in 2:dim(gose2)[1]){
+  lines(f.Data$argvals, gose2[i,], type = 'l', lwd = 2, col = 'grey')
+}
+for(i in 1:dim(gose1)[1]){
+  lines(f.Data$argvals, gose1[i,], type = 'l', lwd = 2, col = 'firebrick2')
+}
+
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'grey', lwd = 2, 
+     main = "Uniform (fixed cov) k = 3", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 2:dim(data1)[1]){
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'grey',lwd = 2)
+}
+for (i in 1:dim(data2)[1]){
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in 1:dim(data3)[1]){
+  lines(f.Data$argvals,data3[i,],type = 'l', col = 'orange2',lwd = 2)
+}
+
+
+###### k = 2 Uniform prior with updating covariance within clusters #####
+
+data1 <- f.Data$data[which(c_opt_2up=='1'),]
+data2 <- f.Data$data[which(c_opt_2up=='2'),]
+
+show(c_opt_2up)
+show(f.Data$clinical$GOSE)
+show(c_opt_2up[index_gose1]) # brutto
+show(c_opt_2up[-index_gose1]) 
+
+x11()
+par(mfrow = c(1,2))
+plot(f.Data$argvals, gose2[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "GOSE", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL', col = 'grey')
+for(i in 2:dim(gose2)[1]){
+  lines(f.Data$argvals, gose2[i,], type = 'l', lwd = 2, col = 'grey')
+}
+for(i in 1:dim(gose1)[1]){
+  lines(f.Data$argvals, gose1[i,], type = 'l', lwd = 2, col = 'firebrick2')
+}
+
+plot(f.Data$argvals,data2[1,], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2, 
+     main = "Uniform (updated cov) k = 2", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 2:dim(data2)[1]){
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in 1:dim(data1)[1]){
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'grey',lwd = 2)
+}
+
+
+###### k = 3 Uniform prior with updating covariance within clusters ####
+
+data1 <- f.Data$data[which(c_opt_3up=='1'),]
+data2 <- f.Data$data[which(c_opt_3up=='2'),]
+data3 <- f.Data$data[which(c_opt_3up=='3'),]
+
+show(c_opt_3up)
+show(f.Data$clinical$GOSE)
+show(c_opt_3up[index_gose1]) # bruttissimo 
+show(c_opt_3up[-index_gose1])
+
+x11()
+par(mfrow = c(1,2))
+plot(f.Data$argvals, gose2[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "GOSE", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL', col = 'grey')
+for(i in 2:dim(gose2)[1]){
+  lines(f.Data$argvals, gose2[i,], type = 'l', lwd = 2, col = 'grey')
+}
+for(i in 1:dim(gose1)[1]){
+  lines(f.Data$argvals, gose1[i,], type = 'l', lwd = 2, col = 'firebrick2')
+}
+
+plot(f.Data$argvals,data1, ylim = range(f.Data$data) ,type = 'l', col = 'grey', lwd = 2, 
+     main = "Uniform (updated cov) k = 3", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 1:dim(data2)[1]){
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'orange2',lwd = 2)
+}
+for (i in 1:dim(data3)[1]){
+  lines(f.Data$argvals,data3[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+
+
+###### Pitman-Yor EPPF prior #####
+
+
+
+##### LCF ####
+
+lcf1 <- f.Data$data[which(f.Data$clinical$LCF == '1'),]
+lcf2 <- f.Data$data[which(f.Data$clinical$LCF == '2'),]
+index_lcf1 <- which(f.Data$clinical$LCF == 1)
+
+###### k = 2 Uniform prior with fixed covariance structure ####
+
+data1 <- f.Data$data[which(c_opt_2=='1'),]
+data2 <- f.Data$data[which(c_opt_2=='2'),]
+
+show(c_opt_2)
+show(f.Data$clinical$LCF)
+show(c_opt_2[index_lcf1]) # brutto
+show(c_opt_2[-index_lcf1])
+
+x11()
+par(mfrow = c(1,2))
+plot(f.Data$argvals, lcf2[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "LCF", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL', col = 'grey')
+for(i in 2:dim(lcf2)[1]){
+  lines(f.Data$argvals, lcf2[i,], type = 'l', lwd = 2, col = 'grey')
+}
+for(i in 1:dim(lcf1)[1]){
+  lines(f.Data$argvals, lcf1[i,], type = 'l', lwd = 2, col = 'firebrick2')
+}
+
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2, 
+     main = "Uniform (fixed cov) k = 2", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 2:dim(data1)[1]){
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in 1:dim(data2)[1]){
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'grey',lwd = 2)
+}
+
+
+###### k = 3 Uniform prior with fixed covariance structure #####
+
+data1 <- f.Data$data[which(c_opt_3=='1'),]
+data2 <- f.Data$data[which(c_opt_3=='2'),]
+data3 <- f.Data$data[which(c_opt_3=='3'),]
+
+show(c_opt_3)
+show(f.Data$clinical$LCF)
+show(c_opt_3[index_lcf1]) # cluster 2 and 3 seem to show a trend but remember that 
+                          # cluster 1 has only two observations
+show(c_opt_3[-index_lcf1])
+
+x11()
+par(mfrow = c(1,2))
+plot(f.Data$argvals, lcf2[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "LCF", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL', col = 'grey')
+for(i in 2:dim(lcf2)[1]){
+  lines(f.Data$argvals, lcf2[i,], type = 'l', lwd = 2, col = 'grey')
+}
+for(i in 1:dim(lcf1)[1]){
+  lines(f.Data$argvals, lcf1[i,], type = 'l', lwd = 2, col = 'firebrick2')
+}
+
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'grey', lwd = 2, 
+     main = "Uniform (fixed cov) k = 3", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 2:dim(data1)[1]){
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'grey',lwd = 2)
+}
+for (i in 1:dim(data2)[1]){
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'orange2',lwd = 2)
+}
+for (i in 1:dim(data3)[1]){
+  lines(f.Data$argvals,data3[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+
+
+###### k = 2 Uniform prior with updating covariance within clusters #####
+
+data1 <- f.Data$data[which(c_opt_2up=='1'),]
+data2 <- f.Data$data[which(c_opt_2up=='2'),]
+
+show(c_opt_2up)
+show(f.Data$clinical$GOSE)
+show(c_opt_2up[index_lcf1]) # brutto 
+show(c_opt_2up[-index_lcf1])
+
+x11()
+par(mfrow = c(1,2))
+plot(f.Data$argvals, lcf2[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "LCF", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL', col = 'grey')
+for(i in 2:dim(lcf2)[1]){
+  lines(f.Data$argvals, lcf2[i,], type = 'l', lwd = 2, col = 'grey')
+}
+for(i in 1:dim(lcf1)[1]){
+  lines(f.Data$argvals, lcf1[i,], type = 'l', lwd = 2, col = 'firebrick2')
+}
+
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2, 
+     main = "Uniform (updated cov) k = 2", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 2:dim(data1)[1]){
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in 1:dim(data2)[1]){
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'grey',lwd = 2)
+}
+
+
+###### k = 3 Uniform prior with updating covariance within clusters ####
+
+data1 <- f.Data$data[which(c_opt_3=='1'),]
+data2 <- f.Data$data[which(c_opt_3=='2'),]
+data3 <- f.Data$data[which(c_opt_3=='3'),]
+
+show(c_opt_3up)
+show(f.Data$clinical$LCF)
+show(c_opt_3up[index_lcf1]) # brutto
+show(c_opt_3up[-index_lcf1])
+
+x11()
+par(mfrow = c(1,2))
+plot(f.Data$argvals, lcf2[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "LCF", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL', col = 'grey')
+for(i in 2:dim(lcf2)[1]){
+  lines(f.Data$argvals, lcf2[i,], type = 'l', lwd = 2, col = 'grey')
+}
+for(i in 1:dim(lcf1)[1]){
+  lines(f.Data$argvals, lcf1[i,], type = 'l', lwd = 2, col = 'firebrick2')
+}
+
+plot(f.Data$argvals, data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'grey', lwd = 2, 
+     main = "Uniform (updated cov) k = 3", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 1:dim(data2)[1]){
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'orange2',lwd = 2)
+}
+for (i in 1:dim(data3)[1]){
+  lines(f.Data$argvals,data3[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+
+
+###### Pitman-Yor EPPF prior #####
+
+
+
+##### DRS #########
+drs1 <- f.Data$data[which(f.Data$clinical$DRS == '1'),]
+drs2 <- f.Data$data[which(f.Data$clinical$DRS == '2'),]
+index_drs1 <- which(f.Data$clinical$DRS == 1)
+
+###### k = 2 Uniform prior with fixed covariance structure ####
+
+data1 <- f.Data$data[which(c_opt_2=='1'),]
+data2 <- f.Data$data[which(c_opt_2=='2'),]
+
+show(c_opt_2)
+show(f.Data$clinical$DRS)
+show(c_opt_2[index_drs1]) # brutto
+show(c_opt_2[-index_drs1])
+
+x11()
+par(mfrow = c(1,2))
+plot(f.Data$argvals, drs2[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "DSR", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL', col = 'grey')
+for(i in 2:dim(drs2)[1]){
+  lines(f.Data$argvals, drs2[i,], type = 'l', lwd = 2, col = 'grey')
+}
+for(i in 1:dim(drs1)[1]){
+  lines(f.Data$argvals, drs1[i,], type = 'l', lwd = 2, col = 'firebrick2')
+}
+
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2, 
+     main = "Uniform (fixed cov) k = 2", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 2:dim(data1)[1]){
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in 1:dim(data2)[1]){
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'grey',lwd = 2)
+}
+
+
+###### k = 3 Uniform prior with fixed covariance structure #####
+
+data1 <- f.Data$data[which(c_opt_3=='1'),]
+data2 <- f.Data$data[which(c_opt_3=='2'),]
+data3 <- f.Data$data[which(c_opt_3=='3'),]
+
+show(c_opt_3)
+show(f.Data$clinical$DRS)
+show(c_opt_3[index_drs1]) # bruttissimo 
+show(c_opt_3[-index_drs1])
+
+x11()
+par(mfrow = c(1,2))
+plot(f.Data$argvals, drs2[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "DSR", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL', col = 'grey')
+for(i in 2:dim(drs2)[1]){
+  lines(f.Data$argvals, drs2[i,], type = 'l', lwd = 2, col = 'grey')
+}
+for(i in 1:dim(drs1)[1]){
+  lines(f.Data$argvals, drs1[i,], type = 'l', lwd = 2, col = 'firebrick2')
+}
+
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'grey', lwd = 2, 
+     main = "Uniform (fixed cov) k = 3", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 2:dim(data1)[1]){
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'grey',lwd = 2)
+}
+for (i in 1:dim(data2)[1]){
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in 1:dim(data3)[1]){
+  lines(f.Data$argvals,data3[i,],type = 'l', col = 'orange2',lwd = 2)
+}
+
+
+###### k = 2 Uniform prior with updating covariance within clusters #####
+
+data1 <- f.Data$data[which(c_opt_2up=='1'),]
+data2 <- f.Data$data[which(c_opt_2up=='2'),]
+
+show(c_opt_2up)
+show(f.Data$clinical$DRS)
+show(c_opt_2up[index_drs1]) # brutto
+show(c_opt_2up[-index_drs1]) 
+
+x11()
+par(mfrow = c(1,2))
+plot(f.Data$argvals, drs2[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "DSR", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL', col = 'grey')
+for(i in 2:dim(drs2)[1]){
+  lines(f.Data$argvals, drs2[i,], type = 'l', lwd = 2, col = 'grey')
+}
+for(i in 1:dim(drs1)[1]){
+  lines(f.Data$argvals, drs1[i,], type = 'l', lwd = 2, col = 'firebrick2')
+}
+
+plot(f.Data$argvals,data2[1,], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2, 
+     main = "Uniform (updated cov) k = 2", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 2:dim(data2)[1]){
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in 1:dim(data1)[1]){
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'grey',lwd = 2)
+}
+
+
+###### k = 3 Uniform prior with updating covariance within clusters ####
+
+data1 <- f.Data$data[which(c_opt_3up=='1'),]
+data2 <- f.Data$data[which(c_opt_3up=='2'),]
+data3 <- f.Data$data[which(c_opt_3up=='3'),]
+
+show(c_opt_3up)
+show(f.Data$clinical$DRS)
+show(c_opt_3up[index_drs1]) # bruttissimo 
+show(c_opt_3up[-index_drs1])
+
+x11()
+par(mfrow = c(1,2))
+plot(f.Data$argvals, drs2[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "DSR", 
+     xlab = 'time', ylab = 'EVOKED POTENTIAL', col = 'grey')
+for(i in 2:dim(drs2)[1]){
+  lines(f.Data$argvals, drs2[i,], type = 'l', lwd = 2, col = 'grey')
+}
+for(i in 1:dim(drs1)[1]){
+  lines(f.Data$argvals, drs1[i,], type = 'l', lwd = 2, col = 'firebrick2')
+}
+
+plot(f.Data$argvals,data1, ylim = range(f.Data$data) ,type = 'l', col = 'grey', lwd = 2, 
+     main = "Uniform (updated cov) k = 3", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 1:dim(data2)[1]){
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'firebrick2',lwd = 2)
+}
+for (i in 1:dim(data3)[1]){
+  lines(f.Data$argvals,data3[i,],type = 'l', col = 'orange2',lwd = 2)
+}
+
+
+###### Pitman-Yor EPPF prior #####
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-##### Save Workspace ####
+#### Save Workspace ####
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
 save.image("functional_WP.RData")
 
