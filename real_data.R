@@ -378,7 +378,7 @@ grid.arrange(plot1,plot2, plot1.m,plot2.m, nrow=2)
 #### Pitman-Yor EPPF Prior ####
 
 alpha <- alpha
-sigma <- 0.75
+sigma <- 0.75 # 0.5
 theta <- 3.66
 lambda <- 1
 
@@ -393,9 +393,42 @@ f.data_clust_py$loss
 c_opt_py <- f.data_clust_py$labels
 show(c_opt_py)
 
+##### Plot (sigma = 0.75 ==> K = 2) #####
+
+c_opt_py2 <- c_opt_py # NON RUNNARE QUESTA RIGA PLS
+
+data1 <- f.Data$data[which(c_opt_py2 == 1),]
+data2 <- f.Data$data[which(c_opt_py2 == 2),]
+
+x11()
+plot(f.Data$argvals,data1, ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2, 
+     main = "Pitman-Yor EPPF", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 1:dim(data2)[1]){
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'grey',lwd = 2)
+}
+lines(f.Data$argvals,data1, ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2)
 
 
+##### Plot (sigma = 0.5 ==> K = 5)########################
 
+c_opt_py5 <- c_opt_py # NON RUNNARE QUESTA RIGA PLS
+
+data1 <- f.Data$data[which(c_opt_py5 == 1),]
+data2 <- f.Data$data[which(c_opt_py5 == 2),]
+data3 <- f.Data$data[which(c_opt_py5 == 3),]
+data4 <- f.Data$data[which(c_opt_py5 == 4),]
+data5 <- f.Data$data[which(c_opt_py5 == 5),]
+
+x11()
+plot(f.Data$argvals,data4[1,], ylim = range(f.Data$data) ,type = 'l', col = 'grey', lwd = 2, 
+     main = "Pitman-Yor EPPF", xlab = 'time', ylab = 'EVOKED POTENTIAL')
+for (i in 1:dim(data4)[1]){
+  lines(f.Data$argvals,data4[i,],type = 'l', col = 'grey',lwd = 2)
+}
+lines(f.Data$argvals,data1, ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2)
+lines(f.Data$argvals,data2, ylim = range(f.Data$data) ,type = 'l', col = 'dodgerblue2', lwd = 2)
+lines(f.Data$argvals,data3, ylim = range(f.Data$data) ,type = 'l', col = 'forestgreen', lwd = 2)
+lines(f.Data$argvals,data5, ylim = range(f.Data$data) ,type = 'l', col = 'gold', lwd = 2)
 
 
 
