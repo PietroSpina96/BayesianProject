@@ -1,16 +1,3 @@
-# queste sinceramente non credo servano ma boh ne dubbio
-library(fda.usc)
-library(fda)
-library(fields)
-
-load("functional_WP.RData")
-load('Functions_WP.RData')
-
-time_red <- seq(1,1600,3)
-f.data_red <- f.data$ausxSL$data[,time_red]
-f.Data <- list('data' = f.data_red, 'argvals' = time_red)
-rm(time_red)
-rm(f.data_red)
 
 discrepancy_within <- function(x, centroid, alpha, eig){
   #compute square discrepancy
@@ -43,7 +30,7 @@ prob_i_k <- function(obs_index, clust_index, Ci, data, lambda, alpha, verbose=FA
   x_k = data[idx_k,]
   
   #update covariance eigs
-  eig = eigen(cov(x_k))
+  eig = eigen(cov(x_k)) #not efficient here but the code is easier to write and more readable
   
   if(length(idx_k)>1) #i.e. at least 2 observations
     centroid = colMeans(x_k)
@@ -150,16 +137,66 @@ gibbs_sampler <- function(N, N_burnin, x0, data, lambda, alpha, k, verbose = F){
   return(samplee)
 }
 
-#RUN DI PROVA
-Ci <- gibbs_sampler(2, 1, c_opt_2, f.Data$data, 1, 1e4, 2, verbose = T)
+### TEST 
+c_opt_test = rep(2,100)
+for(ii in c(95,96,97,98,99,100))
+  c_opt_test[ii]=1
+c_opt_test
 
-#VERA RUN
-
-Ci <- gibbs_sampler(5000, 1000, c_opt_2, f.Data$data, 1, 1e4, 2, verbose = T)
-
-#SAVE RESULTS
-
-save(Ci, file="indexes_Ci_uniform_lambda1_alpha1e4_k2_realData.RData")
+Ci <- gibbs_sampler(5, 1, c_opt_test, data, 1, alpha, 2, verbose = T)
 
 
 
+#actual run
+Ci <- gibbs_sampler(10000, 1000, c_opt, data, 1, alpha, eigen(K_1), 0.25, verbose = T)
+
+
+save(Ci, file="indexes_Ci_uniform_lambda1.RData")
+
+save.image("chain_Ci_data1_uniform.RData")
+
+#### ANLAYSIS OF THE CHAIN
+
+
+df <- list()
+for(ii in 1:dim(Ci)[1]){
+  df[[ii]] <- Ci[ii,]
+}
+
+
+S=similarityMat(df)
+
+x11()
+heatmap(S)
+
+BL1=minbinder(S, cls=Ci, method = "avg",
+              max.k = NULL, include.lg = FALSE, start.cl = NULL, tol = 0.001)
+BL1$cl
+
+binder(Ci,S)
+
+
+BL2=cluster_est_binder(data.frame(t(Ci)),log(S))
+
+BL2$c_est
+
+
+library(NPflow)
+library(mcclust)
+
+S2=similarityMat(data.frame(t(Ci)))
+
+x11()
+heatmap(S2, keep.dendro=FALSE)
+
+
+BL1=minbinder(S2, cls=Ci, method = "avg",
+              max.k = NULL, include.lg = FALSE, start.cl = NULL, tol = 0.001)
+BL1$cl
+
+binder(Ci,S2)
+
+
+BL2=cluster_est_binder(data.frame(t(Ci)),log(S2))
+
+BL2$c_est
