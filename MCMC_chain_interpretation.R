@@ -12,6 +12,18 @@ for(ii in 1:dim(Ci)[1]){
 
 S=similarityMat(df)
 
+#### Estimation by binder loss
+
+BL1 = minbinder(S, cls=Ci, method = "all", max.k = 2)
+
+BL1$cl[1,]
+
+#with lau green
+BL1_lau = minbinder(S, cls=Ci, method = "laugreen", max.k = 2)
+
+BL1_lau$cl
+
+
 #### PLOT OF CO-CLUSTERING MATRIX
 
 library(ggplot2)
