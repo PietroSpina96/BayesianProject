@@ -575,7 +575,7 @@ clusters_union <- function(clust, eps=0, data){
             #                    median(cov.k),median(cov.j),
             #                    min(cov.k),min(cov.j),
             #                    max(cov.k),max(cov.j)))
-            if(cov.hdist < .04){ #TODO threshold .04 tested on simdata5, needs more testing on other datasets
+            if(cov.hdist < .05){
                ## ok, similar mean+cov -> MERGE: cluster j into k
                writeLines(sprintf(" -> Covariances are similar!\n   (COVS DISTANCES: L2 = %.2f  /  HERDIN = %.2f)",cov.L2dist,cov.hdist))
                did.a.merge <- TRUE
@@ -625,7 +625,6 @@ clusters_union <- function(clust, eps=0, data){
                "v" = clusts) # only used to manage colors in plot before/after merging
           )
 }
-
 
 ##### Plot clusters ####
 clusters_plot <- function(time, clust, cols){
