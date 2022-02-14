@@ -23,6 +23,28 @@ BL1_lau = minbinder(S, cls=Ci, method = "laugreen", max.k = 2)
 
 BL1_lau$cl
 
+#greedy (mcclust.ext)
+psm=comp.psm(Ci)
+x11()
+plotpsm(psm)
+vi=minVI(psm,Ci,method=("greedy"),include.greedy=TRUE)
+vi$cl
+vi$value
+#VI(vi$cl,Ci)
+#vi_lb=VI.lb(Ci,psm)
+
+B=minbinder.ext(psm,Ci,method=("greedy"),include.greedy=TRUE)
+B$cl
+B$value
+
+cb=credibleball(B$cl,c.dist="Binder",Ci, alpha = 0.05)
+cvi=credibleball(vi$cl,c.dist="VI",Ci, alpha = 0.05)
+
+summary.c.estimate(B)
+summary.c.estimate(vi)
+
+summary.credibleball(cb)
+summary.credibleball(cvi)
 
 #### PLOT OF CO-CLUSTERING MATRIX
 
