@@ -2,7 +2,6 @@
 load("indexes_Ci_uniform_lambda1_alpha1e4_k2_realData.RData")
 load("indexes_Ci_uniform_lambda1.RData")
 
-library(NPflow)
 library(mcclust)
 
 df <- list()
