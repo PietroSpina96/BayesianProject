@@ -100,7 +100,6 @@ update_k_i <- function(obs_idx, Ci, n_clust, data, lambda, alpha, eig, verbose=F
 
 
 #### MH for our distro
-
 gibbs_sampler <- function(N, N_burnin, x0, data, lambda, alpha, k, verbose = F){
   #compute MH samples of the posterior for cluter indexes Ci
   #INPUTS
@@ -149,13 +148,18 @@ gibbs_sampler <- function(N, N_burnin, x0, data, lambda, alpha, k, verbose = F){
   return(samplee)
 }
 
+# DO RUN
+k <- 3
+alpha <- 1e4
+lambda <- 1
+
 #RUN DI PROVA
-Ci <- gibbs_sampler(2, 1, c_opt_2, f.Data$data, 1, 1e4, 3, verbose = T)
-
+Ci <- gibbs_sampler(2, 1, c_opt_2, f.Data$data, lambda, alpha, k, verbose = T)
 #VERA RUN
-
-Ci <- gibbs_sampler(5000, 1000, c_opt_2, f.Data$data, 1, 1e4, 2, verbose = T)
+Ci <- gibbs_sampler(5000, 1000, c_opt_2, f.Data$data, lambda, alpha, k, verbose = T)
 
 #SAVE RESULTS
+save(Ci, file=paste("indexes_Ci_uniform_lambda",lambda,"_alpha",alpha,"_k",k,"_realData.RData", sep=""))
 
-save(Ci, file="indexes_Ci_uniform_lambda1_alpha1e4_k2_realData.RData")
+# SHOW misclassification probabilities
+plot_misclassification_probabilities(f.Data$argvals, f.Data$data, alpha, Ci)

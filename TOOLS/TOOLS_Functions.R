@@ -665,6 +665,102 @@ clusters_plot <- function(time, clust, cols){
    }
 }
 
+##### Plot misclassification probabilities #####
+plot_misclassification_probabilities <- function(time,data,alpha,Ci){
+   # INPUT: time  = x
+   #        data  = y (n by length(time))
+   #        alpha = Mahalanobis distance parameter
+   #        Ci    = output of gibbs_sampler()
+   # OUTPUT: plot data colored by misclassification probabilities
+   #         (pro tip: returns a ggplot object which can be modified as usual...)
+   #
+   #     !! warning: this function only works for k=2,3 groups !!
+   #   -we know, bad programming, but works for the necessary cases-
+   
+   n <- dim(data)[1]
+   writeLines(sprintf("** PLOT MISCLASSIFICATION PROBABILITIES for %d elements and %d clusters **",n,k))
+   
+   indicii <- cluster_est_binder(Ci %>% t() %>% data.frame())$c_est
+   # indicii <- minbinder(S, cls=Ci, method = "all", max.k = 2)$cl[1,]
+   
+   ngroups <- max(indicii) # 2 or 3
+   
+   gruppo1 <- which(indicii == 1)
+   gruppo2 <- which(indicii == 2)
+   if(ngroups==3) gruppo3 <- which(indicii == 3)
+   
+   # compute all distances
+   writeLines("Computing distances...")
+   eig1 <- cov(data[gruppo1,]) %>% eigen
+   eig2 <- cov(data[gruppo2,]) %>% eigen
+   if(ngroups==3) eig3 <- cov(data[gruppo3,]) %>% eigen
+   dists <- matrix(0,n,n) # Maha-dists matrix, using alternatively eig1 or eig2 based on group
+   for(i in 1:n)
+      for(j in 1:n){
+         if(i %in% gruppo1  &  j %in% gruppo1)
+            dists[i,j] <- alpha_Mahalanobis(alpha,data[i,],data[j,],eig1$values,eig1$vectors)
+         else if(i %in% gruppo2  &  j %in% gruppo2)
+            dists[i,j] <- alpha_Mahalanobis(alpha,data[i,],data[j,],eig2$values,eig2$vectors)
+         else if(ngroups==3) # delicate huh :)
+            if(i %in% gruppo3  &  j %in% gruppo3)
+               dists[i,j] <- alpha_Mahalanobis(alpha,data[i,],data[j,],eig3$values,eig3$vectors)
+      }
+   
+   # find the closest to all others (medoids m1,m2)
+   writeLines("Finding medoids...")
+   maxdist=0
+   for(i in gruppo1){
+      d <- sum(dists[i,gruppo1])
+      if(d > maxdist){
+         maxdist<-d
+         m1 <- i
+      }
+   }
+   maxdist=0
+   for(i in gruppo2){
+      d <- sum(dists[i,gruppo2])
+      if(d > maxdist){
+         maxdist<-d
+         m2 <- i
+      }
+   }
+   if(ngroups==3){
+      maxdist=0
+      for(i in gruppo3){
+         d <- sum(dists[i,gruppo3])
+         if(d > maxdist){
+            maxdist<-d
+            m3 <- i
+         }
+      }
+   }
+   # compute Similarity matrix
+   df <- list()
+   for(ii in 1:dim(Ci)[1]) df[[ii]] <- Ci[ii,]
+   S <- similarityMat(df)
+   
+   # compute misclassification probabilities: p = 1 - s_{i,mi}
+   writeLines("Computing misclassification probabilities...")
+   Pmisclass <- rep(0,n)
+   for(i in gruppo1) Pmisclass[i] <- 1 - S[i,m1]
+   for(i in gruppo2) Pmisclass[i] <- 1 - S[i,m2]
+   if(ngroups==3) for(i in gruppo3) Pmisclass[i] <- 1 - S[i,m3]
+   
+   # adjust range for better coloring
+   writeLines("Plotting...")
+   a <- Pmisclass[Pmisclass!=0] %>% min
+   b <- Pmisclass %>% max
+   # plot data colored by misclassification
+   df <- data %>% t() %>% as.data.frame() %>% 
+      add_column(x=time) %>% gather(group, y, -x)
+   colsrep <- rep(Pmisclass,each=dim(data)[2])
+   ggplot(df, aes(x, y, color=colsrep, group=group)) + 
+      geom_line(size=1) +
+      scale_colour_gradientn(limits=c(a,b),colours=c("#4CAF50","#FFEB3B","#FF5252")) +
+      labs(x="time",y="data", title="Misclassification probabilities",color="")
+   writeLines("DONE!")
+}
+
 # The following function is not loaded in the workspace
 #  Clustering function merging using loss minimization #
 # The parameter eig corresponds to the output of the eigen function (list of eigenvalues and eigenvectors)
