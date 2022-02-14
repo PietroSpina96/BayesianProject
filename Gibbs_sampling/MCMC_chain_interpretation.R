@@ -1,8 +1,12 @@
 #### ANALYSIS OF THE CHAIN
-load("indexes_Ci_uniform_lambda1_alpha1e4_k2_realData.RData")
-load("indexes_Ci_uniform_lambda1.RData")
+load("indexes_Ci_uniform_TEST.RData")
 
 library(mcclust)
+library(NPflow)
+#### NOTE: some function( usually ending in ".ext") come from the extensions of the mcclust library (mcclust.ext) that
+#### can give troubles in istallation, depending on the version of R used. To use those
+#### functions the user is required either to use a proper version of R or to manually load
+#### those functions in the workspace from the repository.
 
 df <- list()
 for(ii in 1:dim(Ci)[1]){
@@ -13,12 +17,12 @@ S=similarityMat(df)
 
 #### Estimation by binder loss
 
-BL1 = minbinder(S, cls=Ci, method = "all", max.k = 2)
+BL1 = minbinder(S, cls=Ci, method = "all")
 
 BL1$cl[1,]
 
 #with lau green
-BL1_lau = minbinder(S, cls=Ci, method = "laugreen", max.k = 2)
+BL1_lau = minbinder(S, cls=Ci, method = "laugreen")
 
 BL1_lau$cl
 

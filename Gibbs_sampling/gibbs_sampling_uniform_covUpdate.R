@@ -1,16 +1,6 @@
-# queste sinceramente non credo servano ma boh ne dubbio
-library(fda.usc)
-library(fda)
-library(fields)
+#### Gibbs sampler WITH update of covariance matrix eigenvalues/eigenvectors
 
-load("functional_WP.RData")
-load('Functions_WP.RData')
 
-time_red <- seq(1,1600,3)
-f.data_red <- f.data$ausxSL$data[,time_red]
-f.Data <- list('data' = f.data_red, 'argvals' = time_red)
-rm(time_red)
-rm(f.data_red)
 
 discrepancy_within <- function(x, centroid, alpha, eig){
   #compute square discrepancy
@@ -28,7 +18,7 @@ discrepancy_within <- function(x, centroid, alpha, eig){
 }
 
 
-prob_i_k <- function(obs_index, clust_index, Ci, data, lambda, alpha, verbose=FALSE){
+prob_i_k_unif_update <- function(obs_index, clust_index, Ci, data, lambda, alpha, verbose=FALSE){
   ## compute fullconditional term for PY-EPPF prior
   
   
@@ -49,7 +39,8 @@ prob_i_k <- function(obs_index, clust_index, Ci, data, lambda, alpha, verbose=FA
     return(-1) # if it's the only observation it can't be reallocated
   
   #update covariance eigs
-  eig = eigen(cov(x_k))
+  eig = eigen(cov(x_k)) #not efficient here but the code is easier to write and more readable
+  
   
   start_time <- Sys.time()
   disc_in = discrepancy_within(x_k, centroid, alpha, eig)
@@ -81,11 +72,11 @@ prob_i_k <- function(obs_index, clust_index, Ci, data, lambda, alpha, verbose=FA
 
 
 
-update_k_i <- function(obs_idx, Ci, n_clust, data, lambda, alpha, verbose=F){
+update_k_i_unif_update <- function(obs_idx, Ci, n_clust, data, lambda, alpha, verbose=F){
   # Sample a value for the cluster, compatible with the given expression of the full conditional
   probs = rep(0,n_clust)
   for(ii in 1:n_clust){
-    val = prob_i_k(obs_idx, ii, Ci, data, lambda, alpha, verbose=F)
+    val = prob_i_k_unif_update(obs_idx, ii, Ci, data, lambda, alpha, verbose=F)
     if(val == -1){
       if(verbose)
         print("Atomic cluster detected!")
@@ -104,7 +95,7 @@ update_k_i <- function(obs_idx, Ci, n_clust, data, lambda, alpha, verbose=F){
 
 #### MH for our distro
 
-gibbs_sampler <- function(N, N_burnin, x0, data, lambda, alpha, k, verbose = F){
+gibbs_sampler_unif_update <- function(N, N_burnin, x0, data, lambda, alpha, k, verbose = F){
   #compute MH samples of the posterior for cluter indexes Ci
   #INPUTS
   # N = number of samples
@@ -133,7 +124,7 @@ gibbs_sampler <- function(N, N_burnin, x0, data, lambda, alpha, k, verbose = F){
     gibbs_time_init <- Sys.time()
     
     for(t in 1:n)#update one component at the time
-      X_temp[t] = update_k_i(t, X_temp, k, data, lambda, alpha, verbose)
+      X_temp[t] = update_k_i_unif_update(t, X_temp, k, data, lambda, alpha, verbose)
     
     if(iterMH > N_burnin){
       posz = iterMH - N_burnin
@@ -150,16 +141,13 @@ gibbs_sampler <- function(N, N_burnin, x0, data, lambda, alpha, k, verbose = F){
   return(samplee)
 }
 
-#RUN DI PROVA
-Ci <- gibbs_sampler(2, 1, c_opt_2, f.Data$data, 1, 1e4, 2, verbose = T)
-
-#VERA RUN
-
-Ci <- gibbs_sampler(5000, 1000, c_opt_2, f.Data$data, 1, 1e4, 2, verbose = T)
-
-#SAVE RESULTS
-
-save(Ci, file="indexes_Ci_uniform_lambda1_alpha1e4_k2_realData.RData")
 
 
+#TEST RUN ON SIMULATED DATA
+Ci <- gibbs_sampler_unif_update(10, 1, c_opt, data, 1, alpha, 2, verbose = T)
 
+#REAL RUN ON SIMULATED DATA
+Ci <- gibbs_sampler_unif_update(8000, 800, c_opt, data, 1, alpha, 2, verbose = T)
+
+
+save(Ci, file="indexes_Ci_uniform_updated_TEST.RData")
