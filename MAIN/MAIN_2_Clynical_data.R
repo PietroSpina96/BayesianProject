@@ -13,7 +13,7 @@ load("functional_WP.RData")
 load('Functions_WP.RData')
 
 
-#### Application on real data ####
+#### Data representation ####
 n <- 26
 t_points <- 1600
 time<-seq(1,t_points)
@@ -57,22 +57,6 @@ eigenft<-eigenvf$vectors
 # statistical units. Here we have N=26 and 25 not null eigenvalues.
 #lambda[1:26]
 
-# Useless
-# # prova
-# kernel_estimator(f.data$ausxSL$data,X_bar,n,1,9,t_points) 
-# 
-# # Covariance matrix for the data
-# K_hat <- matrix(0,t_points,t_points)
-# for (i in 1:t_points){
-#   for (j in 1:t_points){
-#     K_hat[i,j] <- kernel_estimator(f.data$ausxSL$data,X_bar,n,i,j,t_points)
-#   }
-# }
-# # sub-matrix (5x5)
-# khat_example<-K_hat[1:5,1:5]
-# show(khat_example)
-
-
 #### Reduction of data points ####
 
 time_red <- seq(1,1600,3)
@@ -97,16 +81,19 @@ max(eigen_t$values)
 
 ##### alpha-Mahalanobis distance calculation ####
 # Setting alpha
-f_prova <- f.Data$data[10,]
+f_prova <- f.Data$data[22,]
 
 x11()
-plot(f.Data$argvals, f_prova, type = "l", ylim = range(f_prova), lwd=2)
+plot(f.Data$argvals, f_prova, type = "l", ylim = range(f_prova), lwd=2, xlab = 'time', 
+     ylab = 'EVOKED POTENTIAL')
 lines(f.Data$argvals, f_alpha_approx(f_prova,1e+3,eigen_t$values,eigen_t$vectors), 
       type = 'l', lwd=2, col = 'firebrick2')
 lines(f.Data$argvals, f_alpha_approx(f_prova,1e+4,eigen_t$values,eigen_t$vectors), 
-      type = 'l', lwd=2, col = 'blue')
+      type = 'l', lwd=2, col = 'dodgerblue2')
 lines(f.Data$argvals, f_alpha_approx(f_prova,1e+5,eigen_t$values,eigen_t$vectors), 
       type = 'l', lwd=2, col = 'forestgreen')
+legend(1000,-100, legend = c('original function', '1e+3', '1e+4', '1e+5'), 
+       col = c('black', 'firebrick2', 'dodgerblue2', 'forestgreen'), lty = 1, lwd = 2)
 
 
 
@@ -118,14 +105,14 @@ for (i in 1:26){
 }
 
 x11()
-par(mfrow = c(1,2))
 plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data) ,
      type = 'l', lwd = 2, main = "DATA", xlab = 'time', ylab = 'EVOKED POTENTIAL')
 for (i in 2:26){
   lines(f.Data$argvals, f.Data$data[i,], lwd = 2)
 }
+x11()
 plot(f.Data$argvals, f.data_alpha[1,], ylim = range(f.Data$data), 
-     type = 'l', lwd = 2, main = 'SMOOTHED DATA', , xlab = 'time', ylab = 'EVOKED POTENTIAL')
+     type = 'l', lwd = 2, xlab = 'time', ylab = 'EVOKED POTENTIAL')
 for (i in 2:26){
   lines(f.Data$argvals, f.data_alpha[i,], lwd = 2)
 }
@@ -166,24 +153,18 @@ data2 <- f.Data$data[which(c_opt_2=='2'),]
 rownames(data2) <- c(1:dim(data2)[1])
 
 ###### Plot #####
-x11()
-par(mfrow = c(1,2))
-plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "Data", 
-     xlab = 'time', ylab = 'EVOKED POTENTIAL')
-for(i in 2:n){
-  lines(f.Data$argvals,f.Data$data[i,],type = 'l',lwd = 2)
-}
 
-plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick3', lwd = 2, 
+x11()
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'grey', lwd = 2, 
      main = "Uniform (fixed cov) k = 2", xlab = 'time', ylab = 'EVOKED POTENTIAL')
 for (i in 2:dim(data1)[1]){
-  lines(f.Data$argvals,data1[i,],type = 'l', col = 'firebrick3',lwd = 2)
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'grey',lwd = 2)
 }
 for (i in 1:dim(data2)[1]){
-  lines(f.Data$argvals,data2[i,],type = 'l', col = 'dodgerblue3',lwd = 2)
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
-lines(f.Data$argvals, c1, lwd = 3)
-lines(f.Data$argvals, c2, lwd = 3)
+legend(1000,-500, legend = c('Cluster 1', 'Cluster 2'), 
+       col = c('grey', 'firebrick2'), lty = 1, lwd = 2)
 
 
 ##### k = 3 ######
@@ -205,28 +186,21 @@ data3 <- f.Data$data[which(c_opt_3=='3'),]
 
 ###### Plot #####
 x11()
-par(mfrow = c(1,2))
-plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "Data",
-     xlab = 'time', ylab = 'EVOKED POTENTIAL')
-for(i in 2:n){
-  lines(f.Data$argvals,f.Data$data[i,],type = 'l',lwd = 2)
-}
-
-plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'dodgerblue3', lwd = 2, 
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'darkorange', lwd = 2, 
      main = "Uniform (fixed cov) k = 3", xlab = 'time', ylab = 'EVOKED POTENTIAL')
 # plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'gold', lwd = 2, main = "Uniform (fixed cov) k = 3")
-for (i in 2:dim(data1)[1]){
-  lines(f.Data$argvals,data1[i,],type = 'l', col = 'dodgerblue3',lwd = 2)
+for (i in 1:dim(data3)[1]){
+  lines(f.Data$argvals,data3[i,],type = 'l', col = 'grey',lwd = 2)
 }
 for (i in 1:dim(data2)[1]){
-  lines(f.Data$argvals,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
-for (i in 1:dim(data3)[1]){
-  lines(f.Data$argvals,data3[i,],type = 'l', col = 'firebrick2',lwd = 2)
+for (i in 1:dim(data1)[1]){
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'goldenrod1',lwd = 3)
 }
-lines(f.Data$argvals, c1, lwd = 3)
-lines(f.Data$argvals, c2, lwd = 3)
-lines(f.Data$argvals, c3, lwd = 3)
+legend(1000,-500, legend = c('Cluster 1', 'Cluster 2','Cluster 3'), 
+       col = c('grey', 'firebrick2','goldenrod1'), lty = 1, lwd = 2)
+
 
 
 ##### Cluster merging #####
@@ -257,11 +231,6 @@ plot2.m <- clusters_plot(f.Data$argvals, f.data_clust_3merge, colors2) + labs(ti
 grid.arrange(plot1,plot2, plot1.m,plot2.m, nrow=2)
 #
 
-
-
-
-
-
 #### Uniform prior with covariance updating within clusters ####
 
 ##### k = 2 ######
@@ -281,24 +250,18 @@ data1 <- f.Data$data[which(c_opt_2up=='1'),]
 data2 <- f.Data$data[which(c_opt_2up=='2'),]
 
 ###### Plot #####
-x11()
-par(mfrow = c(1,2))
-plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "Data", 
-     xlab = 'time', ylab = 'EVOKED POTENTIAL')
-for(i in 2:n){
-  lines(f.Data$argvals,f.Data$data[i,],type = 'l',lwd = 2)
-}
 
-plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2, 
+x11()
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'dodgerblue2', lwd = 2, 
      main = "Uniform (updated cov) k = 2", xlab = 'time', ylab = 'EVOKED POTENTIAL')
-for (i in 2:dim(data1)[1]){
-  lines(f.Data$argvals,data1[i,],type = 'l', col = 'firebrick2',lwd = 2)
-}
 for (i in 1:dim(data2)[1]){
-  lines(f.Data$argvals,data2[i,],type = 'l', col = 'dodgerblue3',lwd = 2)
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'grey',lwd = 2)
 }
-lines(f.Data$argvals, c1, lwd = 3)
-lines(f.Data$argvals, c2, lwd = 3)
+for (i in 1:dim(data1)[1]){
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'dodgerblue2',lwd = 2)
+}
+legend(1000,-500, legend = c('Cluster 1', 'Cluster 2'), 
+       col = c('grey', 'dodgerblue2'), lty = 1, lwd = 2)
 
 ##### k = 3 ######
 f.data_clust_3up <- fda_clustering_mahalanobis_general(n_clust = 3, alpha = alpha,
@@ -318,30 +281,25 @@ data2 <- f.Data$data[which(c_opt_3up=='2'),]
 data3 <- f.Data$data[which(c_opt_3up=='3'),]
 
 ###### Plot #####
-x11()
-par(mfrow = c(1,2))
-plot(f.Data$argvals,f.Data$data[1,], ylim = range(f.Data$data) ,type = 'l', lwd = 2, main = "Data",
-     xlab = 'time', ylab = 'EVOKED POTENTIAL')
-for(i in 2:n){
-  lines(f.Data$argvals,f.Data$data[i,],type = 'l',lwd = 2)
-}
 
-plot(f.Data$argvals,data1, ylim = range(f.Data$data) ,type = 'l', col = 'dodgerblue3', lwd = 2, 
+x11()
+plot(f.Data$argvals,data1, ylim = range(f.Data$data) ,type = 'l', col = 'mediumorchid', lwd = 2, 
      main = "Uniform (updated cov) k = 3", xlab = 'time', ylab = 'EVOKED POTENTIAL')
 # plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'dodgerblue3', lwd = 2, 
 #      main = "Uniform (updated cov) k = 3", xlab = 'time', ylab = 'EVOKED POTENTIAL')
 # for (i in 2:dim(data1)[1]){
 #   lines(f.Data$argvals,data1[i,],type = 'l', col = 'dodgerblue3',lwd = 2)
 # }
-for (i in 1:dim(data2)[1]){
-  lines(f.Data$argvals,data2[i,],type = 'l', col = 'forestgreen',lwd = 2)
-}
+
 for (i in 1:dim(data3)[1]){
-  lines(f.Data$argvals,data3[i,],type = 'l', col = 'firebrick2',lwd = 2)
+  lines(f.Data$argvals,data3[i,],type = 'l', col = 'grey',lwd = 2)
 }
-lines(f.Data$argvals, c1, lwd = 5, col = 'dodgerblue3')
-lines(f.Data$argvals, c2, lwd = 3)
-lines(f.Data$argvals, c3, lwd = 3)
+for (i in 1:dim(data2)[1]){
+  lines(f.Data$argvals,data2[i,],type = 'l', col = 'dodgerblue2',lwd = 2)
+}
+lines(f.Data$argvals,data1,type = 'l', col = 'mediumorchid',lwd = 3)
+legend(1000,-500, legend = c('Cluster 1', 'Cluster 2','Cluster 3'), 
+       col = c('grey', 'dodgerblue2','mediumorchid'), lty = 1, lwd = 2)
 
 ##### Cluster merging #####
 library(ggplot2)
@@ -370,19 +328,13 @@ plot2.m <- clusters_plot(f.Data$argvals, f.data_clust_3upmerge, colors2) + labs(
 grid.arrange(plot1,plot2, plot1.m,plot2.m, nrow=2)
 #
 
-
-
-
-
-
 #### Pitman-Yor EPPF Prior ####
 
 alpha <- alpha
-sigma <- 0.75 # 0.5
+sigma <- 0.75 
 theta <- 3.66
-lambda <- 1
-
-f.data_clust_py <- fda_clustering_pitmanyor_overall(n_clust = 5, nsimul = 10, alpha = alpha, 
+lambda <- 0.65
+f.data_clust_py <- fda_clustering_pitmanyor_overall(n_clust = 7, nsimul = 1000, alpha = alpha, 
                                                     sigma = sigma, theta = theta, lambda = lambda,
                                                     cov_matrix = cov(f.Data$data), data = f.Data$data)
 
@@ -392,10 +344,22 @@ f.data_clust_py$clusters_number
 f.data_clust_py$loss
 c_opt_py <- f.data_clust_py$labels
 show(c_opt_py)
+c_opt_py2 <- c_opt_py # NON RUNNARE QUESTA RIGA PLS
+
+sigma <- 0.5
+f.data_clust_py <- fda_clustering_pitmanyor_overall(n_clust = 7, nsimul = 1000, alpha = alpha, 
+                                                    sigma = sigma, theta = theta, lambda = lambda,
+                                                    cov_matrix = cov(f.Data$data), data = f.Data$data)
+
+f.data_clust_py$posterior_all_k
+f.data_clust_py$posterior
+f.data_clust_py$clusters_number
+f.data_clust_py$loss
+c_opt_py <- f.data_clust_py$labels
+show(c_opt_py)
+c_opt_py5 <- c_opt_py # NON RUNNARE QUESTA RIGA PLS
 
 ##### Plot (sigma = 0.75 ==> K = 2) #####
-
-c_opt_py2 <- c_opt_py # NON RUNNARE QUESTA RIGA PLS
 
 data1 <- f.Data$data[which(c_opt_py2 == 1),]
 data2 <- f.Data$data[which(c_opt_py2 == 2),]
@@ -407,11 +371,10 @@ for (i in 1:dim(data2)[1]){
   lines(f.Data$argvals,data2[i,],type = 'l', col = 'grey',lwd = 2)
 }
 lines(f.Data$argvals,data1, ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2)
-
+legend(1000,-500, legend = c('Cluster 1', 'Cluster 2'), 
+       col = c('grey', 'firebrick2'), lty = 1, lwd = 2)
 
 ##### Plot (sigma = 0.5 ==> K = 5)########################
-
-c_opt_py5 <- c_opt_py # NON RUNNARE QUESTA RIGA PLS
 
 data1 <- f.Data$data[which(c_opt_py5 == 1),]
 data2 <- f.Data$data[which(c_opt_py5 == 2),]
@@ -420,16 +383,17 @@ data4 <- f.Data$data[which(c_opt_py5 == 4),]
 data5 <- f.Data$data[which(c_opt_py5 == 5),]
 
 x11()
-plot(f.Data$argvals,data4[1,], ylim = range(f.Data$data) ,type = 'l', col = 'grey', lwd = 2, 
+plot(f.Data$argvals,data1[1,], ylim = range(f.Data$data) ,type = 'l', col = 'grey', lwd = 2, 
      main = "Pitman-Yor EPPF", xlab = 'time', ylab = 'EVOKED POTENTIAL')
-for (i in 1:dim(data4)[1]){
-  lines(f.Data$argvals,data4[i,],type = 'l', col = 'grey',lwd = 2)
+for (i in 1:dim(data1)[1]){
+  lines(f.Data$argvals,data1[i,],type = 'l', col = 'grey',lwd = 2)
 }
-lines(f.Data$argvals,data1, ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2)
+lines(f.Data$argvals,data4, ylim = range(f.Data$data) ,type = 'l', col = 'firebrick2', lwd = 2)
 lines(f.Data$argvals,data2, ylim = range(f.Data$data) ,type = 'l', col = 'dodgerblue2', lwd = 2)
-lines(f.Data$argvals,data3, ylim = range(f.Data$data) ,type = 'l', col = 'forestgreen', lwd = 2)
-lines(f.Data$argvals,data5, ylim = range(f.Data$data) ,type = 'l', col = 'gold', lwd = 2)
-
+lines(f.Data$argvals,data3, ylim = range(f.Data$data) ,type = 'l', col = 'mediumorchid', lwd = 2)
+lines(f.Data$argvals,data5, ylim = range(f.Data$data) ,type = 'l', col = 'goldenrod1', lwd = 2)
+legend(1000,-500, legend = c('Cluster 1', 'Cluster 2','Cluster 3','Cluster 4','Cluster 5'), 
+       col = c('grey', 'firebrick2','dodgerblue2','mediumorchid','goldenrod1'), lty = 1, lwd = 2)
 
 
 #### Clinical relevancy #####
@@ -568,11 +532,6 @@ for (i in 1:dim(data3)[1]){
   lines(f.Data$argvals,data3[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
 
-
-###### Pitman-Yor EPPF prior #####
-
-
-
 ##### LCF ####
 
 lcf1 <- f.Data$data[which(f.Data$clinical$LCF == '1'),]
@@ -708,11 +667,6 @@ for (i in 1:dim(data3)[1]){
   lines(f.Data$argvals,data3[i,],type = 'l', col = 'firebrick2',lwd = 2)
 }
 
-
-###### Pitman-Yor EPPF prior #####
-
-
-
 ##### DRS #########
 drs1 <- f.Data$data[which(f.Data$clinical$DRS == '1'),]
 drs2 <- f.Data$data[which(f.Data$clinical$DRS == '2'),]
@@ -845,14 +799,6 @@ for (i in 1:dim(data2)[1]){
 for (i in 1:dim(data3)[1]){
   lines(f.Data$argvals,data3[i,],type = 'l', col = 'orange2',lwd = 2)
 }
-
-
-###### Pitman-Yor EPPF prior #####
-
-
-
-
-
 
 #### Save Workspace ####
 setwd("C:/Users/pietr/Desktop/Bayesian Statistics/Progetto/dati/BayesianProject")
